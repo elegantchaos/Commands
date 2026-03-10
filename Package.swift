@@ -21,7 +21,7 @@ let package = Package(
   ],
 
   dependencies: [
-    .package(path: "../Icons"),
+    .package(url: "https://github.com/elegantchaos/Icons.git", from: "1.0.0"),
     .package(url: "https://github.com/elegantchaos/Logger", from: "2.0.0")
   ],
 
