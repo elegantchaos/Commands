@@ -26,7 +26,7 @@ public extension CommandCentre {
         Label(command.name, icon: command.icon)
       }
       .disabled(shouldDisable(command))
-      #if !os(watchOS)
+      #if !os(watchOS) && !os(tvOS)
         .keyboardShortcut(command.shortcut)
       #endif
       .help(command.help ?? "")
@@ -41,7 +41,7 @@ public extension CommandCentre {
         content()
       }
       .disabled(shouldDisable(command))
-      #if !os(watchOS)
+      #if !os(watchOS) && !os(tvOS)
         .keyboardShortcut(command.shortcut)
       #endif
       .help(command.help ?? "")
@@ -56,7 +56,7 @@ public extension CommandCentre {
         content(command)
       }
       .disabled(shouldDisable(command))
-      #if !os(watchOS)
+      #if !os(watchOS) && !os(tvOS)
         .keyboardShortcut(command.shortcut)
       #endif
       .help(command.help ?? "")
@@ -69,7 +69,7 @@ public extension CommandCentre {
     if availability != .hidden {
       ConfirmableCommandButton(command: command, commander: self)
         .disabled(shouldDisable(command))
-        #if !os(watchOS)
+        #if !os(watchOS) && !os(tvOS)
           .keyboardShortcut(command.shortcut)
         #endif
         .help(command.help ?? "")

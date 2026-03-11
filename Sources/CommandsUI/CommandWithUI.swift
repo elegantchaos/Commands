@@ -7,7 +7,7 @@ import Commands
 import Icons
 import SwiftUI
 
-#if os(watchOS)
+#if os(watchOS) || os(tvOS)
   public struct CommandShortcut {
     public init(_ key: CommandKey, modifiers: CommandModifiers = []) {
     }
