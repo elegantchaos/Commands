@@ -79,7 +79,18 @@ struct DynamicCommandButton<Centre: CommandCentre, Wrapped: CommandWithUI, Conte
   #if os(macOS)
     /// Maps the current macOS modifier state to an abstract command trigger.
     private var currentTrigger: CommandTrigger {
-      let modifiers = NSApp.currentEvent?.modifierFlags ?? []
+      guard let event = NSApp.currentEvent else {
+        return .primary
+      }
+
+      switch event.type {
+        case .leftMouseDown, .leftMouseUp, .rightMouseDown, .rightMouseUp, .otherMouseDown, .otherMouseUp:
+          break
+        default:
+          return .primary
+      }
+
+      let modifiers = event.modifierFlags
       if modifiers.contains(.command) {
         return .secondary
       }
