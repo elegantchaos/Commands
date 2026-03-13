@@ -26,7 +26,7 @@ public extension CommandCentre {
         Label(command.name, icon: command.icon)
       }
       .disabled(shouldDisable(command))
-      #if !os(watchOS)
+      #if !os(watchOS) && !os(tvOS)
         .keyboardShortcut(command.shortcut)
       #endif
       .help(command.help ?? "")
@@ -41,7 +41,7 @@ public extension CommandCentre {
         content()
       }
       .disabled(shouldDisable(command))
-      #if !os(watchOS)
+      #if !os(watchOS) && !os(tvOS)
         .keyboardShortcut(command.shortcut)
       #endif
       .help(command.help ?? "")
@@ -56,10 +56,32 @@ public extension CommandCentre {
         content(command)
       }
       .disabled(shouldDisable(command))
-      #if !os(watchOS)
+      #if !os(watchOS) && !os(tvOS)
         .keyboardShortcut(command.shortcut)
       #endif
       .help(command.help ?? "")
+    }
+  }
+
+  /// Return a button that resolves a concrete command from an activation trigger.
+  @ViewBuilder func dynamicButton<C: CommandWithUI, Content: View>(
+    role: ButtonRole? = nil,
+    command: @escaping @MainActor (CommandTrigger) -> C,
+    content: @escaping () -> Content
+  ) -> some View where C.Centre == Self {
+    if availability(command(.primary)) != .hidden {
+      DynamicCommandButton(commander: self, role: role, command: command, content: content)
+    }
+  }
+
+  /// Return a labelled button that resolves a concrete command from an activation trigger.
+  @ViewBuilder func dynamicButton<C: CommandWithUI>(
+    role: ButtonRole? = nil,
+    command: @escaping @MainActor (CommandTrigger) -> C
+  ) -> some View where C.Centre == Self {
+    let primaryCommand = command(.primary)
+    dynamicButton(role: role, command: command) {
+      Label(primaryCommand.name, icon: primaryCommand.icon)
     }
   }
 
@@ -69,7 +91,7 @@ public extension CommandCentre {
     if availability != .hidden {
       ConfirmableCommandButton(command: command, commander: self)
         .disabled(shouldDisable(command))
-        #if !os(watchOS)
+        #if !os(watchOS) && !os(tvOS)
           .keyboardShortcut(command.shortcut)
         #endif
         .help(command.help ?? "")
