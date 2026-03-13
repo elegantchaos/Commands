@@ -20,6 +20,9 @@ public protocol CommandCentre {
 
   /// Records that a command has finished executing.
   func recordFinishedCommand<C: Command>(_ command: C) where C.Centre == Self
+
+  /// Returns whether the given command is already executing.
+  func isRunning<C: Command>(_ command: C) -> Bool where C.Centre == Self
 }
 
 

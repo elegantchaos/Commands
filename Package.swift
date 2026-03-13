@@ -1,5 +1,4 @@
 // swift-tools-version: 6.2
-
 import PackageDescription
 
 let package = Package(
@@ -22,7 +21,8 @@ let package = Package(
 
   dependencies: [
     .package(url: "https://github.com/elegantchaos/Icons.git", from: "1.0.0"),
-    .package(url: "https://github.com/elegantchaos/Logger", from: "2.0.0")
+    .package(url: "https://github.com/elegantchaos/Logger", from: "2.0.0"),
+    .package(url: "https://github.com/elegantchaos/ActionBuilderPlugin.git", from: "2.1.3"),
   ],
 
   targets: [
@@ -40,7 +40,7 @@ let package = Package(
       name: "CommandsUI",
       dependencies: [
         "Commands",
-        .product(name: "Icons", package: "Icons")
+        .product(name: "Icons", package: "Icons"),
       ],
       exclude: [
         "README.md"
