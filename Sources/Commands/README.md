@@ -9,6 +9,7 @@ It defines command types, command availability, confirmation behavior, and the c
 - Define command protocols and core command metadata.
 - Define command dispatch and center abstractions.
 - Model command availability and confirmation requirements.
+- Model trigger-specific command variants for higher-level UI layers.
 
 ## Depends On
 - `Logger`

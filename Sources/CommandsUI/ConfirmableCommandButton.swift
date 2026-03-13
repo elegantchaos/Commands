@@ -7,12 +7,17 @@ import Commands
 import Icons
 import SwiftUI
 
+/// Button wrapper that presents a confirmation dialog before invoking a command.
 struct ConfirmableCommandButton<C: CommandWithUI, CC: CommandCentre>: View where C.Centre == CC {
+  /// Tracks whether the confirmation alert is currently visible.
   @State var isPresented = false
-  
+
+  /// Command to present and eventually execute.
   let command: C
+
+  /// Command centre that performs the command after confirmation.
   let commander: CC
-  
+
   var body: some View {
     let confirmation = command.confirmation ?? .init(
       title: command.name,
@@ -31,20 +36,20 @@ struct ConfirmableCommandButton<C: CommandWithUI, CC: CommandCentre>: View where
       Text(confirmation.message)
     }
   }
-  
-  func handleShowAlert()
-  {
+
+  /// Presents the confirmation alert with animation.
+  func handleShowAlert() {
     withAnimation {
       isPresented = true
     }
   }
-  
+
+  /// Executes the confirmed command and dismisses the alert afterward.
   func handlePerformCommand() {
     Task {
       do {
         _ = try await commander.perform(command)
       } catch {
-        
       }
 
       withAnimation {

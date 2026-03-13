@@ -6,10 +6,10 @@
 import Commands
 import SwiftUI
 
-/// UI Support
+/// SwiftUI helpers for rendering and invoking commands from a `CommandCentre`.
 @MainActor
 public extension CommandCentre {
-  /// Determine whether the given command should be disabled in the UI.
+  /// Returns whether the given command should be disabled in the current UI state.
   // TODO: track commands whilst they are running, and disable their buttons appropriately
   func shouldDisable<C: CommandWithUI>(_ command: C) -> Bool where C.Centre == Self {
     switch availability(command) {
@@ -18,7 +18,7 @@ public extension CommandCentre {
     }
   }
 
-  /// Return a button for the given command, or nothing if the command is not available.
+  /// Returns a labelled button for the given command, or nothing when it is hidden.
   @ViewBuilder func button<C: CommandWithUI>(_ command: C, role: ButtonRole? = nil) -> some View where C.Centre == Self {
     let availability = availability(command)
     if availability != .hidden {
@@ -33,7 +33,7 @@ public extension CommandCentre {
     }
   }
 
-  /// Return a button for the given command with custom content, or nothing if the command is not available.
+  /// Returns a button for the given command with custom content, or nothing when it is hidden.
   @ViewBuilder func button<C: CommandWithUI, Content: View>(_ command: C, role: ButtonRole? = nil, content: () -> Content) -> some View where C.Centre == Self {
     let availability = availability(command)
     if availability != .hidden {
@@ -48,7 +48,7 @@ public extension CommandCentre {
     }
   }
 
-  /// Return a button for the given command with custom content, or nothing if the command is not available.
+  /// Returns a button that passes the command into the content builder, or nothing when it is hidden.
   @ViewBuilder func button<C: CommandWithUI, Content: View>(_ command: C, role: ButtonRole? = nil, content: (C) -> Content) -> some View where C.Centre == Self {
     let availability = availability(command)
     if availability != .hidden {
@@ -85,7 +85,7 @@ public extension CommandCentre {
     }
   }
 
-  /// Return a button for the given command that shows a confirmation dialog before performing the command, or nothing if the command is not available.
+  /// Returns a button that confirms before executing the command, or nothing when it is hidden.
   @ViewBuilder func confirmableButton<C: CommandWithUI>(_ command: C) -> some View where C.Centre == Self {
     let availability = availability(command)
     if availability != .hidden {
@@ -98,7 +98,7 @@ public extension CommandCentre {
     }
   }
 
-  /// Return a toolbar item for the given command, or nothing if the command is not available.
+  /// Returns a toolbar item for the given command, or nothing when it is hidden.
   @ToolbarContentBuilder func toolbarItem<C: CommandWithUI>(_ command: C, placement: ToolbarItemPlacement = .automatic) -> some ToolbarContent where C.Centre == Self {
     if availability(command) != .hidden {
       ToolbarItem(placement: placement) {
@@ -107,7 +107,7 @@ public extension CommandCentre {
     }
   }
 
-  /// Return a toolbar item for the given command that shows a confirmation dialog before performing the command, or nothing if the command is not available.
+  /// Returns a toolbar item that confirms before executing the command, or nothing when it is hidden.
   @ToolbarContentBuilder func confirmableToolbarItem<C: CommandWithUI>(_ command: C, placement: ToolbarItemPlacement = .automatic) -> some ToolbarContent where C.Centre == Self {
     if availability(command) != .hidden {
       ToolbarItem(placement: placement) {
@@ -116,7 +116,7 @@ public extension CommandCentre {
     }
   }
 
-  /// Return a toolbar item group for the given command, or nothing if the command is not available.
+  /// Returns a toolbar item group for the given command, or nothing when it is hidden.
   @ToolbarContentBuilder func toolbarItemGroup<C: CommandWithUI>(_ command: C, placement: ToolbarItemPlacement = .automatic) -> some ToolbarContent where C.Centre == Self {
     if availability(command) != .hidden {
       ToolbarItemGroup(placement: placement) {

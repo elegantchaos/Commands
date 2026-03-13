@@ -6,5 +6,5 @@
 
 - Command protocols and command centre coordination
 - Availability and confirmation support
-- SwiftUI-facing command wrappers and views
-
+- Trigger-aware command activation for platform-specific interactions
+- SwiftUI-facing command wrappers, buttons, and toolbar helpers

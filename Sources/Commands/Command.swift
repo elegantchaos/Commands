@@ -6,10 +6,14 @@
 import Foundation
 import Logger
 
+/// Shared log channel for command execution diagnostics.
 let commandChannel = Channel("Commands")
 
 
-/// A command that can be performed by a CommandCentre.
+/// Describes an action that a matching command centre can evaluate and perform.
+///
+/// Commands encapsulate availability and execution separately so callers can
+/// decide whether to show, disable, or hide a command before invoking it.
 @MainActor
 public protocol Command<Centre> {
   /// The CommandCentre type that can perform this command.
@@ -28,19 +32,9 @@ public protocol Command<Centre> {
   func perform(centre: Centre) async throws -> ResultType
 }
 
-/// Default implementations for Command protocol.
+/// Default implementations for `Command`.
 @MainActor
 public extension Command {
   /// By default, commands are always enabled.
-  func availability(centre: Centre) -> CommandAvailability { return .enabled }
-  
-//  func perform(centre: Centre) {
-//    Task {
-//      do {
-//        _ = try await perform(centre: centre)
-//      } catch {
-//        commandChannel.log("Error performing command \(id): \(error)")
-//      }
-//    }
-//  }
+  func availability(centre: Centre) -> CommandAvailability { .enabled }
 }

@@ -1,6 +1,11 @@
+import Commands
 import Testing
 @testable import CommandsUI
 
-@Test func example() async throws {
-    // Write your test here and use APIs like `#expect(...)` to check expected conditions.
+/// Ensures the public trigger ordering remains stable for UI resolution logic.
+@Test func testCommandTriggerOrdering() async throws {
+  #expect(CommandTrigger.allCases == [.primary, .secondary, .tertiary])
+  #expect(CommandTrigger.primary.rawValue == "primary")
+  #expect(CommandTrigger.secondary.rawValue == "secondary")
+  #expect(CommandTrigger.tertiary.rawValue == "tertiary")
 }

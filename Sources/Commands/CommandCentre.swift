@@ -6,14 +6,19 @@
 import Foundation
 import SwiftUI
 
+/// Errors thrown by the default command-centre execution helpers.
 public enum CommandError: Error {
+  /// The command reported that it cannot currently be performed.
   case commandUnavaiable
 }
 
-/// A centre that can perform commands.
+/// Coordinates command availability and execution for a concrete application context.
 @MainActor
 public protocol CommandCentre {
+  /// Records that a command has started executing.
   func recordStartedCommand<C: Command>(_ command: C) where C.Centre == Self
+
+  /// Records that a command has finished executing.
   func recordFinishedCommand<C: Command>(_ command: C) where C.Centre == Self
 }
 
@@ -21,44 +26,35 @@ public protocol CommandCentre {
 /// Default implementations of command-related functionality.
 @MainActor
 public extension CommandCentre {
- 
-  /// Return the availability of the given command.
+  /// Returns the current availability of the given command, including running state.
   func availability<C: Command>(_ command: C) -> CommandAvailability where C.Centre == Self {
-    let a = command.availability(centre: self)
+    let availability = command.availability(centre: self)
     if isRunning(command) {
-      return a == .hidden ? .runningSilently : .running
-    } else {
-      return a
+      return availability == .hidden ? .runningSilently : .running
     }
+    return availability
   }
 
-  /// Perform the given command.
+  /// Performs the given command after checking that it is currently enabled.
   func perform<C: Command>(_ command: C) async throws -> C.ResultType where C.Centre == Self {
     commandChannel.debug("performing command «\(command.id)»")
-    
-    // ideally, the UI should prevent any command from being performed
-    // unless it is reporting its availability as `.enabled`.
-    // a race condition might exist where it becomes unavailable
-    // after perform is called, and so we check; this isn't foolproof
-    // of course, since it could still become unavailable later,
-    // and so commands should be prepared to have their perform() method
-    // called when unavailable
+
+    // UI callers should normally gate execution through `availability`, but the
+    // command centre still guards execution because availability can change
+    // between rendering a control and the action firing.
     guard command.availability(centre: self) == .enabled else {
       throw CommandError.commandUnavaiable
     }
 
     recordStartedCommand(command)
-    do {
-      let result = try await command.perform(centre: self)
+    defer {
       recordFinishedCommand(command)
-      return result
-    } catch {
-      recordFinishedCommand(command)
-      throw error
     }
+
+    return try await command.perform(centre: self)
   }
-  
-  /// Perform the given command without waiting for the result.
+
+  /// Starts the given command in a child task and logs any thrown error.
   func performWithoutWaiting<C: Command>(_ command: C) where C.Centre == Self {
     commandChannel.debug("performing command «\(command.id)»")
     Task {
@@ -69,14 +65,17 @@ public extension CommandCentre {
       }
     }
   }
-  
+
+  /// Default hook for centres that do not track active commands.
   func recordStartedCommand<C: Command>(_ command: C) where C.Centre == Self {
   }
-  
+
+  /// Default hook for centres that do not track completed commands.
   func recordFinishedCommand<C: Command>(_ command: C) where C.Centre == Self {
   }
-  
+
+  /// Returns whether the given command is already executing.
   func isRunning<C: Command>(_ command: C) -> Bool where C.Centre == Self {
-    return false
+    false
   }
 }

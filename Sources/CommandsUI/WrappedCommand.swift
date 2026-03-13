@@ -8,33 +8,50 @@ import Icons
 import Foundation
 import SwiftUI
 
-/// Command which wraps another command, and changes some aspect of it.
-/// It has override points for all of the Command protocol methods,
-/// so you can override just the ones you want to change.
+/// Decorates another command while allowing selected UI or execution details to be overridden.
+///
+/// Subclasses can override only the aspects they need to customise while keeping
+/// the wrapped command as the source of truth for everything else.
 open class WrappedCommand<C: CommandWithUI>: CommandWithUI {
+  /// Command centre type accepted by the wrapped command.
   public typealias Centre = C.Centre
 
+  /// Identifier forwarded from the wrapped command.
   open var id: String { command.id }
+
+  /// Icon forwarded from the wrapped command.
   open var icon: Icon { command.icon }
+
+  /// Display name forwarded from the wrapped command.
   open var name: String { command.name }
+
+  /// Keyboard shortcut forwarded from the wrapped command.
   open var shortcut: CommandShortcut? { command.shortcut }
+
+  /// Help text forwarded from the wrapped command.
   open var help: String? { command.help }
+
+  /// Confirmation model forwarded from the wrapped command.
   open var confirmation: CommandConfirmation? { command.confirmation }
+
+  /// Resource bundle forwarded from the wrapped command.
   open var bundle: Bundle { command.bundle }
 
+  /// Wrapped command that remains the source of truth by default.
   let command: C
 
+  /// Creates a wrapper around the supplied command.
   public init(_ command: C) {
     self.command = command
   }
 
+  /// Returns the wrapped command's availability unless overridden.
   open func availability(centre: C.Centre) -> CommandAvailability {
-    return command.availability(centre: centre)
+    command.availability(centre: centre)
   }
 
+  /// Executes the wrapped command unless overridden.
   open func perform(centre: C.Centre) async throws -> C.ResultType {
-    return try await command.perform(centre: centre)
+    try await command.perform(centre: centre)
   }
-
-
 }
