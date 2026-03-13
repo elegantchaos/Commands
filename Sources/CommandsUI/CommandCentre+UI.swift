@@ -63,6 +63,28 @@ public extension CommandCentre {
     }
   }
 
+  /// Return a button that resolves a concrete command from an activation trigger.
+  @ViewBuilder func dynamicButton<C: CommandWithUI, Content: View>(
+    role: ButtonRole? = nil,
+    command: @escaping @MainActor (CommandTrigger) -> C,
+    content: @escaping () -> Content
+  ) -> some View where C.Centre == Self {
+    if availability(DynamicCommand(trigger: .primary, wrappedCommand: command)) != .hidden {
+      DynamicCommandButton(commander: self, role: role, command: command, content: content)
+    }
+  }
+
+  /// Return a labelled button that resolves a concrete command from an activation trigger.
+  @ViewBuilder func dynamicButton<C: CommandWithUI>(
+    role: ButtonRole? = nil,
+    command: @escaping @MainActor (CommandTrigger) -> C
+  ) -> some View where C.Centre == Self {
+    let primaryCommand = command(.primary)
+    dynamicButton(role: role, command: command) {
+      Label(primaryCommand.name, icon: primaryCommand.icon)
+    }
+  }
+
   /// Return a button for the given command that shows a confirmation dialog before performing the command, or nothing if the command is not available.
   @ViewBuilder func confirmableButton<C: CommandWithUI>(_ command: C) -> some View where C.Centre == Self {
     let availability = availability(command)
