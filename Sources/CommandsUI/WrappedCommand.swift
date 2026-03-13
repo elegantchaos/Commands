@@ -12,6 +12,7 @@ import SwiftUI
 ///
 /// Subclasses can override only the aspects they need to customise while keeping
 /// the wrapped command as the source of truth for everything else.
+@MainActor
 open class WrappedCommand<C: CommandWithUI>: CommandWithUI {
   /// Command centre type accepted by the wrapped command.
   public typealias Centre = C.Centre

@@ -8,6 +8,7 @@ import Icons
 import SwiftUI
 
 /// Button wrapper that presents a confirmation dialog before invoking a command.
+@MainActor
 struct ConfirmableCommandButton<C: CommandWithUI, CC: CommandCentre>: View where C.Centre == CC {
   /// Tracks whether the confirmation alert is currently visible.
   @State var isPresented = false
@@ -36,7 +37,6 @@ struct ConfirmableCommandButton<C: CommandWithUI, CC: CommandCentre>: View where
       Text(confirmation.message)
     }
   }
-
   /// Presents the confirmation alert with animation.
   func handleShowAlert() {
     withAnimation {

@@ -64,14 +64,3 @@ let package = Package(
 
   ]
 )
-
-for target in package.targets {
-  var settings = target.swiftSettings ?? []
-  settings.append(contentsOf: [
-    .defaultIsolation(MainActor.self),
-    .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
-    .enableUpcomingFeature("InferIsolatedConformances"),
-    .enableExperimentalFeature("SendableProhibitsMainActorInference"),
-  ])
-  target.swiftSettings = settings
-}
