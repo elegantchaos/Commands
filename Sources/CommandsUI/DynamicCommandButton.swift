@@ -43,20 +43,19 @@ struct DynamicCommandButton<Centre: CommandCentre, Wrapped: CommandWithUI, Conte
   }
 
   /// Concrete command used for default UI state such as disabled, help, and shortcut.
-  private var primaryCommand: DynamicCommand<Wrapped> {
-    .init(trigger: .primary, wrappedCommand: command)
+  private var primaryCommand: Wrapped {
+    command(.primary)
   }
 
-  /// Performs a dynamic command for the supplied trigger.
-  private func performDynamicCommand(_ trigger: CommandTrigger) {
-    let dynamicCommand = DynamicCommand<Wrapped>(trigger: trigger, wrappedCommand: command)
-    commander.performWithoutWaiting(dynamicCommand)
+  /// Performs the wrapped command for the supplied trigger.
+  private func performWrappedCommand(_ trigger: CommandTrigger) {
+    commander.performWithoutWaiting(command(trigger))
   }
 
   @ViewBuilder
   private var baseButton: some View {
     #if os(macOS)
-      Button(role: role, action: { performDynamicCommand(currentTrigger) }) {
+      Button(role: role, action: { performWrappedCommand(currentTrigger) }) {
         content()
       }
     #elseif os(iOS)
@@ -66,11 +65,11 @@ struct DynamicCommandButton<Centre: CommandCentre, Wrapped: CommandWithUI, Conte
       .simultaneousGesture(
         LongPressGesture().onEnded { _ in
           suppressPrimaryAction = true
-          performDynamicCommand(.secondary)
+          performWrappedCommand(.secondary)
         }
       )
     #else
-      Button(role: role, action: { performDynamicCommand(.primary) }) {
+      Button(role: role, action: { performWrappedCommand(.primary) }) {
         content()
       }
     #endif
@@ -107,7 +106,7 @@ struct DynamicCommandButton<Centre: CommandCentre, Wrapped: CommandWithUI, Conte
       if suppressPrimaryAction {
         suppressPrimaryAction = false
       } else {
-        performDynamicCommand(.primary)
+        performWrappedCommand(.primary)
       }
     }
   #endif

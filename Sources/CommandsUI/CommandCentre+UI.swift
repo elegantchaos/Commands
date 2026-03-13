@@ -69,7 +69,7 @@ public extension CommandCentre {
     command: @escaping @MainActor (CommandTrigger) -> C,
     content: @escaping () -> Content
   ) -> some View where C.Centre == Self {
-    if availability(DynamicCommand(trigger: .primary, wrappedCommand: command)) != .hidden {
+    if availability(command(.primary)) != .hidden {
       DynamicCommandButton(commander: self, role: role, command: command, content: content)
     }
   }
