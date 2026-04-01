@@ -7,7 +7,7 @@ import Foundation
 
 
 /// Indicates whether a command is enabled, disabled, or hidden.
-public enum CommandAvailability {
+public enum CommandAvailability: Sendable {
   /// The command can be used.
   case enabled
   

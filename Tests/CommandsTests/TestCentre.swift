@@ -117,103 +117,106 @@ private func waitUntil(
   }
 }
 
-/// Verifies that a command returns its result and records lifecycle hooks.
-@Test func testSimpleCommand() async throws {
-  let centre = TestCentre()
-  let command = TestCommand()
-  #expect(centre.availability(command) == .enabled)
-  #expect(centre.testRan == false)
-  #expect(centre.startedCommandIDs.isEmpty)
-  #expect(centre.finishedCommandIDs.isEmpty)
+@MainActor
+struct TestCentreTests {
+  /// Verifies that a command returns its result and records lifecycle hooks.
+  @Test func testSimpleCommand() async throws {
+    let centre = TestCentre()
+    let command = TestCommand()
+    #expect(centre.availability(command) == .enabled)
+    #expect(centre.testRan == false)
+    #expect(centre.startedCommandIDs.isEmpty)
+    #expect(centre.finishedCommandIDs.isEmpty)
 
-  let result = try await centre.perform(command)
+    let result = try await centre.perform(command)
 
-  #expect(result == "performed")
-  #expect(centre.testRan == true)
-  #expect(centre.startedCommandIDs == [command.id])
-  #expect(centre.finishedCommandIDs == [command.id])
-}
-
-/// Verifies that unavailable commands throw before lifecycle hooks fire.
-@Test func testHiddenCommand() async throws {
-  let centre = TestCentre()
-  let command = TestCommand(reportingAvailabilityAs: .hidden)
-
-  #expect(centre.availability(command) == .hidden)
-
-  await #expect(throws: CommandError.commandUnavaiable) {
-    try await centre.perform(command)
+    #expect(result == "performed")
+    #expect(centre.testRan == true)
+    #expect(centre.startedCommandIDs == [command.id])
+    #expect(centre.finishedCommandIDs == [command.id])
   }
 
-  #expect(centre.testRan == false)
-  #expect(centre.startedCommandIDs.isEmpty)
-  #expect(centre.finishedCommandIDs.isEmpty)
-}
+  /// Verifies that unavailable commands throw before lifecycle hooks fire.
+  @Test func testHiddenCommand() async throws {
+    let centre = TestCentre()
+    let command = TestCommand(reportingAvailabilityAs: .hidden)
 
-/// Verifies that thrown command errors still trigger `recordFinishedCommand`.
-@Test func testFailingCommandRecordsFinish() async throws {
-  let centre = TestCentre()
-  let command = FailingCommand()
+    #expect(centre.availability(command) == .hidden)
 
-  await #expect(throws: TestFailure.expected) {
-    try await centre.perform(command)
+    await #expect(throws: CommandError.commandUnavaiable) {
+      try await centre.perform(command)
+    }
+
+    #expect(centre.testRan == false)
+    #expect(centre.startedCommandIDs.isEmpty)
+    #expect(centre.finishedCommandIDs.isEmpty)
   }
 
-  #expect(centre.testRan == true)
-  #expect(centre.startedCommandIDs == [command.id])
-  #expect(centre.finishedCommandIDs == [command.id])
-}
+  /// Verifies that thrown command errors still trigger `recordFinishedCommand`.
+  @Test func testFailingCommandRecordsFinish() async throws {
+    let centre = TestCentre()
+    let command = FailingCommand()
 
-/// Verifies that the default command availability is `.enabled`.
-@Test func testDefaultAvailabilityImplementation() async throws {
-  let centre = TestCentre()
-  let command = DefaultAvailabilityCommand()
+    await #expect(throws: TestFailure.expected) {
+      try await centre.perform(command)
+    }
 
-  #expect(command.availability(centre: centre) == .enabled)
-  #expect(centre.availability(command) == .enabled)
-}
-
-/// Verifies that non-hidden running commands are surfaced as `.running`.
-@Test(arguments: [CommandAvailability.enabled, .disabled, .running, .runningSilently])
-func testAvailabilityMapsRunningStates(_ baseAvailability: CommandAvailability) async throws {
-  let centre = TestCentre()
-  let command = TestCommand(id: "test.running.\(baseAvailability)", reportingAvailabilityAs: baseAvailability)
-  centre.runningCommandIDs.insert(command.id)
-
-  #expect(centre.availability(command) == .running)
-}
-
-/// Verifies that hidden running commands are surfaced as `.runningSilently`.
-@Test func testAvailabilityMapsHiddenRunningState() async throws {
-  let centre = TestCentre()
-  let command = TestCommand(id: "test.hidden-running", reportingAvailabilityAs: .hidden)
-  centre.runningCommandIDs.insert(command.id)
-
-  #expect(centre.availability(command) == .runningSilently)
-}
-
-/// Verifies that fire-and-forget execution still runs the command and lifecycle hooks.
-@Test func testPerformWithoutWaitingRunsCommand() async throws {
-  let centre = TestCentre()
-  let command = TestCommand(id: "test.background")
-
-  centre.performWithoutWaiting(command)
-  await waitUntil {
-    centre.finishedCommandIDs.contains(command.id)
+    #expect(centre.testRan == true)
+    #expect(centre.startedCommandIDs == [command.id])
+    #expect(centre.finishedCommandIDs == [command.id])
   }
 
-  #expect(centre.testRan == true)
-  #expect(centre.startedCommandIDs == [command.id])
-  #expect(centre.finishedCommandIDs == [command.id])
-}
+  /// Verifies that the default command availability is `.enabled`.
+  @Test func testDefaultAvailabilityImplementation() async throws {
+    let centre = TestCentre()
+    let command = DefaultAvailabilityCommand()
 
-/// Verifies that a protocol-constrained command can execute against a conforming centre.
-@Test func testProtocolCommand() async throws {
-  let centre = TestCentre()
+    #expect(command.availability(centre: centre) == .enabled)
+    #expect(centre.availability(command) == .enabled)
+  }
 
-  #expect(centre.didTheThing == false)
-  try await centre.perform(ProtocolCommand())
-  #expect(centre.didTheThing == true)
+  /// Verifies that non-hidden running commands are surfaced as `.running`.
+  @Test(arguments: [CommandAvailability.enabled, .disabled, .running, .runningSilently])
+  func testAvailabilityMapsRunningStates(_ baseAvailability: CommandAvailability) async throws {
+    let centre = TestCentre()
+    let command = TestCommand(id: "test.running.\(baseAvailability)", reportingAvailabilityAs: baseAvailability)
+    centre.runningCommandIDs.insert(command.id)
+
+    #expect(centre.availability(command) == .running)
+  }
+
+  /// Verifies that hidden running commands are surfaced as `.runningSilently`.
+  @Test func testAvailabilityMapsHiddenRunningState() async throws {
+    let centre = TestCentre()
+    let command = TestCommand(id: "test.hidden-running", reportingAvailabilityAs: .hidden)
+    centre.runningCommandIDs.insert(command.id)
+
+    #expect(centre.availability(command) == .runningSilently)
+  }
+
+  /// Verifies that fire-and-forget execution still runs the command and lifecycle hooks.
+  @Test func testPerformWithoutWaitingRunsCommand() async throws {
+    let centre = TestCentre()
+    let command = TestCommand(id: "test.background")
+
+    centre.performWithoutWaiting(command)
+    await waitUntil {
+      centre.finishedCommandIDs.contains(command.id)
+    }
+
+    #expect(centre.testRan == true)
+    #expect(centre.startedCommandIDs == [command.id])
+    #expect(centre.finishedCommandIDs == [command.id])
+  }
+
+  /// Verifies that a protocol-constrained command can execute against a conforming centre.
+  @Test func testProtocolCommand() async throws {
+    let centre = TestCentre()
+
+    #expect(centre.didTheThing == false)
+    try await centre.perform(ProtocolCommand())
+    #expect(centre.didTheThing == true)
+  }
 }
 
 /// Conforms the test centre to the support protocol used by `ProtocolCommand`.
