@@ -13,7 +13,7 @@ import SwiftUI
     }
   }
 
-  public struct CommandModifiers: OptionSet {
+  public struct CommandModifiers: OptionSet, Sendable {
     public let rawValue: Int
 
     public init(rawValue: Int) {
