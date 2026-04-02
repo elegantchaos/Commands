@@ -34,23 +34,23 @@ struct ImporterCommandButton<C: ImporterCommand, CC: CommandCentre>: View where 
         Label(command.name, icon: command.icon)
       }
       .disabled(centre.shouldDisable(command))
+      .help(command.help ?? "")
       #if !os(watchOS) && !os(tvOS)
         .keyboardShortcut(command.shortcut)
-      #endif
-      .help(command.help ?? "")
-      .fileImporter(
-        isPresented: $isShowingSheet,
-        allowedContentTypes: command.types,
-        allowsMultipleSelection: command.allowsMultipleSelection
-      ) { result in
-        switch result {
-        case .success(let urls):
-          command.state = .chosen(urls)
-        case .failure(let error):
-          command.state = .error(error)
+        .fileImporter(
+          isPresented: $isShowingSheet,
+          allowedContentTypes: command.types,
+          allowsMultipleSelection: command.allowsMultipleSelection
+        ) { result in
+          switch result {
+          case .success(let urls):
+            command.state = .chosen(urls)
+          case .failure(let error):
+            command.state = .error(error)
+          }
+          centre.performWithoutWaiting(command)
         }
-        centre.performWithoutWaiting(command)
-      }
+      #endif
     }
   }
 }
