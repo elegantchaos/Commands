@@ -37,20 +37,9 @@ struct ImporterCommandButton<C: ImporterCommand, CC: CommandCentre>: View where 
       .help(command.help ?? "")
       #if !os(watchOS) && !os(tvOS)
         .keyboardShortcut(command.shortcut)
-        .fileImporter(
-          isPresented: $isShowingSheet,
-          allowedContentTypes: command.types,
-          allowsMultipleSelection: command.allowsMultipleSelection
-        ) { result in
-          switch result {
-          case .success(let urls):
-            command.state = .chosen(urls)
-          case .failure(let error):
-            command.state = .error(error)
-          }
-          centre.performWithoutWaiting(command)
-        }
+        .modifier(ImporterCommandModifier(isShowing: $isShowingSheet, command: command, centre: centre))
       #endif
     }
   }
 }
+
