@@ -11,17 +11,19 @@ import SwiftUI
 /// you need to place an ImporterCommand inside a contextual menu.
 public struct ImporterCommandShowButton<C: ImporterCommand, CC: CommandCentre>: View where C.Centre == CC {
   let command: C
+  let centre: CC
   
   @Binding var isShowingImportSheet: Bool
   
-  public init(command: C, isShowingImportSheet: Binding<Bool>) {
+  public init(command: C, centre: CC, isShowingImportSheet: Binding<Bool>) {
     self.command = command
+    self.centre = centre
     self._isShowingImportSheet = isShowingImportSheet
   }
   
   public var body: some View {
     Button(action: { isShowingImportSheet = !isShowingImportSheet }) {
-      Label(command.name, icon: command.icon)
+      Label(command.name(centre: centre), icon: command.icon(centre: centre))
     }
     
   }

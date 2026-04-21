@@ -39,7 +39,7 @@ struct DynamicCommandButton<Centre: CommandCentre, Wrapped: CommandWithUI, Conte
       #if !os(watchOS) && !os(tvOS)
         .keyboardShortcut(primaryCommand.shortcut)
       #endif
-      .help(primaryCommand.help ?? "")
+      .help(primaryCommand.help(centre: commander) ?? "")
   }
 
   /// Concrete command used for default UI state such as disabled, help, and shortcut.

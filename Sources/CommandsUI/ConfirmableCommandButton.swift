@@ -20,15 +20,15 @@ struct ConfirmableCommandButton<C: CommandWithUI, CC: CommandCentre>: View where
   let commander: CC
 
   var body: some View {
-    let confirmation = command.confirmation ?? .init(
-      title: command.name,
+    let confirmation = command.confirmation(centre: commander) ?? .init(
+      title: command.name(centre: commander),
       cancel: String(localized: "confirmation.default.cancel"),
       message: String(localized: "confirmation.default.message"),
       confirm: String(localized: "confirmation.default.confirm")
     )
     
     Button(action: handleShowAlert) {
-      Label(command.name, icon: command.icon)
+      Label(command.name(centre: commander), icon: command.icon(centre: commander))
     }
     .alert(confirmation.title, isPresented: $isPresented) {
       Button(confirmation.cancel, role: .cancel) {}

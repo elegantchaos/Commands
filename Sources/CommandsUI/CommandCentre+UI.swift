@@ -26,13 +26,13 @@ extension CommandCentre {
     let availability = availability(command)
     if availability != .hidden {
       Button(role: role, action: { performWithoutWaiting(command) }) {
-        Label(command.name, icon: command.icon)
+        Label(command.name(centre: self), icon: command.icon(centre: self))
       }
       .disabled(shouldDisable(command))
       #if !os(watchOS) && !os(tvOS)
         .keyboardShortcut(command.shortcut)
       #endif
-      .help(command.help ?? "")
+      .help(command.help(centre: self) ?? "")
     }
   }
 
@@ -49,7 +49,7 @@ extension CommandCentre {
       #if !os(watchOS) && !os(tvOS)
         .keyboardShortcut(command.shortcut)
       #endif
-      .help(command.help ?? "")
+      .help(command.help(centre: self) ?? "")
     }
   }
 
@@ -66,7 +66,7 @@ extension CommandCentre {
       #if !os(watchOS) && !os(tvOS)
         .keyboardShortcut(command.shortcut)
       #endif
-      .help(command.help ?? "")
+      .help(command.help(centre: self) ?? "")
     }
   }
 
@@ -88,7 +88,7 @@ extension CommandCentre {
   ) -> some View where C.Centre == Self {
     let primaryCommand = command(.primary)
     dynamicButton(role: role, command: command) {
-      Label(primaryCommand.name, icon: primaryCommand.icon)
+      Label(primaryCommand.name(centre: self), icon: primaryCommand.icon(centre: self))
     }
   }
 
@@ -102,7 +102,7 @@ extension CommandCentre {
         #if !os(watchOS) && !os(tvOS)
           .keyboardShortcut(command.shortcut)
         #endif
-        .help(command.help ?? "")
+        .help(command.help(centre: self) ?? "")
     }
   }
 
@@ -154,6 +154,14 @@ extension CommandCentre {
     -> some View where C: ImporterCommand, C.Centre == Self
   {
     ImporterCommandButton(command: command, centre: self, role: role)
+  }
+
+  /// Returns a button that shows an importer sheet when activated.
+  @ViewBuilder public func importerButton<C: ImporterCommand>(
+    _ command: C,
+    isShowingImportSheet: Binding<Bool>
+  ) -> some View where C.Centre == Self {
+    ImporterCommandShowButton(command: command, centre: self, isShowingImportSheet: isShowingImportSheet)
   }
 
 }

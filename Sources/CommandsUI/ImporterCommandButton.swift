@@ -31,10 +31,10 @@ struct ImporterCommandButton<C: ImporterCommand, CC: CommandCentre>: View where 
     let availability = centre.availability(command)
     if availability != .hidden {
       Button(role: role, action: { isShowingSheet = true }) {
-        Label(command.name, icon: command.icon)
+        Label(command.name(centre: centre), icon: command.icon(centre: centre))
       }
       .disabled(centre.shouldDisable(command))
-      .help(command.help ?? "")
+      .help(command.help(centre: centre) ?? "")
       #if !os(watchOS) && !os(tvOS)
         .keyboardShortcut(command.shortcut)
         .modifier(ImporterCommandModifier(isShowing: $isShowingSheet, command: command, centre: centre))
@@ -42,4 +42,3 @@ struct ImporterCommandButton<C: ImporterCommand, CC: CommandCentre>: View where 
     }
   }
 }
-

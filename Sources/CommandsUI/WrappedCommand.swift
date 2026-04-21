@@ -21,19 +21,19 @@ open class WrappedCommand<C: CommandWithUI>: CommandWithUI {
   open var id: String { command.id }
 
   /// Icon forwarded from the wrapped command.
-  open var icon: Icon { command.icon }
+  open func icon(centre: C.Centre) -> Icon { command.icon(centre: centre) }
 
   /// Display name forwarded from the wrapped command.
-  open var name: String { command.name }
+  open func name(centre: C.Centre) -> String { command.name(centre: centre) }
 
   /// Keyboard shortcut forwarded from the wrapped command.
   open var shortcut: CommandShortcut? { command.shortcut }
 
   /// Help text forwarded from the wrapped command.
-  open var help: String? { command.help }
+  open func help(centre: C.Centre) -> String? { command.help(centre: centre) }
 
   /// Confirmation model forwarded from the wrapped command.
-  open var confirmation: CommandConfirmation? { command.confirmation }
+  open func confirmation(centre: C.Centre) -> CommandConfirmation? { command.confirmation(centre: centre) }
 
   /// Resource bundle forwarded from the wrapped command.
   open var bundle: Bundle { command.bundle }
