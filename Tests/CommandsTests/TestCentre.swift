@@ -137,11 +137,12 @@ struct TestCentreTests {
   }
 
   /// Verifies that unavailable commands throw before lifecycle hooks fire.
-  @Test func testHiddenCommand() async throws {
+  @Test(arguments: [CommandAvailability.disabled, .hidden])
+  func testUnavailableCommandsThrowBeforeLifecycleHooks(_ availability: CommandAvailability) async throws {
     let centre = TestCentre()
-    let command = TestCommand(reportingAvailabilityAs: .hidden)
+    let command = TestCommand(reportingAvailabilityAs: availability)
 
-    #expect(centre.availability(command) == .hidden)
+    #expect(centre.availability(command) == availability)
 
     await #expect(throws: CommandError.commandUnavailable) {
       try await centre.perform(command)
