@@ -19,6 +19,7 @@ struct ConfirmableCommandButton<C: CommandWithUI, CC: CommandCentre>: View where
   /// Command centre that performs the command after confirmation.
   let commander: CC
 
+  /// Renders the labelled button and its attached confirmation alert.
   var body: some View {
     let confirmation = command.confirmation(centre: commander) ?? .init(
       title: command.name(centre: commander),
@@ -37,6 +38,7 @@ struct ConfirmableCommandButton<C: CommandWithUI, CC: CommandCentre>: View where
       Text(confirmation.message)
     }
   }
+
   /// Presents the confirmation alert with animation.
   func handleShowAlert() {
     withAnimation {

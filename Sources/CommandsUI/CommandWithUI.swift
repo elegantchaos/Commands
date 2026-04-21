@@ -8,14 +8,19 @@ import Icons
 import SwiftUI
 
 #if os(watchOS) || os(tvOS)
+  /// Lightweight keyboard shortcut placeholder for platforms that do not surface real shortcuts.
   public struct CommandShortcut {
+    /// Creates a no-op shortcut placeholder.
     public init(_ key: CommandKey, modifiers: CommandModifiers = []) {
     }
   }
 
+  /// Cross-platform shortcut modifier representation for watchOS and tvOS builds.
   public struct CommandModifiers: OptionSet, Sendable {
+    /// Raw option-set storage.
     public let rawValue: Int
 
+    /// Creates an option set from its raw value.
     public init(rawValue: Int) {
       self.rawValue = rawValue
     }

@@ -143,7 +143,7 @@ struct TestCentreTests {
 
     #expect(centre.availability(command) == .hidden)
 
-    await #expect(throws: CommandError.commandUnavaiable) {
+    await #expect(throws: CommandError.commandUnavailable) {
       try await centre.perform(command)
     }
 

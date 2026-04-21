@@ -20,16 +20,23 @@ import SwiftUI
 /// the context menu, and use this modifier to attach the sheet to the view
 /// that owns the context menu.
 public struct ImporterCommandModifier<C: ImporterCommand, CC: CommandCentre>: ViewModifier where C.Centre == CC {
+  /// Controls presentation of the file importer.
   @Binding var isShowing: Bool
+
+  /// Mutable command state updated from the importer result.
   @State var command: C
+
+  /// Command centre used to execute the importer-backed command.
   let centre: CC
   
+  /// Creates a modifier that binds importer presentation to a command instance.
   public init(isShowing: Binding<Bool>, command: C, centre: CC) {
     self._isShowing = isShowing
     self._command = .init(initialValue: command)
     self.centre = centre
   }
   
+  /// Applies the importer sheet and forwards its result into the command.
   public func body(content: Content) -> some View {
     content
       .fileImporter(
