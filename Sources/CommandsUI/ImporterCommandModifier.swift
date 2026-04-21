@@ -23,16 +23,16 @@ public struct ImporterCommandModifier<C: ImporterCommand, CC: CommandCentre>: Vi
   /// Controls presentation of the file importer.
   @Binding var isShowing: Bool
 
-  /// Mutable command state updated from the importer result.
-  @State var command: C
+  /// Shared mutable command state updated from the importer result.
+  @Binding var command: C
 
   /// Command centre used to execute the importer-backed command.
   let centre: CC
   
   /// Creates a modifier that binds importer presentation to a command instance.
-  public init(isShowing: Binding<Bool>, command: C, centre: CC) {
+  public init(isShowing: Binding<Bool>, command: Binding<C>, centre: CC) {
     self._isShowing = isShowing
-    self._command = .init(initialValue: command)
+    self._command = command
     self.centre = centre
   }
   

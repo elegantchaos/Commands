@@ -28,8 +28,12 @@ public struct ImporterCommandShowButton<C: ImporterCommand, CC: CommandCentre>: 
   
   /// Renders the button that triggers importer-sheet presentation.
   public var body: some View {
-    Button(action: { isShowingImportSheet = !isShowingImportSheet }) {
-      Label(command.name(centre: centre), icon: command.icon(centre: centre))
+    let availability = centre.availability(command)
+    if availability != .hidden {
+      Button(action: { isShowingImportSheet = true }) {
+        Label(command.name(centre: centre), icon: command.icon(centre: centre))
+      }
+      .disabled(centre.shouldDisable(command))
     }
   }
 }
