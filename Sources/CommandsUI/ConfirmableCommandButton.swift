@@ -8,6 +8,7 @@ import Icons
 import SwiftUI
 
 /// Button wrapper that presents a confirmation dialog before invoking a command.
+@MainActor
 struct ConfirmableCommandButton<C: CommandWithUI, CC: CommandCentre>: View where C.Centre == CC {
   /// Tracks whether the confirmation alert is currently visible.
   @State var isPresented = false
@@ -18,16 +19,17 @@ struct ConfirmableCommandButton<C: CommandWithUI, CC: CommandCentre>: View where
   /// Command centre that performs the command after confirmation.
   let commander: CC
 
+  /// Renders the labelled button and its attached confirmation alert.
   var body: some View {
-    let confirmation = command.confirmation ?? .init(
-      title: command.name,
+    let confirmation = command.confirmation(centre: commander) ?? .init(
+      title: command.name(centre: commander),
       cancel: String(localized: "confirmation.default.cancel"),
       message: String(localized: "confirmation.default.message"),
       confirm: String(localized: "confirmation.default.confirm")
     )
     
     Button(action: handleShowAlert) {
-      Label(command.name, icon: command.icon)
+      Label(command.name(centre: commander), icon: command.icon(centre: commander))
     }
     .alert(confirmation.title, isPresented: $isPresented) {
       Button(confirmation.cancel, role: .cancel) {}
@@ -50,6 +52,7 @@ struct ConfirmableCommandButton<C: CommandWithUI, CC: CommandCentre>: View where
       do {
         _ = try await commander.perform(command)
       } catch {
+        commandChannel.log("Error performing confirmed command \(command.id): \(error)")
       }
 
       withAnimation {

@@ -7,7 +7,7 @@ import Foundation
 import Logger
 
 /// Shared log channel for command execution diagnostics.
-let commandChannel = Channel("Commands")
+public let commandChannel = Channel("Commands")
 
 
 /// Describes an action that a matching command centre can evaluate and perform.

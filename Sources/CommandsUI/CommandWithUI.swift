@@ -8,14 +8,19 @@ import Icons
 import SwiftUI
 
 #if os(watchOS) || os(tvOS)
+  /// Lightweight keyboard shortcut placeholder for platforms that do not surface real shortcuts.
   public struct CommandShortcut {
+    /// Creates a no-op shortcut placeholder.
     public init(_ key: CommandKey, modifiers: CommandModifiers = []) {
     }
   }
 
-  public struct CommandModifiers: OptionSet {
+  /// Cross-platform shortcut modifier representation for watchOS and tvOS builds.
+  public struct CommandModifiers: OptionSet, Sendable {
+    /// Raw option-set storage.
     public let rawValue: Int
 
+    /// Creates an option set from its raw value.
     public init(rawValue: Int) {
       self.rawValue = rawValue
     }
@@ -40,17 +45,17 @@ import SwiftUI
 @MainActor
 public protocol CommandWithUI: Command {
   /// The user-visible name of the command.
-  var name: String { get }
+  func name(centre: Centre) -> String
 
   /// The icon for the command.
-  var icon: Icon { get }
+  func icon(centre: Centre) -> Icon
 
   /// An optional help string for the command.
   /// Can be shown in a tooltip or help menu.
-  var help: String? { get }
+  func help(centre: Centre) -> String?
 
   /// An optional confirmation dialog to show before performing the command.
-  var confirmation: CommandConfirmation? { get }
+  func confirmation(centre: Centre) -> CommandConfirmation?
 
   /// The bundle to use for localization and other resources.
   var bundle: Bundle { get }
@@ -63,13 +68,13 @@ public protocol CommandWithUI: Command {
 public extension CommandWithUI {
 
   /// By default, the name is a localized String using the command ID as the key.
-  var name: String { String(localized: String.LocalizationValue(id), bundle: bundle) }
+  func name(centre: Centre) -> String { String(localized: String.LocalizationValue(id), bundle: bundle) }
 
   /// By default, no confirmation is required.
-  var confirmation: CommandConfirmation? { nil }
+  func confirmation(centre: Centre) -> CommandConfirmation? { nil }
 
   /// By default, the help string is looked up using the command ID.
-  var help: String? { String(localized: String.LocalizationValue(id + ".help"), bundle: bundle) }
+  func help(centre: Centre) -> String? { String(localized: String.LocalizationValue(id + ".help"), bundle: bundle) }
 
   /// By default, use the main bundle for localization and resources.
   var bundle: Bundle { .main }

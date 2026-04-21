@@ -9,7 +9,7 @@ import SwiftUI
 /// Errors thrown by the default command-centre execution helpers.
 public enum CommandError: Error {
   /// The command reported that it cannot currently be performed.
-  case commandUnavaiable
+  case commandUnavailable
 }
 
 /// Coordinates command availability and execution for a concrete application context.
@@ -46,7 +46,7 @@ public extension CommandCentre {
     // command centre still guards execution because availability can change
     // between rendering a control and the action firing.
     guard command.availability(centre: self) == .enabled else {
-      throw CommandError.commandUnavaiable
+      throw CommandError.commandUnavailable
     }
 
     recordStartedCommand(command)
@@ -58,9 +58,10 @@ public extension CommandCentre {
   }
 
   /// Starts the given command in a child task and logs any thrown error.
-  func performWithoutWaiting<C: Command>(_ command: C) where C.Centre == Self {
+  @discardableResult
+  func performWithoutWaiting<C: Command>(_ command: C) -> Task<Void, Never> where C.Centre == Self {
     commandChannel.debug("performing command «\(command.id)»")
-    Task {
+    return Task {
       do {
         _ = try await perform(command)
       } catch {
