@@ -24,3 +24,234 @@
 - Availability and confirmation support
 - Trigger-aware command activation for platform-specific interactions
 - SwiftUI-facing command wrappers, buttons, and toolbar helpers
+
+## Usage
+
+### Define a command against a narrow centre protocol
+
+Keep commands decoupled from a concrete app type by depending on the smallest command-centre protocol that provides what they need.
+
+```swift
+import Commands
+
+@MainActor
+protocol SessionCommands: CommandCentre {
+  func signOut()
+}
+
+@MainActor
+struct SignOutCommand<C: SessionCommands>: Command {
+  let id = "session.sign-out"
+
+  func perform(centre: C) async throws {
+    centre.signOut()
+  }
+}
+```
+
+This keeps the command easy to test and lets multiple centres adopt the same command surface.
+
+### Gate execution with availability
+
+Commands can separate visibility and execution rules from the UI that renders them.
+
+```swift
+import Commands
+
+@MainActor
+protocol DocumentCommands: CommandCentre {
+  var hasSelection: Bool { get }
+  func deleteSelection()
+}
+
+@MainActor
+struct DeleteSelectionCommand<C: DocumentCommands>: Command {
+  let id = "document.delete-selection"
+
+  func availability(centre: C) -> CommandAvailability {
+    centre.hasSelection ? .enabled : .disabled
+  }
+
+  func perform(centre: C) async throws {
+    centre.deleteSelection()
+  }
+}
+```
+
+`CommandCentre.perform(_:)` still rechecks availability before execution, so UI and programmatic callers share the same safety guard.
+
+### Add UI metadata with `CommandWithUI`
+
+Use `CommandWithUI` when the same command needs a user-facing name, icon, help text, or confirmation.
+
+```swift
+import CommandsUI
+import Icons
+
+@MainActor
+protocol RepoCommands: CommandCentre {
+  var currentRepoName: String? { get }
+  func openSettings()
+}
+
+@MainActor
+struct ConfigureRepoCommand<C: RepoCommands>: CommandWithUI {
+  let id = "repo.configure"
+
+  func icon(centre: C) -> Icon {
+    .actions
+  }
+
+  func name(centre: C) -> String {
+    if let repoName = centre.currentRepoName {
+      "Configure \(repoName)"
+    } else {
+      "Configure Repo"
+    }
+  }
+
+  func help(centre: C) -> String? {
+    "Edit repository settings"
+  }
+
+  func perform(centre: C) async throws {
+    centre.openSettings()
+  }
+}
+```
+
+The UI metadata methods receive the centre, so labels and icons can reflect live application state without duplicating lookup logic in the view.
+
+### Render commands in SwiftUI
+
+`CommandsUI` provides button and toolbar helpers directly on the command centre.
+
+```swift
+import CommandsUI
+import SwiftUI
+
+struct RepoToolbar<C: RepoCommands>: View {
+  let commander: C
+
+  var body: some View {
+    VStack {
+      commander.button(ConfigureRepoCommand<C>())
+    }
+    .toolbar {
+      commander.toolbarItem(ConfigureRepoCommand<C>())
+    }
+  }
+}
+```
+
+These helpers automatically respect command availability, shortcuts, help text, and confirmation behavior.
+
+### Resolve trigger-specific variants with `dynamicButton`
+
+Use `dynamicButton` when the concrete command depends on the activation trigger, such as click, command-click, or long-press.
+
+```swift
+import CommandsUI
+import SwiftUI
+
+enum RepoNavigationMode {
+  case edit
+  case showWeb
+  case showActions
+}
+
+@MainActor
+struct NavigateRepoCommand<C: CommandCentre>: CommandWithUI {
+  let id = "repo.navigate"
+  let mode: RepoNavigationMode
+
+  func icon(centre: C) -> Icon {
+    switch mode {
+    case .edit: .actions
+    case .showWeb: .showRepo
+    case .showActions: .showWorkflow
+    }
+  }
+
+  func perform(centre: C) async throws {
+    // Route based on mode.
+  }
+}
+
+struct RepoRow<C: CommandCentre>: View {
+  let commander: C
+
+  var body: some View {
+    commander.dynamicButton { trigger in
+      switch trigger {
+      case .primary: NavigateRepoCommand<C>(mode: .edit)
+      case .secondary: NavigateRepoCommand<C>(mode: .showWeb)
+      case .tertiary: NavigateRepoCommand<C>(mode: .showActions)
+      }
+    }
+  }
+}
+```
+
+This keeps trigger branching in one place while still using the same availability and execution machinery.
+
+### Use importer and confirmation wrappers
+
+`CommandsUI` also provides specialized affordances for common interaction patterns.
+
+```swift
+import CommandsUI
+import UniformTypeIdentifiers
+
+@MainActor
+protocol ImportCommands: CommandCentre {
+  func importFiles(at urls: [URL])
+}
+
+@MainActor
+struct ImportReposCommand<C: ImportCommands>: ImporterCommand {
+  let id = "repos.import"
+  var state: ImporterCommandURLState = .unknown
+
+  var types: [UTType] { [.folder] }
+  var allowsMultipleSelection: Bool { true }
+
+  func icon(centre: C) -> Icon {
+    .addLocalRepo
+  }
+
+  func perform(centre: C) async throws {
+    guard case .chosen(let urls) = state else { return }
+    centre.importFiles(at: urls)
+  }
+}
+
+@MainActor
+struct DeleteRepoCommand<C: CommandCentre>: CommandWithUI {
+  let id = "repo.delete"
+
+  func icon(centre: C) -> Icon {
+    .deleteRepo
+  }
+
+  func confirmation(centre: C) -> CommandConfirmation? {
+    .init(
+      title: "Delete Repo",
+      cancel: "Cancel",
+      message: "This removes the repo from the current list.",
+      confirm: "Delete"
+    )
+  }
+
+  func perform(centre: C) async throws {
+    // Delete the repo.
+  }
+}
+```
+
+```swift
+commander.importer(ImportReposCommand<MyCentre>())
+commander.confirmableButton(DeleteRepoCommand<MyCentre>())
+```
+
+If you need to drive an importer from a context menu, use `importerButton(_:isShowingImportSheet:)` with `ImporterCommandModifier`.
