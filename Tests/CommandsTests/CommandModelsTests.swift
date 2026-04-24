@@ -3,6 +3,7 @@
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 import Commands
+import CommandsUI
 import Foundation
 import Testing
 
