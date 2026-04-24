@@ -89,11 +89,11 @@ extension CommandCentre {
   }
 
   /// Returns a button that confirms before executing the command, or nothing when it is hidden.
-  @ViewBuilder public func confirmableButton<C: CommandWithUI>(_ command: C) -> some View
+  @ViewBuilder public func confirmableButton<C: CommandWithUI>(_ command: C, role: ButtonRole? = nil) -> some View
   where C.Centre == Self {
     let availability = availability(command)
     if availability != .hidden {
-      ConfirmableCommandButton(command: command, commander: self)
+      ConfirmableCommandButton(command: command, commander: self, role: role)
         .disabled(shouldDisable(command))
         #if !os(watchOS) && !os(tvOS)
           .keyboardShortcut(command.shortcut)
