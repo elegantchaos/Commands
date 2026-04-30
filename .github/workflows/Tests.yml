@@ -33,7 +33,7 @@ jobs:
         - name: Select Swift
           uses: swift-actions/setup-swift@v3
           with:
-            swift-version: "6.3"
+            swift-version: "6.3.1"
         - name: Swift Version
           run: swift --version
         - name: Build (release)
@@ -280,20 +280,29 @@ jobs:
             if pick_destination_if_available "watchOS" "watchOS Simulator" "Apple Watch"
             then
               echo "Using existing watchOS simulator destination."
+              WATCHOS_DESTINATION="platform=watchOS Simulator,OS=$DESTINATION_OS,name=$DESTINATION_NAME"
             else
               echo "No available watchOS simulator destination found. Downloading platform support."
               xcodebuild -downloadPlatform watchOS > logs/download-watchOS.log
               xcodebuild -workspace "$WORKSPACE" -scheme "$SCHEME" -showdestinations > logs/destinations-watchOS.log
-              pick_destination "watchOS" "watchOS Simulator" "Apple Watch" "No available non-beta Apple Watch simulator destination found."
+              if pick_destination_if_available "watchOS" "watchOS Simulator" "Apple Watch"
+              then
+                WATCHOS_DESTINATION="platform=watchOS Simulator,OS=$DESTINATION_OS,name=$DESTINATION_NAME"
+              else
+                echo "No concrete watchOS simulator destination found. Falling back to generic watchOS simulator build destination."
+                WATCHOS_DESTINATION="generic/platform=watchOS Simulator"
+              fi
             fi
-            echo "Selected watchOS simulator: ${DESTINATION_NAME:-unknown} (OS ${DESTINATION_OS:-unknown}, id=${DESTINATION_ID:-unknown})."
-            boot_destination "watchOS" "watchOS"
-            echo "Building workspace $WORKSPACE scheme $SCHEME on ${DESTINATION_NAME:-unknown} (watchOS ${DESTINATION_OS:-unknown}, id=${DESTINATION_ID:-unknown})."
-            xcodebuild clean build -workspace "$WORKSPACE" -scheme "$SCHEME" -destination "platform=watchOS Simulator,OS=$DESTINATION_OS,name=$DESTINATION_NAME" -configuration Release CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO ENABLE_TESTABILITY=YES | tee logs/xcodebuild-watchOS-build-release.log | xcbeautify --quiet --disable-logging --renderer github-actions
+            if [[ "${DESTINATION_ID:-}" != "" ]]
+            then
+              echo "Selected watchOS simulator: ${DESTINATION_NAME:-unknown} (OS ${DESTINATION_OS:-unknown}, id=${DESTINATION_ID:-unknown})."
+              boot_destination "watchOS" "watchOS"
+            fi
+            echo "Building workspace $WORKSPACE scheme $SCHEME with destination $WATCHOS_DESTINATION."
+            xcodebuild clean build -workspace "$WORKSPACE" -scheme "$SCHEME" -destination "$WATCHOS_DESTINATION" -configuration Release CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO ENABLE_TESTABILITY=YES | tee logs/xcodebuild-watchOS-build-release.log | xcbeautify --quiet --disable-logging --renderer github-actions
         - name: Upload Logs
           uses: actions/upload-artifact@v7
           if: always()
           with:
             name: xcode-swift63-logs
             path: logs
-
