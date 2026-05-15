@@ -23,51 +23,23 @@ extension CommandCentre {
   @ViewBuilder public func button<C: CommandWithUI>(_ command: C, role: ButtonRole? = nil)
     -> some View where C.Centre == Self
   {
-    let availability = availability(command)
-    if availability != .hidden {
-      Button(role: role, action: { performWithoutWaiting(command) }) {
-        Label(command.name(centre: self), icon: command.icon(centre: self))
-      }
-      .disabled(shouldDisable(command))
-      #if !os(watchOS) && !os(tvOS)
-        .keyboardShortcut(command.shortcut)
-      #endif
-      .help(command.help(centre: self) ?? "")
-    }
+    CommandButton(command: command, commander: self, role: role)
   }
 
   /// Returns a button for the given command with custom content, or nothing when it is hidden.
   @ViewBuilder public func button<C: CommandWithUI, Content: View>(
-    _ command: C, role: ButtonRole? = nil, content: () -> Content
+    _ command: C, role: ButtonRole? = nil, content: @escaping () -> Content
   ) -> some View where C.Centre == Self {
-    let availability = availability(command)
-    if availability != .hidden {
-      Button(role: role, action: { performWithoutWaiting(command) }) {
-        content()
-      }
-      .disabled(shouldDisable(command))
-      #if !os(watchOS) && !os(tvOS)
-        .keyboardShortcut(command.shortcut)
-      #endif
-      .help(command.help(centre: self) ?? "")
+    CommandButton(command: command, commander: self, role: role) { _ in
+      content()
     }
   }
 
   /// Returns a button that passes the command into the content builder, or nothing when it is hidden.
   @ViewBuilder public func button<C: CommandWithUI, Content: View>(
-    _ command: C, role: ButtonRole? = nil, content: (C) -> Content
+    _ command: C, role: ButtonRole? = nil, content: @escaping (C) -> Content
   ) -> some View where C.Centre == Self {
-    let availability = availability(command)
-    if availability != .hidden {
-      Button(role: role, action: { performWithoutWaiting(command) }) {
-        content(command)
-      }
-      .disabled(shouldDisable(command))
-      #if !os(watchOS) && !os(tvOS)
-        .keyboardShortcut(command.shortcut)
-      #endif
-      .help(command.help(centre: self) ?? "")
-    }
+    CommandButton(command: command, commander: self, role: role, content: content)
   }
 
   /// Return a button that resolves a concrete command from an activation trigger.
@@ -93,11 +65,11 @@ extension CommandCentre {
   }
 
   /// Returns a button that confirms before executing the command, or nothing when it is hidden.
-  @ViewBuilder public func confirmableButton<C: CommandWithUI>(_ command: C) -> some View
+  @ViewBuilder public func confirmableButton<C: CommandWithUI>(_ command: C, role: ButtonRole? = nil) -> some View
   where C.Centre == Self {
     let availability = availability(command)
     if availability != .hidden {
-      ConfirmableCommandButton(command: command, commander: self)
+      ConfirmableCommandButton(command: command, commander: self, role: role)
         .disabled(shouldDisable(command))
         #if !os(watchOS) && !os(tvOS)
           .keyboardShortcut(command.shortcut)
@@ -150,7 +122,6 @@ extension CommandCentre {
   /// Returns a labelled button for the given command, or nothing when it is hidden.
   /// When the button is pressed, an importer sheet is shown.
   /// When the import is confirmed, the command is performed with the selected URLs.
-  #if !os(watchOS) && !os(tvOS)
   @ViewBuilder public func importer<C: CommandWithUI>(_ command: C, role: ButtonRole? = nil)
     -> some View where C: ImporterCommand, C.Centre == Self
   {
@@ -162,8 +133,8 @@ extension CommandCentre {
     _ command: C,
     isShowingImportSheet: Binding<Bool>
   ) -> some View where C.Centre == Self {
-    ImporterCommandShowButton(command: command, centre: self, isShowingImportSheet: isShowingImportSheet)
+    ImporterCommandShowButton(
+      command: command, centre: self, isShowingImportSheet: isShowingImportSheet)
   }
-  #endif
 
 }

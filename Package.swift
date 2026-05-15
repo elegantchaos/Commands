@@ -53,13 +53,18 @@ let package = Package(
     .testTarget(
       name: "CommandsTests",
       dependencies: [
-        "Commands"
+        "Commands",
+        "CommandsUI",
       ]
     ),
 
     .testTarget(
       name: "CommandsUITests",
-      dependencies: ["CommandsUI"]
+      dependencies: [
+        "Commands",
+        "CommandsUI",
+        .product(name: "Icons", package: "Icons"),
+      ]
     ),
 
   ]

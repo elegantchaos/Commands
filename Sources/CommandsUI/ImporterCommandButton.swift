@@ -53,10 +53,9 @@ struct ImporterCommandButton<C: ImporterCommand, CC: CommandCentre>: View where 
       }
       .disabled(centre.shouldDisable(command))
       .help(command.help(centre: centre) ?? "")
-      #if !os(watchOS) && !os(tvOS)
-        .keyboardShortcut(command.shortcut)
-        .modifier(ImporterCommandModifier(isShowing: $isShowingSheet, command: $command, centre: centre))
-      #endif
+      .commandShortcut(command)
+      .modifier(
+        ImporterCommandModifier(isShowing: $isShowingSheet, command: $command, centre: centre))
     }
   }
 }

@@ -7,6 +7,7 @@ import Commands
 import Foundation
 import Icons
 import Testing
+
 @testable import CommandsUI
 
 /// Test command centre used to exercise `CommandsUI` helper behavior without rendering views.
@@ -131,6 +132,36 @@ private final class MetadataBundleToken {
 /// Tests for non-view `CommandsUI` helpers and models.
 @MainActor
 struct CommandsUITests {
+  /// Checks that the string-based confirmation initializer preserves values.
+  @Test func confirmationStoresExplicitStrings() async throws {
+    let confirmation = CommandConfirmation(
+      title: "Delete Item",
+      cancel: "Cancel",
+      message: "This action cannot be undone.",
+      confirm: "Delete"
+    )
+
+    #expect(confirmation.title == "Delete Item")
+    #expect(confirmation.cancel == "Cancel")
+    #expect(confirmation.message == "This action cannot be undone.")
+    #expect(confirmation.confirm == "Delete")
+  }
+
+  /// Checks that the localized-resource initializer resolves inline string literals.
+  @Test func confirmationResolvesLocalizedResources() async throws {
+    let confirmation = CommandConfirmation(
+      titleKey: "Archive",
+      cancelKey: "Not Now",
+      messageKey: "Archive the current item?",
+      confirmKey: "Archive It"
+    )
+
+    #expect(confirmation.title == "Archive")
+    #expect(confirmation.cancel == "Not Now")
+    #expect(confirmation.message == "Archive the current item?")
+    #expect(confirmation.confirm == "Archive It")
+  }
+
   /// Ensures the public trigger ordering remains stable for UI resolution logic.
   @Test func commandTriggerOrderingRemainsStable() {
     #expect(CommandTrigger.allCases == [.primary, .secondary, .tertiary])
@@ -164,7 +195,8 @@ struct CommandsUITests {
     availabilityAndExpectation: (availability: CommandAvailability, expected: Bool)
   ) {
     let centre = UITestCentre()
-    let command = AvailabilityUICommand(reportedAvailability: availabilityAndExpectation.availability)
+    let command = AvailabilityUICommand(
+      reportedAvailability: availabilityAndExpectation.availability)
 
     #expect(centre.shouldDisable(command) == availabilityAndExpectation.expected)
   }
@@ -182,7 +214,8 @@ struct CommandsUITests {
   /// Verifies that `WrappedCommand` forwards all metadata, availability, and execution by default.
   @Test func wrappedCommandForwardsWrappedBehavior() async throws {
     let centre = UITestCentre()
-    let wrapped = WrappedCommand(MetadataCommand(reportedAvailability: .disabled, result: "forwarded"))
+    let wrapped = WrappedCommand(
+      MetadataCommand(reportedAvailability: .disabled, result: "forwarded"))
 
     #expect(wrapped.id == "test.ui.metadata")
     #expect(wrapped.icon(centre: centre).systemImage == "network")
@@ -200,7 +233,8 @@ struct CommandsUITests {
   /// Verifies that `WrappedCommand` subclasses can override selected metadata while inheriting the rest.
   @Test func wrappedCommandAllowsSelectiveOverrides() {
     let centre = UITestCentre()
-    let wrapped = OverridingWrappedCommand(MetadataCommand(reportedAvailability: .enabled, result: "ignored"))
+    let wrapped = OverridingWrappedCommand(
+      MetadataCommand(reportedAvailability: .enabled, result: "ignored"))
 
     #expect(wrapped.name(centre: centre) == "Wrapped Metadata Command")
     #expect(wrapped.help(centre: centre) == "Helpful metadata")
