@@ -146,6 +146,35 @@ struct RepoToolbar<C: RepoCommands>: View {
 
 These helpers automatically respect command availability, shortcuts, help text, and confirmation behavior.
 
+### Build UIKit and Mac Catalyst menus
+
+Subclass `CommandCentreDelegate` when an iOS or Mac Catalyst application needs to populate UIKit menus from the same command models. Generated commands carry their invocation through the responder chain and preserve command metadata, availability, and keyboard shortcuts.
+
+```swift
+import CommandsUI
+import UIKit
+
+@MainActor
+final class AppDelegate: CommandCentreDelegate {
+  let commander: AppCommandCentre
+
+  init(commander: AppCommandCentre) {
+    self.commander = commander
+    super.init()
+  }
+
+  override func buildMenu(with builder: UIMenuBuilder) {
+    super.buildMenu(with: builder)
+    let menu = menuForCommand(
+      NewDocumentCommand(),
+      centre: commander,
+      identifier: UIMenu.Identifier("app.menu.new-document")
+    )
+    builder.replaceChildren(ofMenu: .file) { _ in [menu] }
+  }
+}
+```
+
 ### Resolve trigger-specific variants with `dynamicButton`
 
 Use `dynamicButton` when the concrete command depends on the activation trigger, such as click, command-click, or long-press.
