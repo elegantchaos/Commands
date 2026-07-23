@@ -65,7 +65,9 @@ extension CommandCentre {
   }
 
   /// Returns a button that confirms before executing the command, or nothing when it is hidden.
-  @ViewBuilder public func confirmableButton<C: CommandWithUI>(_ command: C, role: ButtonRole? = nil) -> some View
+  @ViewBuilder public func confirmableButton<C: CommandWithUI>(
+    _ command: C, role: ButtonRole? = nil
+  ) -> some View
   where C.Centre == Self {
     let availability = availability(command)
     if availability != .hidden {
@@ -129,6 +131,10 @@ extension CommandCentre {
   }
 
   /// Returns a button that shows an importer sheet when activated.
+  ///
+  /// Note that this button builds on watchOS/tvOS, but the importer sheet
+  /// itself is not available on those platforms, so the button will not do
+  /// anything when pressed.
   @ViewBuilder public func importerButton<C: ImporterCommand>(
     _ command: C,
     isShowingImportSheet: Binding<Bool>
