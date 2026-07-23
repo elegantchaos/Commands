@@ -7,7 +7,12 @@ import Commands
 import Foundation
 import Icons
 import Testing
+
 @testable import CommandsUI
+
+#if canImport(UIKit) && !os(watchOS)
+  import UIKit
+#endif
 
 /// Test command centre used to exercise `CommandsUI` helper behavior without rendering views.
 @MainActor
@@ -15,11 +20,56 @@ private final class UITestCentre: CommandCentre {
   /// Command identifiers currently considered to be running.
   var runningCommandIDs: Set<String> = []
 
+  /// Command identifiers performed through platform UI adapters.
+  var performedCommandIDs: [String] = []
+
   /// Returns whether the supplied command is marked as running.
   func isRunning<C: Command>(_ command: C) -> Bool where C.Centre == UITestCentre {
     runningCommandIDs.contains(command.id)
   }
 }
+
+#if canImport(UIKit) && !os(watchOS)
+  /// Command used to verify UIKit menu and keyboard-command integration.
+  @MainActor
+  private struct UIKitBackedCommand: CommandWithUI {
+    /// Stable identifier used for dispatch assertions.
+    let id = "test.ui.uikit"
+
+    /// Availability exposed through the generated UIKit command.
+    var reportedAvailability: CommandAvailability = .enabled
+
+    /// Returns the configured availability.
+    func availability(centre: UITestCentre) -> CommandAvailability {
+      reportedAvailability
+    }
+
+    /// Returns a fixed display name.
+    func name(centre: UITestCentre) -> String {
+      "UIKit Command"
+    }
+
+    /// Returns a fixed SF Symbol.
+    func icon(centre: UITestCentre) -> Icon {
+      Icon("square.and.pencil")
+    }
+
+    /// Returns fixed discoverability help.
+    func help(centre: UITestCentre) -> String? {
+      "Perform the UIKit command"
+    }
+
+    /// Supplies a keyboard shortcut for Catalyst menus.
+    var shortcut: CommandShortcut? {
+      CommandShortcut("k", modifiers: [.command, .shift])
+    }
+
+    /// Records execution in the test centre.
+    func perform(centre: UITestCentre) async throws {
+      centre.performedCommandIDs.append(id)
+    }
+  }
+#endif
 
 /// Minimal UI command used to exercise default `CommandWithUI` behavior.
 @MainActor
@@ -131,6 +181,92 @@ private final class MetadataBundleToken {
 /// Tests for non-view `CommandsUI` helpers and models.
 @MainActor
 struct CommandsUITests {
+  #if canImport(UIKit) && !os(watchOS)
+    /// Verifies that UIKit commands preserve metadata, shortcuts, and command execution.
+    @Test func commandCentreDelegateBuildsAndDispatchesUIKitCommands() async throws {
+      let centre = UITestCentre()
+      let command = UIKitBackedCommand()
+      let delegate = CommandCentreDelegate()
+
+      let generatedCommand = delegate.uiCommand(command, centre: centre)
+      let keyCommand = try #require(generatedCommand as? UIKeyCommand)
+
+      #expect(keyCommand.title == "UIKit Command")
+      #expect(keyCommand.image != nil)
+      #expect(keyCommand.discoverabilityTitle == "Perform the UIKit command")
+      #expect(keyCommand.input == "k")
+      #expect(keyCommand.modifierFlags == [.command, .shift])
+      #expect(keyCommand.propertyList as? String == command.id)
+
+      let task = try #require(delegate.performCommand(generatedCommand))
+      await task.value
+      #expect(centre.performedCommandIDs == [command.id])
+    }
+
+    /// Verifies that the UIKit menu helper wraps generated commands in an inline menu.
+    @Test func commandCentreDelegateBuildsInlineMenus() throws {
+      let centre = UITestCentre()
+      let command = UIKitBackedCommand()
+      let delegate = CommandCentreDelegate()
+      let identifier = UIMenu.Identifier("test.ui.menu")
+
+      let menu = delegate.menuForCommand(command, centre: centre, identifier: identifier)
+
+      #expect(menu.identifier == identifier)
+      #expect(menu.options.contains(.displayInline))
+      #expect(menu.children.count == 1)
+      #expect(menu.children.first is UIKeyCommand)
+    }
+
+    /// Verifies that command availability is represented by UIKit menu attributes.
+    @Test func commandCentreDelegateMapsAvailabilityToMenuAttributes() {
+      let centre = UITestCentre()
+      let delegate = CommandCentreDelegate()
+
+      let disabled = delegate.uiCommand(
+        UIKitBackedCommand(reportedAvailability: .disabled),
+        centre: centre
+      )
+      let hidden = delegate.uiCommand(
+        UIKitBackedCommand(reportedAvailability: .hidden),
+        centre: centre
+      )
+
+      #expect(disabled.attributes.contains(.disabled))
+      #expect(hidden.attributes.contains(.hidden))
+    }
+  #endif
+
+  /// Checks that the string-based confirmation initializer preserves values.
+  @Test func confirmationStoresExplicitStrings() async throws {
+    let confirmation = CommandConfirmation(
+      title: "Delete Item",
+      cancel: "Cancel",
+      message: "This action cannot be undone.",
+      confirm: "Delete"
+    )
+
+    #expect(confirmation.title == "Delete Item")
+    #expect(confirmation.cancel == "Cancel")
+    #expect(confirmation.message == "This action cannot be undone.")
+    #expect(confirmation.confirm == "Delete")
+  }
+
+  /// Checks that the localized-resource initializer resolves inline string literals.
+  @Test func confirmationResolvesLocalizedResources() async throws {
+    let confirmation = CommandConfirmation(
+      titleKey: "Archive",
+      cancelKey: "Not Now",
+      messageKey: "Archive the current item?",
+      confirmKey: "Archive It"
+    )
+
+    #expect(confirmation.title == "Archive")
+    #expect(confirmation.cancel == "Not Now")
+    #expect(confirmation.message == "Archive the current item?")
+    #expect(confirmation.confirm == "Archive It")
+  }
+
   /// Ensures the public trigger ordering remains stable for UI resolution logic.
   @Test func commandTriggerOrderingRemainsStable() {
     #expect(CommandTrigger.allCases == [.primary, .secondary, .tertiary])
@@ -164,7 +300,8 @@ struct CommandsUITests {
     availabilityAndExpectation: (availability: CommandAvailability, expected: Bool)
   ) {
     let centre = UITestCentre()
-    let command = AvailabilityUICommand(reportedAvailability: availabilityAndExpectation.availability)
+    let command = AvailabilityUICommand(
+      reportedAvailability: availabilityAndExpectation.availability)
 
     #expect(centre.shouldDisable(command) == availabilityAndExpectation.expected)
   }
@@ -182,7 +319,8 @@ struct CommandsUITests {
   /// Verifies that `WrappedCommand` forwards all metadata, availability, and execution by default.
   @Test func wrappedCommandForwardsWrappedBehavior() async throws {
     let centre = UITestCentre()
-    let wrapped = WrappedCommand(MetadataCommand(reportedAvailability: .disabled, result: "forwarded"))
+    let wrapped = WrappedCommand(
+      MetadataCommand(reportedAvailability: .disabled, result: "forwarded"))
 
     #expect(wrapped.id == "test.ui.metadata")
     #expect(wrapped.icon(centre: centre).systemImage == "network")
@@ -200,7 +338,8 @@ struct CommandsUITests {
   /// Verifies that `WrappedCommand` subclasses can override selected metadata while inheriting the rest.
   @Test func wrappedCommandAllowsSelectiveOverrides() {
     let centre = UITestCentre()
-    let wrapped = OverridingWrappedCommand(MetadataCommand(reportedAvailability: .enabled, result: "ignored"))
+    let wrapped = OverridingWrappedCommand(
+      MetadataCommand(reportedAvailability: .enabled, result: "ignored"))
 
     #expect(wrapped.name(centre: centre) == "Wrapped Metadata Command")
     #expect(wrapped.help(centre: centre) == "Helpful metadata")

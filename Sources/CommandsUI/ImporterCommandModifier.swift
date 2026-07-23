@@ -6,8 +6,6 @@
 import Commands
 import SwiftUI
 
-#if !os(watchOS) && !os(tvOS)
-
 /// Modifier which applies a fileImporter to the view that shows
 /// import sheet for the associated `ImporterCommand`.
 /// If you use `commander.importer(myImporterCommand)` to make a button
@@ -19,7 +17,8 @@ import SwiftUI
 /// need to make a button to set the isShowing binding to true, place that in
 /// the context menu, and use this modifier to attach the sheet to the view
 /// that owns the context menu.
-public struct ImporterCommandModifier<C: ImporterCommand, CC: CommandCentre>: ViewModifier where C.Centre == CC {
+public struct ImporterCommandModifier<C: ImporterCommand, CC: CommandCentre>: ViewModifier
+where C.Centre == CC {
   /// Controls presentation of the file importer.
   @Binding var isShowing: Bool
 
@@ -28,30 +27,31 @@ public struct ImporterCommandModifier<C: ImporterCommand, CC: CommandCentre>: Vi
 
   /// Command centre used to execute the importer-backed command.
   let centre: CC
-  
+
   /// Creates a modifier that binds importer presentation to a command instance.
   public init(isShowing: Binding<Bool>, command: Binding<C>, centre: CC) {
     self._isShowing = isShowing
     self._command = command
     self.centre = centre
   }
-  
+
   /// Applies the importer sheet and forwards its result into the command.
   public func body(content: Content) -> some View {
     content
-      .fileImporter(
-        isPresented: $isShowing,
-        allowedContentTypes: command.types,
-        allowsMultipleSelection: command.allowsMultipleSelection
-      ) { result in
-        switch result {
+      #if !os(watchOS) && !os(tvOS)
+        .fileImporter(
+          isPresented: $isShowing,
+          allowedContentTypes: command.types,
+          allowsMultipleSelection: command.allowsMultipleSelection
+        ) { result in
+          switch result {
           case .success(let urls):
             command.state = .chosen(urls)
           case .failure(let error):
             command.state = .error(error)
+          }
+          centre.performWithoutWaiting(command)
         }
-        centre.performWithoutWaiting(command)
-      }
+      #endif
   }
 }
-#endif

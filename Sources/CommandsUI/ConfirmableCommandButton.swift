@@ -19,6 +19,16 @@ struct ConfirmableCommandButton<C: CommandWithUI, CC: CommandCentre>: View where
   /// Command centre that performs the command after confirmation.
   let commander: CC
 
+  /// Role of the button
+  let role: ButtonRole?
+  
+  /// Create the button.
+  init(command: C, commander: CC, role: ButtonRole? = nil) {
+    self.command = command
+    self.commander = commander
+    self.role = role
+  }
+  
   /// Renders the labelled button and its attached confirmation alert.
   var body: some View {
     let confirmation = command.confirmation(centre: commander) ?? .init(
@@ -28,7 +38,7 @@ struct ConfirmableCommandButton<C: CommandWithUI, CC: CommandCentre>: View where
       confirm: String(localized: "confirmation.default.confirm")
     )
     
-    Button(action: handleShowAlert) {
+    Button(role: role, action: handleShowAlert) {
       Label(command.name(centre: commander), icon: command.icon(centre: commander))
     }
     .alert(confirmation.title, isPresented: $isPresented) {

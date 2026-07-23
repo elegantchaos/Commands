@@ -36,9 +36,7 @@ struct DynamicCommandButton<Centre: CommandCentre, Wrapped: CommandWithUI, Conte
       // cannot predict tap vs long-press up front, so its disabled state will
       // remain primary-trigger based unless the UI is split into distinct controls.
       .disabled(commander.shouldDisable(primaryCommand))
-      #if !os(watchOS) && !os(tvOS)
-        .keyboardShortcut(primaryCommand.shortcut)
-      #endif
+      .commandShortcut(primaryCommand)
       .help(primaryCommand.help(centre: commander) ?? "")
   }
 
