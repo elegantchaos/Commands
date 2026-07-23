@@ -53,8 +53,7 @@ let package = Package(
     .testTarget(
       name: "CommandsTests",
       dependencies: [
-        "Commands",
-        "CommandsUI",
+        "Commands"
       ]
     ),
 
