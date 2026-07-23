@@ -19,6 +19,10 @@
   @MainActor
   open class CommandCentreDelegate: UIResponder, UIApplicationDelegate {
     /// Type-erased invocations indexed by their command identifiers.
+    ///
+    /// Stable identifiers keep this registry bounded because rebuilding a command
+    /// replaces its existing invocation. Dynamically generated unique identifiers
+    /// would retain invocations for the lifetime of the delegate and should be avoided.
     private var invocations: [String: CommandInvocation] = [:]
 
     /// Creates an inline UIKit menu containing a generated command.
