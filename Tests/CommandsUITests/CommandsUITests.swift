@@ -196,6 +196,7 @@ struct CommandsUITests {
       #expect(keyCommand.discoverabilityTitle == "Perform the UIKit command")
       #expect(keyCommand.input == "k")
       #expect(keyCommand.modifierFlags == [.command, .shift])
+      #expect(keyCommand.propertyList as? String == command.id)
 
       let task = try #require(delegate.performCommand(generatedCommand))
       await task.value

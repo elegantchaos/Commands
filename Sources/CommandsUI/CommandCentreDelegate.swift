@@ -14,10 +14,13 @@
   ///
   /// Subclass this type from an application's `UIApplicationDelegate` and use
   /// `menuForCommand(_:centre:identifier:)` while building iOS or Mac Catalyst menus.
-  /// Each generated menu command retains its invocation, so dispatch does not depend
-  /// on a concrete command-centre type or the presence of an icon.
+  /// Each generated menu command carries its command identifier, so dispatch does not
+  /// depend on a concrete command-centre type or the presence of an icon.
   @MainActor
   open class CommandCentreDelegate: UIResponder, UIApplicationDelegate {
+    /// Type-erased invocations indexed by their command identifiers.
+    private var invocations: [String: CommandInvocation] = [:]
+
     /// Creates an inline UIKit menu containing a generated command.
     public func menuForCommand<C: CommandWithUI>(
       _ command: C,
@@ -37,6 +40,7 @@
       let invocation = CommandInvocation {
         centre.performWithoutWaiting(command)
       }
+      invocations[command.id] = invocation
       let selector = #selector(handleCommand(_:))
       let attributes = attributes(for: command, centre: centre)
       let image = UIImage(icon: command.icon(centre: centre))
@@ -48,7 +52,7 @@
           action: selector,
           input: String(shortcut.key.character),
           modifierFlags: shortcut.modifiers.uiKeyModifierFlags,
-          propertyList: invocation,
+          propertyList: command.id,
           discoverabilityTitle: command.help(centre: centre),
           attributes: attributes
         )
@@ -58,7 +62,7 @@
         title: command.name(centre: centre),
         image: image,
         action: selector,
-        propertyList: invocation,
+        propertyList: command.id,
         discoverabilityTitle: command.help(centre: centre),
         attributes: attributes
       )
@@ -70,7 +74,10 @@
     /// without requiring UIKit to route an Objective-C responder-chain action.
     @discardableResult
     func performCommand(_ command: UICommand) -> Task<Void, Never>? {
-      guard let invocation = command.propertyList as? CommandInvocation else {
+      guard
+        let commandID = command.propertyList as? String,
+        let invocation = invocations[commandID]
+      else {
         return nil
       }
       return invocation.perform()
@@ -96,9 +103,9 @@
     }
   }
 
-  /// Type-erased invocation retained by a generated UIKit command.
+  /// Type-erased invocation retained by the command-centre delegate.
   @MainActor
-  private final class CommandInvocation: NSObject {
+  private final class CommandInvocation {
     /// Action that starts command execution.
     let perform: @MainActor () -> Task<Void, Never>
 
