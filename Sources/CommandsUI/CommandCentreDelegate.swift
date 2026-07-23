@@ -39,7 +39,7 @@
       }
       let selector = #selector(handleCommand(_:))
       let attributes = attributes(for: command, centre: centre)
-      let image = UIImage(systemName: command.icon(centre: centre))
+      let image = UIImage(icon: command.icon(centre: centre))
 
       if let shortcut = command.shortcut {
         return UIKeyCommand(
