@@ -143,4 +143,20 @@ extension CommandCentre {
       command: command, centre: self, isShowingImportSheet: isShowingImportSheet)
   }
 
+  /// Returns a stub undo button for a command that has no undo.
+  /// (should be used for debugging only)
+  @ViewBuilder public func undoButton<C: Command>(_ command: C, role: ButtonRole? = nil)
+  -> some View where C.Centre == Self, C.UndoCommandType.Centre == Self, C.UndoCommandType == NoUndoCommand<Self>
+  {
+    Text("No undo for \(command.id)")
+  }
+
+  /// Returns a labelled button for the given command, or nothing when it is hidden.
+  @ViewBuilder public func undoButton<C: Command>(_ command: C, role: ButtonRole? = nil)
+  -> some View where C.Centre == Self, C.UndoCommandType.Centre == Self, C.UndoCommandType: CommandWithUI
+  {
+    let c = command.commandForUndo(centre: self)
+    CommandButton(command: c, commander: self, role: role)
+  }
+
 }
