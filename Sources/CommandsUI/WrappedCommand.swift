@@ -16,7 +16,7 @@ import SwiftUI
 open class WrappedCommand<C: CommandWithUI>: CommandWithUI {
   /// Command centre type accepted by the wrapped command.
   public typealias Centre = C.Centre
-
+  
   /// Identifier forwarded from the wrapped command.
   open var id: String { command.id }
 
@@ -54,5 +54,9 @@ open class WrappedCommand<C: CommandWithUI>: CommandWithUI {
   /// Executes the wrapped command unless overridden.
   open func perform(centre: C.Centre) async throws -> C.ResultType {
     try await command.perform(centre: centre)
+  }
+  
+  public func commandForUndo(centre: C.Centre) -> UndoCommandType {
+    command.commandForUndo(centre: centre)
   }
 }

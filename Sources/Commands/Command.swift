@@ -9,7 +9,6 @@ import Logger
 /// Shared log channel for command execution diagnostics.
 public let commandChannel = Channel("Commands")
 
-
 /// Describes an action that a matching command centre can evaluate and perform.
 ///
 /// Commands encapsulate availability and execution separately so callers can
@@ -18,23 +17,47 @@ public let commandChannel = Channel("Commands")
 public protocol Command<Centre> {
   /// The CommandCentre type that can perform this command.
   associatedtype Centre: CommandCentre
-  
+
   /// The type of result returned when the command is performed.
   associatedtype ResultType
-  
+
+  associatedtype UndoCommandType: Command<Centre>
+
   /// A unique identifier for the command.
   var id: String { get }
-  
+
   /// Determine whether the command is enabled, disabled, or hidden.
   func availability(centre: Centre) -> CommandAvailability
-  
+
   /// Perform the command using the given CommandCentre.
   func perform(centre: Centre) async throws -> ResultType
+
+  func commandForUndo(centre: Centre) -> UndoCommandType
 }
 
 /// Default implementations for `Command`.
 @MainActor
-public extension Command {
+extension Command {
   /// By default, commands are always enabled.
-  func availability(centre: Centre) -> CommandAvailability { .enabled }
+  public func availability(centre: Centre) -> CommandAvailability { .enabled }
+
+  public func commandForUndo(centre: Centre) -> NoUndoCommand<Centre> {
+    return NoUndoCommand()
+  }
+}
+
+@MainActor
+public struct NoUndoCommand<C: CommandCentre>: Command {
+  public let id = "no undo"
+
+  public func availability(centre: C) -> CommandAvailability {
+    .disabled
+  }
+  
+  public func perform(centre: C) async throws {
+  }
+  
+  public func commandForUndo(centre: C) -> some Command {
+    self
+  }
 }
