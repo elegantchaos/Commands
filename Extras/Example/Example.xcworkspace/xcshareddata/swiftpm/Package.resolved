@@ -1,0 +1,24 @@
+{
+  "originHash" : "9c4354578ca04c449ccd3d45076285dfe2edd0b70ae17f36a6ec8b4678f4f51d",
+  "pins" : [
+    {
+      "identity" : "icons",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/elegantchaos/Icons.git",
+      "state" : {
+        "revision" : "033e9582671a14f1224e915d89866e8b2e1014ff",
+        "version" : "1.0.2"
+      }
+    },
+    {
+      "identity" : "logger",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/elegantchaos/Logger",
+      "state" : {
+        "revision" : "c1d6df4eaf73f88e18ee23da02224069b17ab313",
+        "version" : "2.0.4"
+      }
+    }
+  ],
+  "version" : 3
+}
