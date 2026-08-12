@@ -94,10 +94,14 @@ open class UndoService {
     false
   }
   
-  open func recordUndo(_ invocation: UndoInvocation) {
+  open func recordUndo(_ invocation: CommandInverse) {
   }
   
   open func performUndo() {
+  }
+  
+  open var debugDescription: String {
+    "UndoService()"
   }
 }
 
@@ -109,7 +113,7 @@ public protocol UndoableCommandCenter: CommandCentre {
 @MainActor
 public extension UndoableCommandCenter {
   func recordFinishedCommand<C: Command>(_ command: C) where C.Centre == Self {
-    if let invocation = command.undoInvocation(centre: self) {
+    if let invocation = command.inverse(centre: self) {
       undoService.recordUndo(invocation)
     }
   }

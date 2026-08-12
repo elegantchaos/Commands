@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Commands
 import CommandsUI
 
 struct ContentView: View {
@@ -19,9 +20,11 @@ struct ContentView: View {
           Text("Done: \(commander.service.count)")
           commander.button(ExampleCommand())
           commander.undoButton()
+          Text("Stack: \(commander.undoService.debugDescription)")
         }
         .padding()
     }
+  
 }
 
 #Preview {

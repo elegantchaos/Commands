@@ -10,9 +10,30 @@ import Commands
 import Icons
 
 @MainActor
-struct ExampleUndoInvocation: UndoInvocation {
-  let availability: () -> CommandAvailability
-  let perform: @concurrent () async throws -> ()
+struct CommandProxy<C: Command>: CommandInverse {
+    let command: C
+    let centre: C.Centre
+  
+  init(command: C, centre: C.Centre) {
+    self.command = command
+    self.centre = centre
+  }
+  
+  var id: String {
+    command.id
+  }
+  
+  var availability: () -> CommandAvailability {
+    {
+      centre.availability(command)
+    }
+  }
+  
+  var perform: @concurrent () async throws -> () {
+    {
+      _ = try await centre.perform(command)
+    }
+  }
 }
 
 struct ExampleCommand<Centre: ExampleServiceProvider>: CommandWithUI {
@@ -26,13 +47,8 @@ struct ExampleCommand<Centre: ExampleServiceProvider>: CommandWithUI {
     centre.service.incrementDone()
   }
   
-  func undoInvocation(centre: Centre) -> UndoInvocation? {
-    let command = ExampleUndoCommand<Centre>()
-    return ExampleUndoInvocation(availability: {
-      command.availability(centre: centre)
-    }, perform: {
-      try await command.perform(centre: centre)
-    })
+  func inverse(centre: Centre) -> CommandInverse? {
+    return CommandProxy(command: ExampleUndoCommand(), centre: centre)
   }
 }
 
@@ -47,13 +63,14 @@ struct ExampleUndoCommand<Centre: ExampleServiceProvider>: CommandWithUI {
     centre.service.decrementDone()
   }
   
-  func undoInvocation(centre: Centre) -> UndoInvocation? {
-    let command = ExampleCommand<Centre>()
-    return ExampleUndoInvocation(availability: {
-      command.availability(centre: centre)
-    }, perform: {
-      try await command.perform(centre: centre)
-    })
+  func inverse(centre: Centre) -> CommandInverse? {
+    return CommandProxy(command: ExampleCommand(), centre: centre)
+//    let command = ExampleCommand<Centre>()
+//    return ExampleUndoInvocation(availability: {
+//      command.availability(centre: centre)
+//    }, perform: {
+//      try await command.perform(centre: centre)
+//    })
   }
 }
 

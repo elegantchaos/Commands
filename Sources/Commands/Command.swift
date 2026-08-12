@@ -30,8 +30,10 @@ public protocol Command<Centre> {
   /// Perform the command using the given CommandCentre.
   func perform(centre: Centre) async throws -> ResultType
 
-  /// Return the invocation needed to undo the command.
-  func undoInvocation(centre: Centre) -> UndoInvocation?
+  /// Return the inverse of this command.
+  /// The inverse can be invoked to undo whatever state changes this
+  /// command performs.
+  func inverse(centre: Centre) -> CommandInverse?
 
 }
 
@@ -42,9 +44,17 @@ extension Command {
   public func availability(centre: Centre) -> CommandAvailability { .enabled }
 }
 
-/// An undo invocation knows how to report its availability, and to perform the undo.
+/// Describes the inverse of a command.
 @MainActor
-public protocol UndoInvocation {
+public protocol CommandInverse {
+  var id: String { get }
+  
+  /// Determine whether the inverse should be regarded as enabled, disabled, etc.
   var availability: () -> CommandAvailability { get }
+  
+  /// Perform the inverse command.
+  /// Typically this is done by invoking another command on the same command centre
+  /// that was used when the `CommandInverse` instance was created; though this
+  /// is not strictly enforced.
   var perform: () async throws -> () { get }
 }

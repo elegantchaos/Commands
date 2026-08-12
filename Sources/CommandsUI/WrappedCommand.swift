@@ -56,7 +56,7 @@ open class WrappedCommand<C: CommandWithUI>: CommandWithUI {
     try await command.perform(centre: centre)
   }
   
-  open func undoInvocation(centre: C.Centre) -> UndoInvocation? {
-    command.undoInvocation(centre: centre)
+  open func inverse(centre: C.Centre) -> CommandInverse? {
+    command.inverse(centre: centre)
   }
 }

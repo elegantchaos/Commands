@@ -13,13 +13,13 @@ class ExampleUndoService: UndoService {
     super.init()
   }
 
-  var undoStack: [UndoInvocation] = []
+  var undoStack: [CommandInverse] = []
   
   override var hasUndo: Bool {
     !undoStack.isEmpty
   }
   
-  override func recordUndo(_ invocation: UndoInvocation) {
+  override func recordUndo(_ invocation: CommandInverse) {
     undoStack = undoStack + [invocation]
     
   }
@@ -35,6 +35,12 @@ class ExampleUndoService: UndoService {
         }
       }
     }
+  }
+  
+  override var debugDescription: String {
+    undoStack
+      .map { $0.id }
+      .joined(separator: " > ")
   }
 }
 
