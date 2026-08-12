@@ -29,6 +29,10 @@ public protocol Command<Centre> {
 
   /// Perform the command using the given CommandCentre.
   func perform(centre: Centre) async throws -> ResultType
+
+  /// Return the invocation needed to undo the command.
+  func undoInvocation(centre: Centre) -> UndoInvocation?
+
 }
 
 /// Default implementations for `Command`.
@@ -38,8 +42,9 @@ extension Command {
   public func availability(centre: Centre) -> CommandAvailability { .enabled }
 }
 
+/// An undo invocation knows how to report its availability, and to perform the undo.
 @MainActor
-public protocol UndoableCommand: Command where Centre: UndoableCommandCenter {
-  associatedtype UndoType: UndoableCommand
-  func commandForUndo(centre: Centre) -> UndoType
+public protocol UndoInvocation {
+  var availability: () -> CommandAvailability { get }
+  var perform: () async throws -> () { get }
 }

@@ -148,18 +148,24 @@ extension CommandCentre {
 extension UndoableCommandCenter {
 
   /// Returns a labelled button for the given command, or nothing when it is hidden.
-  @ViewBuilder public func undoButton<C: UndoableCommand>(_ command: C, role: ButtonRole? = nil)
-  -> some View where C.Centre == Self, C.UndoType.Centre == Self, C.UndoType: CommandWithUI
+  @ViewBuilder public func undoButton(role: ButtonRole? = nil) -> some View
   {
-    if hasUndo {
-//      let c = popCommand()
-//      Button(action: { c() }) {
-        Text("undo")
-//      }
+    UndoButton(undoService: undoService)
+  }
 
+}
+
+@MainActor
+public struct UndoButton: View {
+  let undoService: UndoService
+  
+  public var body: some View {
+    if undoService.hasUndo {
+      Button(action: undoService.performUndo) {
+        Text("undo")
+      }
     } else {
       Text("no undo")
     }
   }
-
 }

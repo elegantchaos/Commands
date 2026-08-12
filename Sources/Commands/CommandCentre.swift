@@ -85,14 +85,32 @@ public extension CommandCentre {
 }
 
 @MainActor
+@Observable
+open class UndoService {
+  public init() {
+  }
+  
+  open var hasUndo: Bool {
+    false
+  }
+  
+  open func recordUndo(_ invocation: UndoInvocation) {
+  }
+  
+  open func performUndo() {
+  }
+}
+
+@MainActor
 public protocol UndoableCommandCenter: CommandCentre {
-  var hasUndo: Bool { get }
-  func performUndo()
+  var undoService: UndoService { get }
 }
 
 @MainActor
 public extension UndoableCommandCenter {
-  func recordFinishedCommand<C: UndoableCommand>(_ command: C) where C.Centre == Self  {
-    pushCommand(command)
+  func recordFinishedCommand<C: Command>(_ command: C) where C.Centre == Self {
+    if let invocation = command.undoInvocation(centre: self) {
+      undoService.recordUndo(invocation)
+    }
   }
 }
