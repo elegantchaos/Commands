@@ -55,8 +55,11 @@ open class WrappedCommand<C: CommandWithUI>: CommandWithUI {
   open func perform(centre: C.Centre) async throws -> C.ResultType {
     try await command.perform(centre: centre)
   }
-  
-  public func commandForUndo(centre: C.Centre) -> UndoCommandType {
+}
+
+@MainActor
+extension WrappedCommand where C: UndoableCommand {
+  public func commandForUndo(centre: C.Centre) -> C.UndoType {
     command.commandForUndo(centre: centre)
   }
 }

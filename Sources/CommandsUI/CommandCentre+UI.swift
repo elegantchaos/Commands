@@ -14,18 +14,18 @@ extension CommandCentre {
   // TODO: track commands whilst they are running, and disable their buttons appropriately
   public func shouldDisable<C: CommandWithUI>(_ command: C) -> Bool where C.Centre == Self {
     switch availability(command) {
-    case .disabled, .running, .runningSilently: return true
-    default: return false
+      case .disabled, .running, .runningSilently: return true
+      default: return false
     }
   }
-
+  
   /// Returns a labelled button for the given command, or nothing when it is hidden.
   @ViewBuilder public func button<C: CommandWithUI>(_ command: C, role: ButtonRole? = nil)
-    -> some View where C.Centre == Self
+  -> some View where C.Centre == Self
   {
     CommandButton(command: command, commander: self, role: role)
   }
-
+  
   /// Returns a button for the given command with custom content, or nothing when it is hidden.
   @ViewBuilder public func button<C: CommandWithUI, Content: View>(
     _ command: C, role: ButtonRole? = nil, content: @escaping () -> Content
@@ -34,14 +34,14 @@ extension CommandCentre {
       content()
     }
   }
-
+  
   /// Returns a button that passes the command into the content builder, or nothing when it is hidden.
   @ViewBuilder public func button<C: CommandWithUI, Content: View>(
     _ command: C, role: ButtonRole? = nil, content: @escaping (C) -> Content
   ) -> some View where C.Centre == Self {
     CommandButton(command: command, commander: self, role: role, content: content)
   }
-
+  
   /// Return a button that resolves a concrete command from an activation trigger.
   @ViewBuilder public func dynamicButton<C: CommandWithUI, Content: View>(
     role: ButtonRole? = nil,
@@ -52,7 +52,7 @@ extension CommandCentre {
       DynamicCommandButton(commander: self, role: role, command: command, content: content)
     }
   }
-
+  
   /// Return a labelled button that resolves a concrete command from an activation trigger.
   @ViewBuilder public func dynamicButton<C: CommandWithUI>(
     role: ButtonRole? = nil,
@@ -63,7 +63,7 @@ extension CommandCentre {
       Label(primaryCommand.name(centre: self), icon: primaryCommand.icon(centre: self))
     }
   }
-
+  
   /// Returns a button that confirms before executing the command, or nothing when it is hidden.
   @ViewBuilder public func confirmableButton<C: CommandWithUI>(
     _ command: C, role: ButtonRole? = nil
@@ -73,13 +73,13 @@ extension CommandCentre {
     if availability != .hidden {
       ConfirmableCommandButton(command: command, commander: self, role: role)
         .disabled(shouldDisable(command))
-        #if !os(watchOS) && !os(tvOS)
-          .keyboardShortcut(command.shortcut)
-        #endif
+#if !os(watchOS) && !os(tvOS)
+        .keyboardShortcut(command.shortcut)
+#endif
         .help(command.help(centre: self) ?? "")
     }
   }
-
+  
   /// Returns a toolbar item for the given command, or nothing when it is hidden.
   @ToolbarContentBuilder public func toolbarItem<C: CommandWithUI>(
     _ command: C, placement: ToolbarItemPlacement = .automatic
@@ -90,7 +90,7 @@ extension CommandCentre {
       }
     }
   }
-
+  
   /// Returns a toolbar item that confirms before executing the command, or nothing when it is hidden.
   @ToolbarContentBuilder public func confirmableToolbarItem<C: CommandWithUI>(
     _ command: C, placement: ToolbarItemPlacement = .automatic
@@ -101,7 +101,7 @@ extension CommandCentre {
       }
     }
   }
-
+  
   /// Returns a toolbar item group for the given command, or nothing when it is hidden.
   @ToolbarContentBuilder public func toolbarItemGroup<C: CommandWithUI>(
     _ command: C, placement: ToolbarItemPlacement = .automatic
@@ -112,7 +112,7 @@ extension CommandCentre {
       }
     }
   }
-
+  
   //  func menu<each C: Command>(_ command: repeat each C) -> some View where repeat (each C).Centre == Self {
   //    return Menu {
   //      repeat button(each command)
@@ -120,16 +120,16 @@ extension CommandCentre {
   //      Label("action.more", systemImage: "ellipsis.circle")
   //    }
   //  }
-
+  
   /// Returns a labelled button for the given command, or nothing when it is hidden.
   /// When the button is pressed, an importer sheet is shown.
   /// When the import is confirmed, the command is performed with the selected URLs.
   @ViewBuilder public func importer<C: CommandWithUI>(_ command: C, role: ButtonRole? = nil)
-    -> some View where C: ImporterCommand, C.Centre == Self
+  -> some View where C: ImporterCommand, C.Centre == Self
   {
     ImporterCommandButton(command: command, centre: self, role: role)
   }
-
+  
   /// Returns a button that shows an importer sheet when activated.
   ///
   /// Note that this button builds on watchOS/tvOS, but the importer sheet
@@ -142,21 +142,24 @@ extension CommandCentre {
     ImporterCommandShowButton(
       command: command, centre: self, isShowingImportSheet: isShowingImportSheet)
   }
+}
 
-  /// Returns a stub undo button for a command that has no undo.
-  /// (should be used for debugging only)
-  @ViewBuilder public func undoButton<C: Command>(_ command: C, role: ButtonRole? = nil)
-  -> some View where C.Centre == Self, C.UndoCommandType.Centre == Self, C.UndoCommandType == NoUndoCommand<Self>
-  {
-    Text("No undo for \(command.id)")
-  }
+@MainActor
+extension UndoableCommandCenter {
 
   /// Returns a labelled button for the given command, or nothing when it is hidden.
-  @ViewBuilder public func undoButton<C: Command>(_ command: C, role: ButtonRole? = nil)
-  -> some View where C.Centre == Self, C.UndoCommandType.Centre == Self, C.UndoCommandType: CommandWithUI
+  @ViewBuilder public func undoButton<C: UndoableCommand>(_ command: C, role: ButtonRole? = nil)
+  -> some View where C.Centre == Self, C.UndoType.Centre == Self, C.UndoType: CommandWithUI
   {
-    let c = command.commandForUndo(centre: self)
-    CommandButton(command: c, commander: self, role: role)
+    if hasUndo {
+//      let c = popCommand()
+//      Button(action: { c() }) {
+        Text("undo")
+//      }
+
+    } else {
+      Text("no undo")
+    }
   }
 
 }

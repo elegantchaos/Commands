@@ -83,3 +83,16 @@ public extension CommandCentre {
     false
   }
 }
+
+@MainActor
+public protocol UndoableCommandCenter: CommandCentre {
+  var hasUndo: Bool { get }
+  func performUndo()
+}
+
+@MainActor
+public extension UndoableCommandCenter {
+  func recordFinishedCommand<C: UndoableCommand>(_ command: C) where C.Centre == Self  {
+    pushCommand(command)
+  }
+}

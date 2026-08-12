@@ -21,8 +21,6 @@ public protocol Command<Centre> {
   /// The type of result returned when the command is performed.
   associatedtype ResultType
 
-  associatedtype UndoCommandType: Command<Centre>
-
   /// A unique identifier for the command.
   var id: String { get }
 
@@ -31,8 +29,6 @@ public protocol Command<Centre> {
 
   /// Perform the command using the given CommandCentre.
   func perform(centre: Centre) async throws -> ResultType
-
-  func commandForUndo(centre: Centre) -> UndoCommandType
 }
 
 /// Default implementations for `Command`.
@@ -40,24 +36,10 @@ public protocol Command<Centre> {
 extension Command {
   /// By default, commands are always enabled.
   public func availability(centre: Centre) -> CommandAvailability { .enabled }
-
-  public func commandForUndo(centre: Centre) -> NoUndoCommand<Centre> {
-    return NoUndoCommand()
-  }
 }
 
 @MainActor
-public struct NoUndoCommand<C: CommandCentre>: Command {
-  public let id = "no undo"
-
-  public func availability(centre: C) -> CommandAvailability {
-    .disabled
-  }
-  
-  public func perform(centre: C) async throws {
-  }
-  
-  public func commandForUndo(centre: C) -> some Command {
-    self
-  }
+public protocol UndoableCommand: Command where Centre: UndoableCommandCenter {
+  associatedtype UndoType: UndoableCommand
+  func commandForUndo(centre: Centre) -> UndoType
 }
