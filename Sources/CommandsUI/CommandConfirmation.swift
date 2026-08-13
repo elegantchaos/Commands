@@ -6,7 +6,7 @@
 import Foundation
 
 /// Information needed to display a confirmation dialog for a command.
-public struct CommandConfirmation {
+public struct CommandConfirmation: Sendable {
   /// Title shown in the confirmation dialog.
   public let title: String
 

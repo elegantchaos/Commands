@@ -36,7 +36,7 @@ public struct CommandInverseProxyWithUI<C: CommandWithUI>: CommandInverseWithUI 
   }
 
   /// Action closure forwarded from the wrapped command.
-  public var action: @concurrent (CommandSource) async throws -> CommandInverse? {
+  public var action: (CommandSource) async throws -> CommandInverse? {
     inverse.action
   }
 

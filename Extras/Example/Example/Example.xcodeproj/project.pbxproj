@@ -40,11 +40,6 @@
 			path = Example;
 			sourceTree = "<group>";
 		};
-		2281C4D230238FD100E4D148 /* ExampleTests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = ExampleTests;
-			sourceTree = "<group>";
-		};
 		2281C4DC30238FD100E4D148 /* ExampleUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = ExampleUITests;
@@ -77,7 +72,6 @@
 			isa = PBXGroup;
 			children = (
 				2281C4C430238FCF00E4D148 /* Example */,
-				2281C4D230238FD100E4D148 /* ExampleTests */,
 				2281C4DC30238FD100E4D148 /* ExampleUITests */,
 				2281C4C330238FCF00E4D148 /* Products */,
 			);
@@ -130,9 +124,6 @@
 			);
 			dependencies = (
 				2281C4D130238FD100E4D148 /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				2281C4D230238FD100E4D148 /* ExampleTests */,
 			);
 			name = ExampleTests;
 			productName = ExampleTests;

@@ -4,10 +4,9 @@
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 import Foundation
-import SwiftUI
 
 /// Errors thrown by the default command-centre execution helpers.
-public enum CommandError: Error, Equatable {
+public enum CommandError: Error, Equatable, Sendable {
   /// The command reported that it cannot currently be performed.
   case commandUnavailable
 }
@@ -23,6 +22,9 @@ public protocol CommandCentre {
 
   /// Returns whether the given command is already executing.
   func isRunning<C: Command>(_ command: C) -> Bool where C.Centre == Self
+
+  /// Returns whether a command can begin from the supplied invocation source.
+  func isAllowed(from source: CommandSource) -> Bool
 }
 
 /// Default implementations of command-related functionality.
@@ -30,7 +32,17 @@ public protocol CommandCentre {
 extension CommandCentre {
   /// Returns the current availability of the given command, including running state.
   public func availability<C: Command>(_ command: C) -> CommandAvailability where C.Centre == Self {
+    availability(command, from: .button)
+  }
+
+  /// Returns availability for a specific invocation source.
+  private func availability<C: Command>(_ command: C, from source: CommandSource)
+    -> CommandAvailability where C.Centre == Self
+  {
     let availability = command.availability(centre: self)
+    guard isAllowed(from: source) else {
+      return availability == .hidden ? .hidden : .disabled
+    }
     if isRunning(command) {
       return availability == .hidden ? .runningSilently : .running
     }
@@ -46,7 +58,7 @@ extension CommandCentre {
     // UI callers should normally gate execution through `availability`, but the
     // command centre still guards execution because availability can change
     // between rendering a control and the action firing.
-    guard command.availability(centre: self) == .enabled else {
+    guard availability(command, from: source) == .enabled else {
       throw CommandError.commandUnavailable
     }
 
@@ -58,7 +70,7 @@ extension CommandCentre {
     return try await command.perform(centre: self, from: source)
   }
 
-  /// Starts the given command in a child task and logs any thrown error.
+  /// Starts the given command in an unstructured task and logs any thrown error.
   @discardableResult
   public func performWithoutWaiting<C: Command>(_ command: C, from source: CommandSource) -> Task<
     Void, Never
@@ -86,5 +98,10 @@ extension CommandCentre {
   /// Returns whether the given command is already executing.
   public func isRunning<C: Command>(_ command: C) -> Bool where C.Centre == Self {
     false
+  }
+
+  /// By default, command execution is allowed from every source.
+  public func isAllowed(from source: CommandSource) -> Bool {
+    true
   }
 }

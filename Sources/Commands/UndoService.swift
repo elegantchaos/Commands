@@ -6,7 +6,7 @@
 import Foundation
 
 /// Errors reported while performing a history operation.
-public enum UndoServiceError: Error, Equatable {
+public enum UndoServiceError: Error, Equatable, Sendable {
   /// An undo or redo operation is already in progress.
   case historyOperationInProgress
 }
@@ -21,7 +21,7 @@ public enum UndoServiceError: Error, Equatable {
 @Observable
 open class UndoService {
   /// A history operation that is currently in progress.
-  public enum Operation: Equatable {
+  public enum Operation: Equatable, Sendable {
     /// Reverses a completed history entry.
     case undo
 

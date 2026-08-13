@@ -287,11 +287,18 @@ struct UndoServiceTests {
     #expect(centre.undoService.isRedoing == false)
     #expect(centre.undoService.operation == .undo)
     #expect(centre.undoService.hasUndo)
+    #expect(centre.availability(UndoableTestCommand()) == .disabled)
+
+    await #expect(throws: CommandError.commandUnavailable) {
+      try await centre.perform(UndoableTestCommand(), from: .button)
+    }
+    #expect(centre.undoService.stackDescription == "suspended")
 
     gate.release()
     try await firstUndo.value
     #expect(centre.undoService.isUndoing == false)
     #expect(centre.undoService.operation == nil)
     #expect(centre.undoService.hasUndo == false)
+    #expect(centre.availability(UndoableTestCommand()) == .enabled)
   }
 }

@@ -24,6 +24,13 @@ documentation, and tests.
 - Updated unit tests for the current command API and added coverage for undo/redo
   traversal, redo-branch truncation, failure preservation, and concurrent
   history-operation rejection.
+- Defined the package concurrency model in `Extras/Documentation/Concurrency.md`.
+  Command coordination remains main-actor isolated; CPU-heavy work belongs in
+  injected concurrent services. Undoable centres now block forward commands
+  while an undo or redo action is suspended, preventing re-entrant history
+  corruption. `CommandCentre.isAllowed(from:)` delegates source-specific policy
+  to the concrete centre, leaving undo/redo semantics in
+  `UndoableCommandCentre`.
 
 ## Validation
 

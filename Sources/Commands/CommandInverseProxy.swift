@@ -26,7 +26,7 @@ public struct CommandInverseProxy<C: Command>: CommandInverse {
     }
   }
 
-  public var action: @concurrent (CommandSource) async throws -> CommandInverse? {
+  public var action: (CommandSource) async throws -> CommandInverse? {
     { source in
       _ = try await centre.perform(command, from: source)
       return command.inverse(centre: centre)

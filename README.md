@@ -20,6 +20,9 @@
 their presentation. `CommandsUI` renders those actions in SwiftUI and adapts
 them to UIKit and Mac Catalyst menus.
 
+See [Concurrency](Extras/Documentation/Concurrency.md) for the package's actor,
+async execution, undo/redo, and cancellation design.
+
 ## Capabilities
 
 - Centre-aware command availability and lifecycle tracking
