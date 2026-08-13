@@ -14,11 +14,11 @@ public enum UndoServiceError: Error, Equatable, Sendable {
   case forwardCommandInProgress
 }
 
-/// A lightweight, observable history of command inverses.
+/// A lightweight, observable history of command reversals.
 ///
 /// The cursor separates completed history from entries that can be redone.
-/// Each successful history operation replaces the executed inverse with the
-/// inverse returned by that action, so undo and redo can traverse the same
+/// Each successful history operation replaces the executed reversal with the
+/// reversal returned by that operation, so undo and redo can traverse the same
 /// history in either direction. Each service owns all state for its active
 /// history operation; it does not use global or task-local state.
 @MainActor
@@ -44,8 +44,8 @@ open class UndoService {
     }
   }
 
-  /// Inverses for completed and redoable history entries.
-  var undoStack: [CommandInverse] = []
+  /// Reversals for completed and redoable history entries.
+  var undoStack: [any CommandReversal] = []
 
   /// The number of completed entries at the front of `undoStack`.
   var undoCursor = 0
@@ -93,8 +93,8 @@ open class UndoService {
     nextUndo != nil
   }
 
-  /// The inverse that will be performed by the next undo operation.
-  open var nextUndo: CommandInverse? {
+  /// The reversal that will be performed by the next undo operation.
+  open var nextUndo: (any CommandReversal)? {
     guard undoCursor > 0 else {
       return nil
     }
@@ -106,18 +106,18 @@ open class UndoService {
     nextRedo != nil
   }
 
-  /// The inverse that will be performed by the next redo operation.
-  open var nextRedo: CommandInverse? {
+  /// The reversal that will be performed by the next redo operation.
+  open var nextRedo: (any CommandReversal)? {
     guard undoCursor < undoStack.count else {
       return nil
     }
     return undoStack[undoCursor]
   }
 
-  /// Records a new inverse and discards any entries that could previously be redone.
-  open func recordUndo(_ invocation: CommandInverse) {
+  /// Records a reversal and discards any entries that could previously be redone.
+  open func recordUndo(_ reversal: any CommandReversal) {
     undoStack.removeSubrange(undoCursor...)
-    undoStack.append(invocation)
+    undoStack.append(reversal)
     undoCursor = undoStack.count
   }
 
@@ -135,9 +135,9 @@ open class UndoService {
     forwardCommandCount -= 1
   }
 
-  /// Performs the next inverse that reverses a completed history entry.
+  /// Performs the next reversal that reverses a completed history entry.
   ///
-  /// The inverse remains available when it throws. Calls made while undo or
+  /// The reversal remains available when it throws. Calls made while undo or
   /// redo is in progress throw `UndoServiceError.historyOperationInProgress`.
   /// Calls made while forward commands are active throw
   /// `UndoServiceError.forwardCommandInProgress`.
@@ -155,7 +155,7 @@ open class UndoService {
     }
 
     let index = undoCursor - 1
-    let inverse = undoStack[index]
+    let reversal = undoStack[index]
     let context = CommandExecutionContext()
     activeOperation = .undo(context)
     defer {
@@ -163,13 +163,13 @@ open class UndoService {
     }
 
     try Task.checkCancellation()
-    let replacement = try await inverse.action(context)
+    let replacement = try await reversal.perform(in: context)
     updateHistory(at: index, with: replacement, cursor: index)
   }
 
-  /// Performs the next inverse that reapplies an undone history entry.
+  /// Performs the next reversal that reapplies an undone history entry.
   ///
-  /// The inverse remains available when it throws. Calls made while undo or
+  /// The reversal remains available when it throws. Calls made while undo or
   /// redo is in progress throw `UndoServiceError.historyOperationInProgress`.
   /// Calls made while forward commands are active throw
   /// `UndoServiceError.forwardCommandInProgress`.
@@ -187,7 +187,7 @@ open class UndoService {
     }
 
     let index = undoCursor
-    let inverse = undoStack[index]
+    let reversal = undoStack[index]
     let context = CommandExecutionContext()
     activeOperation = .redo(context)
     defer {
@@ -195,12 +195,16 @@ open class UndoService {
     }
 
     try Task.checkCancellation()
-    let replacement = try await inverse.action(context)
+    let replacement = try await reversal.perform(in: context)
     updateHistory(at: index, with: replacement, cursor: index + 1)
   }
 
-  /// Replaces a performed entry with its inverse, or removes it when no inverse exists.
-  private func updateHistory(at index: Int, with replacement: CommandInverse?, cursor: Int) {
+  /// Replaces a performed entry with its opposing reversal, or removes it when absent.
+  private func updateHistory(
+    at index: Int,
+    with replacement: (any CommandReversal)?,
+    cursor: Int
+  ) {
     if let replacement {
       undoStack[index] = replacement
       undoCursor = cursor

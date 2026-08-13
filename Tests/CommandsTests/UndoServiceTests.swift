@@ -6,37 +6,37 @@
 import Commands
 import Testing
 
-/// Command centre used to observe inverse command execution.
+/// Command centre used to observe reversal execution.
 @MainActor
 private final class UndoTestCentre: UndoableCommandCentre {
-  /// Command identifiers performed through an inverse.
+  /// Command identifiers performed through a reversal.
   var performedCommandIDs: [String] = []
 
   /// Undo history maintained by the command centre.
   let undoService = UndoService()
 }
 
-/// Command used to verify inverse proxy and undo-stack behavior.
+/// Command used to verify reversal adapter and undo-stack behavior.
 @MainActor
 private struct UndoCommand: Command {
   /// Identifier used to verify history execution order.
   let id: String
 
-  /// Availability reported through an inverse proxy.
+  /// Availability reported through a reversal adapter.
   let reportedAvailability: CommandAvailability
 
   /// Identifier of the command that reverses this command.
-  let inverseID: String?
+  let reversalID: String?
 
-  /// Creates a command with the supplied identifier, availability, and inverse.
+  /// Creates a command with the supplied identifier, availability, and reversal.
   init(
     id: String,
     reportedAvailability: CommandAvailability = .enabled,
-    inverseID: String? = nil
+    reversalID: String? = nil
   ) {
     self.id = id
     self.reportedAvailability = reportedAvailability
-    self.inverseID = inverseID
+    self.reversalID = reversalID
   }
 
   /// Returns the configured availability.
@@ -44,49 +44,49 @@ private struct UndoCommand: Command {
     reportedAvailability
   }
 
-  /// Records that an inverse performed this command.
+  /// Records that a reversal performed this command.
   func perform(centre: UndoTestCentre) async throws {
     centre.performedCommandIDs.append(id)
   }
 
   /// Returns the command that reverses this history action.
-  func inverse(centre: UndoTestCentre) -> CommandInverse? {
-    guard let inverseID else {
+  func reversal(centre: UndoTestCentre) -> (any CommandReversal)? {
+    guard let reversalID else {
       return nil
     }
-    return CommandInverseProxy(
-      command: UndoCommand(id: inverseID, inverseID: id),
+    return CommandReversalAdapter(
+      command: UndoCommand(id: reversalID, reversalID: id),
       centre: centre
     )
   }
 }
 
-/// Command that supplies an undo action through `CommandInverseProxy`.
+/// Command that supplies an undo action through `CommandReversalAdapter`.
 @MainActor
 private struct UndoableTestCommand: Command {
   /// Stable identifier for the forward operation.
   let id = "test.undoable.forward"
 
-  /// Performs no work beyond registering its inverse.
+  /// Performs no work beyond registering its reversal.
   func perform(centre: UndoTestCentre) async throws {
   }
 
   /// Returns the command that reverses the forward operation.
-  func inverse(centre: UndoTestCentre) -> CommandInverse? {
-    CommandInverseProxy(command: UndoCommand(id: "test.undoable.inverse"), centre: centre)
+  func reversal(centre: UndoTestCentre) -> (any CommandReversal)? {
+    CommandReversalAdapter(command: UndoCommand(id: "test.undoable.reversal"), centre: centre)
   }
 }
 
-/// Error thrown by a deliberately failing inverse command.
+/// Error thrown by a deliberately failing reversal command.
 private enum UndoFailure: Error, Equatable {
   /// The expected failure used to verify retry behavior.
   case expected
 }
 
-/// Command that fails while executing an inverse.
+/// Command that fails while executing a reversal.
 @MainActor
 private struct FailingUndoCommand: Command {
-  /// Stable identifier for the failing inverse.
+  /// Stable identifier for the failing reversal.
   let id = "failing"
 
   /// Throws the expected test error.
@@ -139,7 +139,7 @@ private final class UndoGate {
 /// Command that suspends until a test explicitly releases it.
 @MainActor
 private struct SuspendedUndoCommand: Command {
-  /// Stable identifier for the suspended inverse.
+  /// Stable identifier for the suspended reversal.
   let id = "suspended"
 
   /// Test-controlled suspension point.
@@ -166,44 +166,41 @@ private struct SuspendedForwardCommand: Command {
   }
 }
 
-/// Inverse that attempts to execute a command in another undo service's execution context.
+/// Reversal that attempts to execute a command in another undo service's execution context.
 @MainActor
-private struct CrossServiceInverse: CommandInverse {
-  /// Stable identifier for the test inverse.
+private struct CrossServiceReversal: CommandReversal {
+  /// Stable identifier for the test reversal.
   let id = "cross-service"
 
-  /// Centre whose active history operation must reject this inverse's execution context.
+  /// Centre whose active history operation must reject this reversal's execution context.
   let centre: UndoTestCentre
 
-  /// Returns an enabled availability state for the test inverse.
-  var availability: () -> CommandAvailability {
-    { .enabled }
+  /// Returns an enabled availability state for the test reversal.
+  func availability() -> CommandAvailability {
+    .enabled
   }
 
   /// Attempts to execute a command using the execution context supplied by another service.
-  var action: (CommandExecutionContext) async throws -> CommandInverse? {
-    { context in
-      _ = try await centre.perform(
-        UndoCommand(id: "cross-service.command"), during: context)
-      return nil
-    }
+  func perform(in context: CommandExecutionContext) async throws -> (any CommandReversal)? {
+    _ = try await centre.perform(UndoCommand(id: "cross-service.command"), during: context)
+    return nil
   }
 }
 
-/// Tests undo and redo registration, execution, and inverse-command adaptation.
+/// Tests undo and redo registration, execution, and reversal adaptation.
 @MainActor
 struct UndoServiceTests {
   /// Verifies that undo actions can be reversed by matching redo actions.
   @Test func undoAndRedoTraverseHistoryInOrder() async throws {
     let centre = UndoTestCentre()
     centre.undoService.recordUndo(
-      CommandInverseProxy(
-        command: UndoCommand(id: "undo.first", inverseID: "redo.first"),
+      CommandReversalAdapter(
+        command: UndoCommand(id: "undo.first", reversalID: "redo.first"),
         centre: centre
       ))
     centre.undoService.recordUndo(
-      CommandInverseProxy(
-        command: UndoCommand(id: "undo.second", inverseID: "redo.second"),
+      CommandReversalAdapter(
+        command: UndoCommand(id: "undo.second", reversalID: "redo.second"),
         centre: centre
       ))
 
@@ -239,8 +236,8 @@ struct UndoServiceTests {
   @Test func recordingAfterUndoDiscardsRedoHistory() async throws {
     let centre = UndoTestCentre()
     centre.undoService.recordUndo(
-      CommandInverseProxy(
-        command: UndoCommand(id: "undo.original", inverseID: "redo.original"),
+      CommandReversalAdapter(
+        command: UndoCommand(id: "undo.original", reversalID: "redo.original"),
         centre: centre
       ))
 
@@ -248,7 +245,7 @@ struct UndoServiceTests {
     #expect(centre.undoService.hasRedo)
 
     centre.undoService.recordUndo(
-      CommandInverseProxy(command: UndoCommand(id: "undo.replacement"), centre: centre))
+      CommandReversalAdapter(command: UndoCommand(id: "undo.replacement"), centre: centre))
 
     #expect(centre.undoService.stackDescription == "undo.replacement")
     #expect(centre.undoService.hasUndo)
@@ -256,37 +253,37 @@ struct UndoServiceTests {
     #expect(centre.undoService.nextUndo?.id == "undo.replacement")
   }
 
-  /// Verifies that undoable centres record successful forward command inverses.
-  @Test func undoableCentreRecordsForwardCommandInverses() async throws {
+  /// Verifies that undoable centres record successful forward command reversals.
+  @Test func undoableCentreRecordsForwardCommandReversals() async throws {
     let centre = UndoTestCentre()
     let command = UndoableTestCommand()
 
     try await centre.perform(command)
-    #expect(centre.undoService.stackDescription == "test.undoable.inverse")
+    #expect(centre.undoService.stackDescription == "test.undoable.reversal")
   }
 
-  /// Verifies that inverse proxies preserve availability and execution behavior.
-  @Test func commandInverseProxyForwardsAvailabilityAndExecution() async throws {
+  /// Verifies that reversal adapters preserve availability and execution behavior.
+  @Test func commandReversalAdapterForwardsAvailabilityAndExecution() async throws {
     let centre = UndoTestCentre()
-    let unavailableProxy = CommandInverseProxy(
+    let unavailableAdapter = CommandReversalAdapter(
       command: UndoCommand(id: "test.proxy", reportedAvailability: .disabled), centre: centre)
 
-    #expect(unavailableProxy.id == "test.proxy")
-    #expect(unavailableProxy.availability() == .disabled)
+    #expect(unavailableAdapter.id == "test.proxy")
+    #expect(unavailableAdapter.availability() == .disabled)
 
-    let executableProxy = CommandInverseProxy(
+    let executableAdapter = CommandReversalAdapter(
       command: UndoCommand(id: "test.proxy"), centre: centre)
 
-    centre.undoService.recordUndo(executableProxy)
+    centre.undoService.recordUndo(executableAdapter)
     try await centre.undoService.performUndo()
     #expect(centre.performedCommandIDs == ["test.proxy"])
   }
 
-  /// Verifies that failed inverses remain available for a later retry.
-  @Test func failedUndoPreservesTheInverse() async {
+  /// Verifies that failed reversals remain available for a later retry.
+  @Test func failedUndoPreservesTheReversal() async {
     let centre = UndoTestCentre()
     centre.undoService.recordUndo(
-      CommandInverseProxy(command: FailingUndoCommand(), centre: centre))
+      CommandReversalAdapter(command: FailingUndoCommand(), centre: centre))
 
     await #expect(throws: UndoFailure.expected) {
       try await centre.undoService.performUndo()
@@ -302,7 +299,7 @@ struct UndoServiceTests {
     let centre = UndoTestCentre()
     let gate = UndoGate()
     centre.undoService.recordUndo(
-      CommandInverseProxy(command: SuspendedUndoCommand(gate: gate), centre: centre))
+      CommandReversalAdapter(command: SuspendedUndoCommand(gate: gate), centre: centre))
 
     let firstUndo = Task {
       try await centre.undoService.performUndo()
@@ -334,7 +331,7 @@ struct UndoServiceTests {
     let centre = UndoTestCentre()
     let gate = UndoGate()
     centre.undoService.recordUndo(
-      CommandInverseProxy(command: UndoCommand(id: "undo.pending"), centre: centre))
+      CommandReversalAdapter(command: UndoCommand(id: "undo.pending"), centre: centre))
 
     let forwardCommand = Task {
       try await centre.perform(SuspendedForwardCommand(gate: gate))
@@ -358,7 +355,7 @@ struct UndoServiceTests {
     let activeCentre = UndoTestCentre()
     let activeGate = UndoGate()
     activeCentre.undoService.recordUndo(
-      CommandInverseProxy(command: SuspendedUndoCommand(gate: activeGate), centre: activeCentre))
+      CommandReversalAdapter(command: SuspendedUndoCommand(gate: activeGate), centre: activeCentre))
 
     let activeUndo = Task {
       try await activeCentre.undoService.performUndo()
@@ -366,7 +363,7 @@ struct UndoServiceTests {
     await activeGate.waitUntilStarted()
 
     let otherCentre = UndoTestCentre()
-    otherCentre.undoService.recordUndo(CrossServiceInverse(centre: activeCentre))
+    otherCentre.undoService.recordUndo(CrossServiceReversal(centre: activeCentre))
 
     await #expect(throws: CommandError.commandUnavailable) {
       try await otherCentre.undoService.performUndo()

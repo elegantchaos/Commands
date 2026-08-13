@@ -35,9 +35,9 @@ public struct RedoCommandButton: View {
 
   /// Renders the pending redo action unless it is hidden.
   public var body: some View {
-    let inverse = undoService.nextRedo
-    let availability = inverse?.availability() ?? .disabled
-    let presentation = showsCommandPresentation ? inverse as? any CommandInverseWithUI : nil
+    let reversal = undoService.nextRedo
+    let availability = reversal?.availability() ?? .disabled
+    let presentation = showsCommandPresentation ? reversal as? any CommandReversalWithUI : nil
 
     if availability != .hidden {
       Button(role: role, action: performRedo) {
@@ -52,7 +52,7 @@ public struct RedoCommandButton: View {
   }
 
   /// Button label for the pending action or the standard Redo action.
-  @ViewBuilder private func label(presentation: (any CommandInverseWithUI)?) -> some View {
+  @ViewBuilder private func label(presentation: (any CommandReversalWithUI)?) -> some View {
     if let presentation {
       Label(
         String.localizedStringWithFormat(

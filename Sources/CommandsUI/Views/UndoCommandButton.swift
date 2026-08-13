@@ -7,19 +7,19 @@ import Commands
 import Icons
 import SwiftUI
 
-/// A button that performs the next inverse held by an undo service.
+/// A button that performs the next reversal held by an undo service.
 ///
-/// The button remains visible but disabled when there is no inverse. It is
-/// hidden only when the pending inverse reports `.hidden` availability.
+/// The button remains visible but disabled when there is no reversal. It is
+/// hidden only when the pending reversal reports `.hidden` availability.
 @MainActor
 public struct UndoCommandButton: View {
-  /// Undo service that owns the pending inverse.
+  /// Undo service that owns the pending reversal.
   private let undoService: UndoService
 
   /// Optional semantic role for the button.
   private let role: ButtonRole?
 
-  /// Whether the pending inverse's UI metadata should replace the standard Undo label.
+  /// Whether the pending reversal's UI metadata should replace the standard Undo label.
   private let showsCommandPresentation: Bool
 
   /// Creates an undo button for the supplied service.
@@ -33,11 +33,11 @@ public struct UndoCommandButton: View {
     self.showsCommandPresentation = showsCommandPresentation
   }
 
-  /// Renders the pending inverse unless it is hidden.
+  /// Renders the pending reversal unless it is hidden.
   public var body: some View {
-    let inverse = undoService.nextUndo
-    let availability = inverse?.availability() ?? .disabled
-    let presentation = showsCommandPresentation ? inverse as? any CommandInverseWithUI : nil
+    let reversal = undoService.nextUndo
+    let availability = reversal?.availability() ?? .disabled
+    let presentation = showsCommandPresentation ? reversal as? any CommandReversalWithUI : nil
 
     if availability != .hidden {
       Button(role: role, action: performUndo) {
@@ -51,8 +51,8 @@ public struct UndoCommandButton: View {
     }
   }
 
-  /// Button label for the pending inverse or the standard Undo action.
-  @ViewBuilder private func label(presentation: (any CommandInverseWithUI)?) -> some View {
+  /// Button label for the pending reversal or the standard Undo action.
+  @ViewBuilder private func label(presentation: (any CommandReversalWithUI)?) -> some View {
     if let presentation {
       Label(
         String.localizedStringWithFormat(

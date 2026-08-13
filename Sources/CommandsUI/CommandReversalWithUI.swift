@@ -6,15 +6,15 @@
 import Commands
 import Icons
 
-/// An inverse command that exposes presentation metadata for a user interface.
+/// A command reversal that exposes presentation metadata for a user interface.
 @MainActor
-public protocol CommandInverseWithUI: CommandInverse {
-  /// Returns the user-visible name of the inverse command.
+public protocol CommandReversalWithUI: CommandReversal {
+  /// Returns the user-visible name of the reversal.
   func name() -> String
 
-  /// Returns the icon representing the inverse command.
+  /// Returns the icon representing the reversal.
   func icon() -> Icon
 
-  /// Returns optional help text for the inverse command.
+  /// Returns optional help text for the reversal.
   func help() -> String?
 }

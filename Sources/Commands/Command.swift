@@ -30,10 +30,8 @@ public protocol Command<Centre> {
   /// Performs the command using the given command centre.
   func perform(centre: Centre) async throws -> ResultType
 
-  /// Return the inverse of this command.
-  /// The inverse can be invoked to undo whatever state changes this
-  /// command performs.
-  func inverse(centre: Centre) -> CommandInverse?
+  /// Returns the operation that reverses this command.
+  func reversal(centre: Centre) -> (any CommandReversal)?
 
 }
 
@@ -43,6 +41,6 @@ extension Command {
   /// By default, commands are always enabled.
   public func availability(centre: Centre) -> CommandAvailability { .enabled }
 
-  /// By default, a command does not have to define an inverse.
-  public func inverse(centre: Centre) -> CommandInverse? { nil }
+  /// By default, a command does not provide a reversal.
+  public func reversal(centre: Centre) -> (any CommandReversal)? { nil }
 }

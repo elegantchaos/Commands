@@ -58,7 +58,7 @@ open class WrappedCommand<C: CommandWithUI>: CommandWithUI {
     try await command.perform(centre: centre)
   }
 
-  open func inverse(centre: C.Centre) -> CommandInverse? {
-    command.inverse(centre: centre)
+  open func reversal(centre: C.Centre) -> (any CommandReversal)? {
+    command.reversal(centre: centre)
   }
 }

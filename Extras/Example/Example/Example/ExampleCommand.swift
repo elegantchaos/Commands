@@ -7,7 +7,7 @@ import Commands
 import CommandsUI
 import Icons
 
-/// Increments the example service count and supplies its undo command.
+/// Increments the example service count and supplies its reversal.
 struct ExampleCommand<Centre: ExampleServiceProvider>: CommandWithUI {
   let id = "com.elegantchaos.commands.example"
 
@@ -19,12 +19,12 @@ struct ExampleCommand<Centre: ExampleServiceProvider>: CommandWithUI {
     centre.service.incrementDone()
   }
 
-  func inverse(centre: Centre) -> CommandInverse? {
-    return CommandInverseProxyWithUI(command: ExampleUndoCommand(), centre: centre)
+  func reversal(centre: Centre) -> (any CommandReversal)? {
+    CommandReversalAdapterWithUI(command: ExampleUndoCommand(), centre: centre)
   }
 }
 
-/// Decrements the example service count and supplies its redo command.
+/// Decrements the example service count and supplies its reversal.
 struct ExampleUndoCommand<Centre: ExampleServiceProvider>: CommandWithUI {
   let id = "com.elegantchaos.commands.undo"
 
@@ -36,13 +36,7 @@ struct ExampleUndoCommand<Centre: ExampleServiceProvider>: CommandWithUI {
     centre.service.decrementDone()
   }
 
-  func inverse(centre: Centre) -> CommandInverse? {
-    return CommandInverseProxyWithUI(command: ExampleCommand(), centre: centre)
-    //    let command = ExampleCommand<Centre>()
-    //    return ExampleUndoInvocation(availability: {
-    //      command.availability(centre: centre)
-    //    }, perform: {
-    //      try await command.perform(centre: centre)
-    //    })
+  func reversal(centre: Centre) -> (any CommandReversal)? {
+    CommandReversalAdapterWithUI(command: ExampleCommand(), centre: centre)
   }
 }

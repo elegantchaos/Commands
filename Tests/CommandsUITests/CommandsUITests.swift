@@ -296,20 +296,20 @@ struct CommandsUITests {
     #expect(wrapped.confirmation(centre: centre)?.confirm == "Proceed")
   }
 
-  /// Verifies that UI inverse proxies preserve current metadata and execution behavior.
-  @Test func commandInverseUIProxyForwardsMetadataAndExecution() async throws {
+  /// Verifies that UI reversal adapters preserve current metadata and execution behavior.
+  @Test func commandReversalAdapterWithUIForwardsMetadataAndExecution() async throws {
     let centre = UITestCentre()
     let command = MetadataCommand(reportedAvailability: .enabled, result: "ignored")
-    let inverse = CommandInverseProxyWithUI(command: command, centre: centre)
+    let reversal = CommandReversalAdapterWithUI(command: command, centre: centre)
 
-    #expect(inverse.id == command.id)
-    #expect(inverse.availability() == .enabled)
-    #expect(inverse.name() == "Metadata Command")
-    #expect(inverse.icon().systemImage == "network")
-    #expect(inverse.help() == "Helpful metadata")
+    #expect(reversal.id == command.id)
+    #expect(reversal.availability() == .enabled)
+    #expect(reversal.name() == "Metadata Command")
+    #expect(reversal.icon().systemImage == "network")
+    #expect(reversal.help() == "Helpful metadata")
 
     let undoService = UndoService()
-    undoService.recordUndo(inverse)
+    undoService.recordUndo(reversal)
     try await undoService.performUndo()
     #expect(centre.performedCommandIDs == [command.id])
   }

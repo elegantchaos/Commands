@@ -20,178 +20,27 @@
 their presentation. `CommandsUI` renders those actions in SwiftUI and adapts
 them to UIKit and Mac Catalyst menus.
 
-See [Concurrency](Extras/Documentation/Concurrency.md) for the package's actor,
+See the detailed [Commands](Sources/Commands/README.md) and
+[CommandsUI](Sources/CommandsUI/README.md) guides for each target. See
+[Concurrency](Extras/Documentation/Concurrency.md) for the package's actor,
 async execution, undo/redo, and cancellation design.
 
 ## Capabilities
 
 - Centre-aware command availability and lifecycle tracking
-- Optional inverse commands with a lightweight undo/redo service
+- Optional command reversals with a lightweight undo/redo service
 - UI metadata: localized name and help, icons, shortcuts, and confirmation
 - SwiftUI buttons, toolbar items, dynamic-trigger buttons, and file importers
 - UIKit and Mac Catalyst `UICommand` and `UIMenu` adaptation
 
-## Define a command
+## Targets
 
-Commands depend on the narrowest command-centre protocol that supplies their
-work. Every command declares an identifier, executes asynchronously, and may
-supply an inverse for undo.
+- [Commands](Sources/Commands/README.md): core command execution, availability,
+  reversals, undo, and redo.
+- [CommandsUI](Sources/CommandsUI/README.md): UI metadata, SwiftUI controls,
+  file importers, and UIKit/Mac Catalyst menus.
 
-```swift
-import Commands
+## Example
 
-@MainActor
-protocol SessionCommands: CommandCentre {
-  func signOut()
-}
-
-@MainActor
-struct SignOutCommand<C: SessionCommands>: Command {
-  let id = "session.sign-out"
-
-  func perform(centre: C) async throws {
-    centre.signOut()
-  }
-
-  func inverse(centre: C) -> CommandInverse? {
-    nil
-  }
-}
-```
-
-Call `perform(_:)` for an awaited result, or `performWithoutWaiting(_:)` for a
-task that logs errors. Both helpers
-check availability immediately before execution, then notify the centre that
-the command started and finished.
-
-```swift
-try await commander.perform(SignOutCommand())
-commander.performWithoutWaiting(SignOutCommand())
-```
-
-## Model availability
-
-A command can be enabled, disabled, hidden, running, or running silently. UI
-helpers use this to choose whether to render a command and whether it accepts
-interaction; programmatic execution also rejects commands that are not enabled.
-
-```swift
-func availability(centre: C) -> CommandAvailability {
-  centre.hasActiveSession ? .enabled : .disabled
-}
-```
-
-Centres that track active commands should implement
-`recordStartedCommand`, `recordFinishedCommand`, and `isRunning`. The default
-implementations are appropriate for centres that do not need tracking.
-
-## Add UI metadata and render SwiftUI controls
-
-`CommandWithUI` adds the presentation metadata needed by UI clients. Its
-default `name` and `help` look up the command ID and `<id>.help` in the
-command's resource bundle; override them when the metadata depends on live
-centre state.
-
-```swift
-import CommandsUI
-import Icons
-import SwiftUI
-
-@MainActor
-struct ConfigureRepositoryCommand<C: SessionCommands>: CommandWithUI {
-  let id = "repository.configure"
-
-  func icon(centre: C) -> Icon { .actions }
-
-  func perform(centre: C) async throws {
-    // Configure the repository.
-  }
-
-  func inverse(centre: C) -> CommandInverse? { nil }
-}
-
-struct RepositoryToolbar<C: SessionCommands>: View {
-  let commander: C
-
-  var body: some View {
-    commander.button(ConfigureRepositoryCommand<C>())
-      .toolbar {
-        commander.toolbarItem(ConfigureRepositoryCommand<C>())
-      }
-  }
-}
-```
-
-`confirmableButton` and `confirmableToolbarItem` show a command confirmation.
-Provide a `CommandConfirmation` from `confirmation(centre:)` when the action
-requires explicit approval.
-
-## Dynamic commands and importers
-
-Use `dynamicButton` when one control chooses a command variant from its
-activation trigger: `.primary`, `.secondary`, or `.tertiary`. On macOS these
-map to normal, Command-, and Option-clicks; on iOS, the secondary trigger is a
-long press.
-
-`ImporterCommand` carries the result of SwiftUI's file importer into command
-execution. `importer(_:)` supplies both the button and importer sheet. For a
-context menu, pair `importerButton(_:isShowingImportSheet:)` with
-`ImporterCommandModifier` attached to the view that owns the menu.
-
-## UIKit and Mac Catalyst menus
-
-Subclass `CommandCentreDelegate` in an iOS or Mac Catalyst application, then
-create `UICommand` values or inline `UIMenu` values from the same command
-models.
-
-```swift
-import CommandsUI
-import UIKit
-
-@MainActor
-final class AppDelegate: CommandCentreDelegate {
-  let commander: AppCommandCentre
-
-  init(commander: AppCommandCentre) {
-    self.commander = commander
-    super.init()
-  }
-
-  override func buildMenu(with builder: UIMenuBuilder) {
-    let menu = menuForCommand(
-      NewDocumentCommand(),
-      centre: commander,
-      identifier: UIMenu.Identifier("app.menu.new-document")
-    )
-    builder.replaceChildren(ofMenu: .file) { _ in [menu] }
-  }
-}
-```
-
-The delegate stores executable invocations in a private registry and places the
-command's stable string ID in UIKit's `propertyList`. Keep IDs stable: each
-reuse replaces the previous registration, whereas continuously generating IDs
-retains invocations for the delegate's lifetime.
-
-## Undo
-
-Adopt `UndoableCommandCentre` and provide an `UndoService` to record inverses
-after successful commands. The service retains a history cursor, so each successful
-undo can be reversed with `try await undoService.performRedo()`. Recording a new
-command after undoing discards the redo branch. `undoButton()` and `redoButton()`
-render the package's standard history controls; applications can also call
-`try await undoService.performUndo()` and `try await undoService.performRedo()`
-directly. Pass `showsCommandPresentation: true` to either button when inverse
-commands use `CommandInverseProxyWithUI` and the button should display their
-localized name and icon instead of the standard Undo or Redo label.
-
-```swift
-@MainActor
-final class EditorCommands: UndoableCommandCentre {
-  let undoService = UndoService()
-}
-```
-
-`CommandInverseProxy` turns a command and its centre into a `CommandInverse`. The
-wrapped command's `inverse(centre:)` provides the inverse required to return from
-undo to redo (and back again).
+The [example application](Extras/Example) demonstrates commands, localized UI
+metadata, and undo/redo controls working together.

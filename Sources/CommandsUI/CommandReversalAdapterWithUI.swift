@@ -6,11 +6,11 @@
 import Commands
 import Icons
 
-/// Adapts a UI-capable command and its centre into a presentable inverse command.
+/// Adapts a UI-capable command and its centre into a presentable reversal.
 @MainActor
-public struct CommandInverseProxyWithUI<C: CommandWithUI>: CommandInverseWithUI {
-  /// Core inverse behavior for the wrapped command.
-  private let inverse: CommandInverseProxy<C>
+public struct CommandReversalAdapterWithUI<C: CommandWithUI>: CommandReversalWithUI {
+  /// Core reversal behavior for the wrapped command.
+  private let reversal: CommandReversalAdapter<C>
 
   /// UI-capable command whose metadata is presented.
   private let command: C
@@ -18,26 +18,26 @@ public struct CommandInverseProxyWithUI<C: CommandWithUI>: CommandInverseWithUI 
   /// Command centre used to resolve dynamic metadata.
   private let centre: C.Centre
 
-  /// Creates an inverse that forwards execution and UI metadata from a command.
+  /// Creates a reversal that forwards execution and UI metadata from a command.
   public init(command: C, centre: C.Centre) {
-    inverse = CommandInverseProxy(command: command, centre: centre)
+    reversal = CommandReversalAdapter(command: command, centre: centre)
     self.command = command
     self.centre = centre
   }
 
   /// Stable identifier forwarded from the wrapped command.
   public var id: String {
-    inverse.id
+    reversal.id
   }
 
-  /// Availability closure forwarded from the wrapped command.
-  public var availability: () -> CommandAvailability {
-    inverse.availability
+  /// Returns the wrapped command's current availability.
+  public func availability() -> CommandAvailability {
+    reversal.availability()
   }
 
-  /// Action closure forwarded from the wrapped command.
-  public var action: (CommandExecutionContext) async throws -> CommandInverse? {
-    inverse.action
+  /// Performs the wrapped command and returns its opposing reversal.
+  public func perform(in context: CommandExecutionContext) async throws -> (any CommandReversal)? {
+    try await reversal.perform(in: context)
   }
 
   /// Returns the command's current display name.

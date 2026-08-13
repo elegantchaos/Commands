@@ -8,14 +8,14 @@ documentation, and tests.
 ## Completed work
 
 - Updated code comments, formatting, public API documentation, and the README.
-- Added UI-capable inverse-command metadata through `CommandInverseWithUI` and
-  `CommandInverseProxyWithUI`.
+- Added UI-capable command-reversal metadata through `CommandReversalWithUI` and
+  `CommandReversalAdapterWithUI`.
 - Moved `UndoCommandButton` to its own source file and made it follow the
   pending inverse's availability and optional command presentation.
 - Reduced repetition in CommandsUI controls with shared label and presentation
   helpers while keeping availability evaluation dynamic during `body` updates.
 - Made `UndoService.performUndo()` asynchronous and added cursor-based undo/redo
-  history. A history action returns its replacement inverse, which lets the
+  history. A history action returns its replacement reversal, which lets the
   service move repeatedly between undo and redo states.
 - Added `UndoService.performRedo()`, `hasRedo`, `nextRedo`, `isUndoing`, and
   `isRedoing`.
