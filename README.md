@@ -176,6 +176,9 @@ retains invocations for the delegate's lifetime.
 Adopt `UndoableCommandCentre` and provide an `UndoService` to record inverses
 after successful commands. `undoButton()` renders the package's basic undo
 control; applications can also call `try await undoService.performUndo()` directly.
+Pass `showsCommandPresentation: true` to `undoButton()` when inverse commands
+use `CommandInverseProxyWithUI` and the button should display their localized name
+and icon instead of the standard Undo label.
 
 ```swift
 @MainActor

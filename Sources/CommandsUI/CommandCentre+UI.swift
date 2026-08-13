@@ -137,32 +137,15 @@ extension CommandCentre {
 
 @MainActor
 extension UndoableCommandCentre {
-  /// Returns a labelled button for the given command, or nothing when it is hidden.
-  @ViewBuilder public func undoButton(role: ButtonRole? = nil) -> some View {
-    UndoButton(undoService: undoService)
-  }
-}
-
-@MainActor
-public struct UndoButton: View {
-  let undoService: UndoService
-
-  public var body: some View {
-    if undoService.hasUndo {
-      Button {
-        Task {
-          do {
-            try await undoService.performUndo()
-          } catch {
-            commandChannel.log("Error performing undo: \(error)")
-          }
-        }
-      } label: {
-        Text("undo")
-      }
-      .disabled(undoService.isUndoing)
-    } else {
-      Text("no undo")
-    }
+  /// Returns a button that performs the next undo operation.
+  @ViewBuilder public func undoButton(
+    role: ButtonRole? = nil,
+    showsCommandPresentation: Bool = false
+  ) -> some View {
+    CommandUndoButton(
+      undoService: undoService,
+      role: role,
+      showsCommandPresentation: showsCommandPresentation
+    )
   }
 }

@@ -149,6 +149,7 @@ struct UndoServiceTests {
 
     #expect(centre.undoService.hasUndo)
     #expect(centre.undoService.stackDescription == "first > second")
+    #expect(centre.undoService.nextUndo?.id == "second")
 
     try await centre.undoService.performUndo()
     #expect(centre.performedCommandIDs == ["second"])
@@ -158,6 +159,7 @@ struct UndoServiceTests {
     try await centre.undoService.performUndo()
     #expect(centre.performedCommandIDs == ["second", "first"])
     #expect(centre.undoService.hasUndo == false)
+    #expect(centre.undoService.nextUndo == nil)
 
     try await centre.undoService.performUndo()
     #expect(centre.performedCommandIDs == ["second", "first"])

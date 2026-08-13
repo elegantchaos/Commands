@@ -20,7 +20,7 @@ struct ExampleCommand<Centre: ExampleServiceProvider>: CommandWithUI {
   }
 
   func inverse(centre: Centre) -> CommandInverse? {
-    return CommandInverseProxy(command: ExampleUndoCommand(), centre: centre)
+    return CommandInverseProxyWithUI(command: ExampleUndoCommand(), centre: centre)
   }
 }
 
@@ -37,7 +37,7 @@ struct ExampleUndoCommand<Centre: ExampleServiceProvider>: CommandWithUI {
   }
 
   func inverse(centre: Centre) -> CommandInverse? {
-    return CommandInverseProxy(command: ExampleCommand(), centre: centre)
+    return CommandInverseProxyWithUI(command: ExampleCommand(), centre: centre)
     //    let command = ExampleCommand<Centre>()
     //    return ExampleUndoInvocation(availability: {
     //      command.availability(centre: centre)

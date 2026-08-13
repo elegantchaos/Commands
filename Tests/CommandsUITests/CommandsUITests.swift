@@ -23,6 +23,9 @@ private final class UITestCentre: CommandCentre {
   /// Command identifiers performed through platform UI adapters.
   var performedCommandIDs: [String] = []
 
+  /// Sources used to perform commands through UI adapters.
+  var performedCommandSources: [CommandSource] = []
+
   /// Returns whether the supplied command is marked as running.
   func isRunning<C: Command>(_ command: C) -> Bool where C.Centre == UITestCentre {
     runningCommandIDs.contains(command.id)
@@ -161,7 +164,9 @@ private struct MetadataCommand: CommandWithUI {
 
   /// Returns the configured result.
   func perform(centre: UITestCentre, from source: CommandSource) async throws -> String {
-    result
+    centre.performedCommandIDs.append(id)
+    centre.performedCommandSources.append(source)
+    return result
   }
 }
 
@@ -345,5 +350,22 @@ struct CommandsUITests {
     #expect(wrapped.help(centre: centre) == "Helpful metadata")
     #expect(wrapped.icon(centre: centre).systemImage == "network")
     #expect(wrapped.confirmation(centre: centre)?.confirm == "Proceed")
+  }
+
+  /// Verifies that UI inverse proxies preserve current metadata and execution behavior.
+  @Test func commandInverseUIProxyForwardsMetadataAndExecution() async throws {
+    let centre = UITestCentre()
+    let command = MetadataCommand(reportedAvailability: .enabled, result: "ignored")
+    let inverse = CommandInverseProxyWithUI(command: command, centre: centre)
+
+    #expect(inverse.id == command.id)
+    #expect(inverse.availability() == .enabled)
+    #expect(inverse.name() == "Metadata Command")
+    #expect(inverse.icon().systemImage == "network")
+    #expect(inverse.help() == "Helpful metadata")
+
+    try await inverse.action(.undo)
+    #expect(centre.performedCommandIDs == [command.id])
+    #expect(centre.performedCommandSources == [.undo])
   }
 }

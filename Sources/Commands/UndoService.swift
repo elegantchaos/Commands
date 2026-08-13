@@ -27,7 +27,12 @@ open class UndoService {
 
   /// Are there items on the undo stack?
   open var hasUndo: Bool {
-    !undoStack.isEmpty
+    nextUndo != nil
+  }
+
+  /// The inverse that will be performed by the next undo operation.
+  open var nextUndo: CommandInverse? {
+    undoStack.last
   }
 
   /// Record a `CommandInverse` on the stack.
