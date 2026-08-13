@@ -4,7 +4,6 @@
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 import Commands
-import Icons
 import SwiftUI
 
 /// Button that renders and performs a command for a concrete command centre.
@@ -23,9 +22,6 @@ where C.Centre == CC {
   /// Optional custom content for the button label.
   private let content: ((C) -> Content)?
 
-  /// Current requested label visibility.
-  @Environment(\.labelsVisibility) private var labelsVisibility
-
   /// Creates a command button with custom label content.
   public init(
     command: C,
@@ -41,13 +37,16 @@ where C.Centre == CC {
 
   /// Renders the command button, or no view when the command is hidden.
   public var body: some View {
-    if commander.availability(command) != .hidden {
+    let availability = commander.availability(command)
+    if availability != .hidden {
       Button(role: role, action: { commander.performWithoutWaiting(command, from: .button) }) {
         label
       }
-      .disabled(commander.shouldDisable(command))
-      .commandShortcut(command)
-      .help(command.help(centre: commander) ?? "")
+      .commandPresentation(
+        availability: availability,
+        help: command.help(centre: commander),
+        shortcut: command.shortcut
+      )
     }
   }
 
@@ -56,22 +55,8 @@ where C.Centre == CC {
     if let content {
       content(command)
     } else {
-      defaultLabel
+      CommandLabel(command: command, centre: commander)
     }
-  }
-
-  /// Default command label.
-  @ViewBuilder private var defaultLabel: some View {
-    #if os(tvOS)
-      if labelsVisibility == .hidden {
-        Image(icon: command.icon(centre: commander))
-          .accessibilityLabel(command.name(centre: commander))
-      } else {
-        Label(command.name(centre: commander), icon: command.icon(centre: commander))
-      }
-    #else
-      Label(command.name(centre: commander), icon: command.icon(centre: commander))
-    #endif
   }
 }
 

@@ -4,7 +4,6 @@
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 import Commands
-import Icons
 import SwiftUI
 
 /// Button wrapper that presents a confirmation dialog before invoking a command.
@@ -31,6 +30,7 @@ struct ConfirmableCommandButton<C: CommandWithUI, CC: CommandCentre>: View where
 
   /// Renders the labelled button and its attached confirmation alert.
   var body: some View {
+    let availability = commander.availability(command)
     let confirmation =
       command.confirmation(centre: commander)
       ?? .init(
@@ -40,14 +40,21 @@ struct ConfirmableCommandButton<C: CommandWithUI, CC: CommandCentre>: View where
         confirm: String(localized: "confirmation.default.confirm")
       )
 
-    Button(role: role, action: handleShowAlert) {
-      Label(command.name(centre: commander), icon: command.icon(centre: commander))
-    }
-    .alert(confirmation.title, isPresented: $isPresented) {
-      Button(confirmation.cancel, role: .cancel) {}
-      Button(confirmation.confirm, role: .destructive) { handlePerformCommand() }
-    } message: {
-      Text(confirmation.message)
+    if availability != .hidden {
+      Button(role: role, action: handleShowAlert) {
+        CommandLabel(command: command, centre: commander)
+      }
+      .commandPresentation(
+        availability: availability,
+        help: command.help(centre: commander),
+        shortcut: command.shortcut
+      )
+      .alert(confirmation.title, isPresented: $isPresented) {
+        Button(confirmation.cancel, role: .cancel) {}
+        Button(confirmation.confirm, role: .destructive) { handlePerformCommand() }
+      } message: {
+        Text(confirmation.message)
+      }
     }
   }
 

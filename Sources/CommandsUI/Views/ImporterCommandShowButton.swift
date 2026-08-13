@@ -32,9 +32,13 @@ where C.Centre == CC {
     let availability = centre.availability(command)
     if availability != .hidden {
       Button(action: { isShowingImportSheet = true }) {
-        Label(command.name(centre: centre), icon: command.icon(centre: centre))
+        CommandLabel(command: command, centre: centre)
       }
-      .disabled(centre.shouldDisable(command))
+      .commandPresentation(
+        availability: availability,
+        help: nil,
+        shortcut: nil
+      )
     }
   }
 }

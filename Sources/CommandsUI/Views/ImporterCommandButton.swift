@@ -49,11 +49,13 @@ struct ImporterCommandButton<C: ImporterCommand, CC: CommandCentre>: View where 
     let availability = centre.availability(command)
     if availability != .hidden {
       Button(role: role, action: { isShowingSheet = true }) {
-        Label(command.name(centre: centre), icon: command.icon(centre: centre))
+        CommandLabel(command: command, centre: centre)
       }
-      .disabled(centre.shouldDisable(command))
-      .help(command.help(centre: centre) ?? "")
-      .commandShortcut(command)
+      .commandPresentation(
+        availability: availability,
+        help: command.help(centre: centre),
+        shortcut: command.shortcut
+      )
       .modifier(
         ImporterCommandModifier(isShowing: $isShowingSheet, command: $command, centre: centre))
     }

@@ -85,14 +85,3 @@ extension CommandWithUI {
   /// By default, no shortcut is provided.
   public var shortcut: CommandShortcut? { nil }
 }
-
-extension View {
-  /// Apply shortcut if the command has one and the platform supports it.
-  func commandShortcut<C: CommandWithUI>(_ command: C) -> some View {
-    #if os(tvOS) || os(watchOS)
-      self
-    #else
-      self.keyboardShortcut(command.shortcut)
-    #endif
-  }
-}

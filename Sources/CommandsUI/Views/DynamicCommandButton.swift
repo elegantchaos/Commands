@@ -24,26 +24,28 @@ where Wrapped.Centre == Centre {
   let command: @MainActor (CommandTrigger) -> Wrapped
 
   /// Content displayed inside the button.
-  let content: () -> Content
+  let content: Content
 
   @State private var suppressPrimaryAction = false
 
   var body: some View {
-    baseButton
-      // TODO: Track the current dynamic trigger in view state so macOS can use
-      // modifier changes to update availability, help, and shortcut ahead of the
-      // click. That likely means monitoring key and mouse modifier events and
-      // refreshing a stored CommandTrigger as the pointer focus changes. iOS still
-      // cannot predict tap vs long-press up front, so its disabled state will
-      // remain primary-trigger based unless the UI is split into distinct controls.
-      .disabled(commander.shouldDisable(primaryCommand))
-      .commandShortcut(primaryCommand)
-      .help(primaryCommand.help(centre: commander) ?? "")
-  }
+    let primaryCommand = command(.primary)
+    let availability = commander.availability(primaryCommand)
 
-  /// Concrete command used for default UI state such as disabled, help, and shortcut.
-  private var primaryCommand: Wrapped {
-    command(.primary)
+    if availability != .hidden {
+      baseButton
+        // TODO: Track the current dynamic trigger in view state so macOS can use
+        // modifier changes to update availability, help, and shortcut ahead of the
+        // click. That likely means monitoring key and mouse modifier events and
+        // refreshing a stored CommandTrigger as the pointer focus changes. iOS still
+        // cannot predict tap vs long-press up front, so its disabled state will
+        // remain primary-trigger based unless the UI is split into distinct controls.
+        .commandPresentation(
+          availability: availability,
+          help: primaryCommand.help(centre: commander),
+          shortcut: primaryCommand.shortcut
+        )
+    }
   }
 
   /// Performs the wrapped command for the supplied trigger.
@@ -54,12 +56,10 @@ where Wrapped.Centre == Centre {
   @ViewBuilder
   private var baseButton: some View {
     #if os(macOS)
-      Button(role: role, action: { performWrappedCommand(currentTrigger) }) {
-        content()
-      }
+      Button(role: role, action: { performWrappedCommand(currentTrigger) }, label: { content })
     #elseif os(iOS)
       Button(role: role, action: performPrimaryAction) {
-        content()
+        content
       }
       .simultaneousGesture(
         LongPressGesture().onEnded { _ in
@@ -68,9 +68,7 @@ where Wrapped.Centre == Centre {
         }
       )
     #else
-      Button(role: role, action: { performWrappedCommand(.primary) }) {
-        content()
-      }
+      Button(role: role, action: { performWrappedCommand(.primary) }, label: { content })
     #endif
   }
 

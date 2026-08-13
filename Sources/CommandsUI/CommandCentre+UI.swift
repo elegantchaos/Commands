@@ -45,11 +45,14 @@ extension CommandCentre {
   @ViewBuilder public func dynamicButton<C: CommandWithUI, Content: View>(
     role: ButtonRole? = nil,
     command: @escaping @MainActor (CommandTrigger) -> C,
-    content: @escaping () -> Content
+    @ViewBuilder content: () -> Content
   ) -> some View where C.Centre == Self {
-    if availability(command(.primary)) != .hidden {
-      DynamicCommandButton(commander: self, role: role, command: command, content: content)
-    }
+    DynamicCommandButton(
+      commander: self,
+      role: role,
+      command: command,
+      content: content()
+    )
   }
 
   /// Return a labelled button that resolves a concrete command from an activation trigger.
@@ -59,7 +62,7 @@ extension CommandCentre {
   ) -> some View where C.Centre == Self {
     let primaryCommand = command(.primary)
     dynamicButton(role: role, command: command) {
-      Label(primaryCommand.name(centre: self), icon: primaryCommand.icon(centre: self))
+      CommandLabel(command: primaryCommand, centre: self)
     }
   }
 
@@ -68,15 +71,7 @@ extension CommandCentre {
     _ command: C, role: ButtonRole? = nil
   ) -> some View
   where C.Centre == Self {
-    let availability = availability(command)
-    if availability != .hidden {
-      ConfirmableCommandButton(command: command, commander: self, role: role)
-        .disabled(shouldDisable(command))
-        #if !os(watchOS) && !os(tvOS)
-          .keyboardShortcut(command.shortcut)
-        #endif
-        .help(command.help(centre: self) ?? "")
-    }
+    ConfirmableCommandButton(command: command, commander: self, role: role)
   }
 
   /// Returns a toolbar item for the given command, or nothing when it is hidden.
@@ -142,7 +137,7 @@ extension UndoableCommandCentre {
     role: ButtonRole? = nil,
     showsCommandPresentation: Bool = false
   ) -> some View {
-    CommandUndoButton(
+    UndoCommandButton(
       undoService: undoService,
       role: role,
       showsCommandPresentation: showsCommandPresentation

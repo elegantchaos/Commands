@@ -12,7 +12,7 @@ import SwiftUI
 /// The button remains visible but disabled when there is no inverse. It is
 /// hidden only when the pending inverse reports `.hidden` availability.
 @MainActor
-public struct CommandUndoButton: View {
+public struct UndoCommandButton: View {
   /// Undo service that owns the pending inverse.
   private let undoService: UndoService
 
@@ -35,35 +35,28 @@ public struct CommandUndoButton: View {
 
   /// Renders the pending inverse unless it is hidden.
   public var body: some View {
+    let inverse = undoService.nextUndo
+    let availability = inverse?.availability() ?? .disabled
+    let presentation = showsCommandPresentation ? inverse as? any CommandInverseWithUI : nil
+
     if availability != .hidden {
       Button(role: role, action: performUndo) {
-        label
+        label(presentation: presentation)
       }
-      .disabled(availability != .enabled || undoService.isUndoing)
-      .help(presentation?.help() ?? "")
+      .commandPresentation(
+        availability: availability,
+        help: presentation?.help(),
+        isPerforming: undoService.isUndoing
+      )
     }
-  }
-
-  /// Availability of the pending inverse, or disabled when the stack is empty.
-  private var availability: CommandAvailability {
-    undoService.nextUndo?.availability() ?? .disabled
-  }
-
-  /// UI presentation provided by a UI-capable inverse, when requested.
-  private var presentation: (any CommandInverseWithUI)? {
-    guard showsCommandPresentation else {
-      return nil
-    }
-    return undoService.nextUndo as? any CommandInverseWithUI
   }
 
   /// Button label for the pending inverse or the standard Undo action.
-  @ViewBuilder private var label: some View {
+  @ViewBuilder private func label(presentation: (any CommandInverseWithUI)?) -> some View {
     if let presentation {
-      let text = "Undo \(presentation.name())"
-      Label(text, icon: presentation.icon())
+      Label(.actionUndo(action: presentation.name()), icon: presentation.icon())
     } else {
-      Text("Undo", bundle: #bundle)
+      Text("action.undo.simple", bundle: #bundle)
     }
   }
 
