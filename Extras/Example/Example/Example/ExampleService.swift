@@ -1,14 +1,13 @@
-//
-//  ExampleCommandState.swift
-//  Example
-//
+// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //  Created by Sam Deane on 05/08/2026.
-//
+//  Copyright © 2026 Elegant Chaos Limited. All rights reserved.
+// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 import Commands
 import Observation
 
 @Observable
+/// Observable counter state used by the example commands.
 class ExampleService {
   var count = 0
 
@@ -21,6 +20,7 @@ class ExampleService {
   }
 }
 
+/// Supplies the service required by the example commands.
 protocol ExampleServiceProvider: CommandCentre {
   var service: ExampleService { get }
 

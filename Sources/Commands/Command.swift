@@ -9,7 +9,6 @@ import Logger
 /// Shared log channel for command execution diagnostics.
 public let commandChannel = Channel("Commands")
 
-
 /// Describes an action that a matching command centre can evaluate and perform.
 ///
 /// Commands encapsulate availability and execution separately so callers can
@@ -43,4 +42,7 @@ public protocol Command<Centre> {
 extension Command {
   /// By default, commands are always enabled.
   public func availability(centre: Centre) -> CommandAvailability { .enabled }
+
+  /// By default, a command does not have to define an inverse.
+  func inverse(centre: Centre) -> CommandInverse? { nil }
 }

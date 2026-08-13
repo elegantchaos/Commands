@@ -5,8 +5,7 @@
 
 import Foundation
 
-/// A basic undo service.
-/// Keeps a simple stack of `CommandInverse` instances.
+/// A lightweight, observable stack of command inverses.
 @MainActor
 @Observable
 open class UndoService {

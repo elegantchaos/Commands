@@ -25,12 +25,11 @@ public protocol CommandCentre {
   func isRunning<C: Command>(_ command: C) -> Bool where C.Centre == Self
 }
 
-
 /// Default implementations of command-related functionality.
 @MainActor
-public extension CommandCentre {
+extension CommandCentre {
   /// Returns the current availability of the given command, including running state.
-  func availability<C: Command>(_ command: C) -> CommandAvailability where C.Centre == Self {
+  public func availability<C: Command>(_ command: C) -> CommandAvailability where C.Centre == Self {
     let availability = command.availability(centre: self)
     if isRunning(command) {
       return availability == .hidden ? .runningSilently : .running
@@ -39,7 +38,9 @@ public extension CommandCentre {
   }
 
   /// Performs the given command after checking that it is currently enabled.
-  func perform<C: Command>(_ command: C, from source: CommandSource) async throws -> C.ResultType where C.Centre == Self {
+  public func perform<C: Command>(_ command: C, from source: CommandSource) async throws
+    -> C.ResultType where C.Centre == Self
+  {
     commandChannel.debug("performing command «\(command.id)» from \(source)")
 
     // UI callers should normally gate execution through `availability`, but the
@@ -59,7 +60,9 @@ public extension CommandCentre {
 
   /// Starts the given command in a child task and logs any thrown error.
   @discardableResult
-  func performWithoutWaiting<C: Command>(_ command: C, from source: CommandSource) -> Task<Void, Never> where C.Centre == Self {
+  public func performWithoutWaiting<C: Command>(_ command: C, from source: CommandSource) -> Task<
+    Void, Never
+  > where C.Centre == Self {
     commandChannel.debug("performing command «\(command.id)» from \(source) without waiting")
     return Task {
       do {
@@ -71,15 +74,17 @@ public extension CommandCentre {
   }
 
   /// Default hook for centres that do not track active commands.
-  func recordStartedCommand<C: Command>(_ command: C, from source: CommandSource) where C.Centre == Self {
+  public func recordStartedCommand<C: Command>(_ command: C, from source: CommandSource)
+  where C.Centre == Self {
   }
 
   /// Default hook for centres that do not track completed commands.
-  func recordFinishedCommand<C: Command>(_ command: C, from source: CommandSource) where C.Centre == Self {
+  public func recordFinishedCommand<C: Command>(_ command: C, from source: CommandSource)
+  where C.Centre == Self {
   }
 
   /// Returns whether the given command is already executing.
-  func isRunning<C: Command>(_ command: C) -> Bool where C.Centre == Self {
+  public func isRunning<C: Command>(_ command: C) -> Bool where C.Centre == Self {
     false
   }
 }

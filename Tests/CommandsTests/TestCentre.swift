@@ -138,7 +138,9 @@ struct TestCentreTests {
 
   /// Verifies that unavailable commands throw before lifecycle hooks fire.
   @Test(arguments: [CommandAvailability.disabled, .hidden])
-  func testUnavailableCommandsThrowBeforeLifecycleHooks(_ availability: CommandAvailability) async throws {
+  func testUnavailableCommandsThrowBeforeLifecycleHooks(_ availability: CommandAvailability)
+    async throws
+  {
     let centre = TestCentre()
     let command = TestCommand(reportingAvailabilityAs: availability)
 
@@ -180,7 +182,8 @@ struct TestCentreTests {
   @Test(arguments: [CommandAvailability.enabled, .disabled, .running, .runningSilently])
   func testAvailabilityMapsRunningStates(_ baseAvailability: CommandAvailability) async throws {
     let centre = TestCentre()
-    let command = TestCommand(id: "test.running.\(baseAvailability)", reportingAvailabilityAs: baseAvailability)
+    let command = TestCommand(
+      id: "test.running.\(baseAvailability)", reportingAvailabilityAs: baseAvailability)
     centre.runningCommandIDs.insert(command.id)
 
     #expect(centre.availability(command) == .running)

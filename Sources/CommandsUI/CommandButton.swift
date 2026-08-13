@@ -9,7 +9,8 @@ import SwiftUI
 
 /// Button that renders and performs a command for a concrete command centre.
 @MainActor
-public struct CommandButton<C: CommandWithUI, CC: CommandCentre, Content: View>: View where C.Centre == CC {
+public struct CommandButton<C: CommandWithUI, CC: CommandCentre, Content: View>: View
+where C.Centre == CC {
   /// Command to render and perform.
   public let command: C
 
@@ -74,9 +75,9 @@ public struct CommandButton<C: CommandWithUI, CC: CommandCentre, Content: View>:
   }
 }
 
-public extension CommandButton where Content == EmptyView {
+extension CommandButton where Content == EmptyView {
   /// Creates a command button with the default command label.
-  init(command: C, commander: CC, role: ButtonRole? = nil) {
+  public init(command: C, commander: CC, role: ButtonRole? = nil) {
     self.command = command
     self.commander = commander
     self.role = role

@@ -1,15 +1,13 @@
-//
-//  ExampleCommand.swift
-//  Example
-//
+// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //  Created by Sam Deane on 05/08/2026.
-//
+//  Copyright © 2026 Elegant Chaos Limited. All rights reserved.
+// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-import CommandsUI
 import Commands
+import CommandsUI
 import Icons
 
-
+/// Increments the example service count and supplies its undo command.
 struct ExampleCommand<Centre: ExampleServiceProvider>: CommandWithUI {
   let id = "com.elegantchaos.commands.example"
 
@@ -20,12 +18,13 @@ struct ExampleCommand<Centre: ExampleServiceProvider>: CommandWithUI {
   func perform(centre: Centre, from source: CommandSource) async throws {
     centre.service.incrementDone()
   }
-  
+
   func inverse(centre: Centre) -> CommandInverse? {
-    return CommandProxy(command: ExampleUndoCommand(), centre: centre)
+    return CommandInverseProxy(command: ExampleUndoCommand(), centre: centre)
   }
 }
 
+/// Decrements the example service count and supplies its redo command.
 struct ExampleUndoCommand<Centre: ExampleServiceProvider>: CommandWithUI {
   let id = "com.elegantchaos.commands.undo"
 
@@ -36,15 +35,14 @@ struct ExampleUndoCommand<Centre: ExampleServiceProvider>: CommandWithUI {
   func perform(centre: Centre, from source: CommandSource) async throws {
     centre.service.decrementDone()
   }
-  
+
   func inverse(centre: Centre) -> CommandInverse? {
-    return CommandProxy(command: ExampleCommand(), centre: centre)
-//    let command = ExampleCommand<Centre>()
-//    return ExampleUndoInvocation(availability: {
-//      command.availability(centre: centre)
-//    }, perform: {
-//      try await command.perform(centre: centre)
-//    })
+    return CommandInverseProxy(command: ExampleCommand(), centre: centre)
+    //    let command = ExampleCommand<Centre>()
+    //    return ExampleUndoInvocation(availability: {
+    //      command.availability(centre: centre)
+    //    }, perform: {
+    //      try await command.perform(centre: centre)
+    //    })
   }
 }
-

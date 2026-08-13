@@ -4,8 +4,8 @@
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 import Commands
-import Icons
 import Foundation
+import Icons
 import SwiftUI
 
 /// Decorates another command while allowing selected UI or execution details to be overridden.
@@ -16,7 +16,7 @@ import SwiftUI
 open class WrappedCommand<C: CommandWithUI>: CommandWithUI {
   /// Command centre type accepted by the wrapped command.
   public typealias Centre = C.Centre
-  
+
   /// Identifier forwarded from the wrapped command.
   open var id: String { command.id }
 
@@ -33,7 +33,9 @@ open class WrappedCommand<C: CommandWithUI>: CommandWithUI {
   open func help(centre: C.Centre) -> String? { command.help(centre: centre) }
 
   /// Confirmation model forwarded from the wrapped command.
-  open func confirmation(centre: C.Centre) -> CommandConfirmation? { command.confirmation(centre: centre) }
+  open func confirmation(centre: C.Centre) -> CommandConfirmation? {
+    command.confirmation(centre: centre)
+  }
 
   /// Resource bundle forwarded from the wrapped command.
   open var bundle: Bundle { command.bundle }
@@ -55,7 +57,7 @@ open class WrappedCommand<C: CommandWithUI>: CommandWithUI {
   open func perform(centre: C.Centre, from source: CommandSource) async throws -> C.ResultType {
     try await command.perform(centre: centre, from: source)
   }
-  
+
   open func inverse(centre: C.Centre) -> CommandInverse? {
     command.inverse(centre: centre)
   }

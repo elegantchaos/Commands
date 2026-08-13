@@ -8,14 +8,12 @@ import Foundation
 /// Describes the inverse of a command.
 @MainActor
 public protocol CommandInverse {
+  /// Stable identifier for the inverse command.
   var id: String { get }
-  
-  /// Determine whether the inverse should be regarded as enabled, disabled, etc.
+
+  /// Returns the inverse command's current availability.
   var availability: () -> CommandAvailability { get }
-  
-  /// Perform the inverse command.
-  /// Typically this is done by invoking another command on the same command centre
-  /// that was used when the `CommandInverse` instance was created; though this
-  /// is not strictly enforced.
-  var action: (CommandSource) async throws -> () { get }
+
+  /// Performs the inverse from the supplied source.
+  var action: (CommandSource) async throws -> Void { get }
 }

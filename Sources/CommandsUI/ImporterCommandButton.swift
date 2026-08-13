@@ -8,7 +8,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 /// Resolution state for an importer-backed command before and after the picker runs.
-public enum ImporterCommandURLState {
+public enum ImporterState {
   /// No importer result has been received yet.
   case unknown
 
@@ -28,7 +28,7 @@ public protocol ImporterCommand: CommandWithUI {
   var allowsMultipleSelection: Bool { get }
 
   /// Mutable importer result state carried between picker presentation and execution.
-  var state: ImporterCommandURLState { get set }
+  var state: ImporterState { get set }
 }
 
 /// Button wrapper that presents an importer sheet before invoking a command.

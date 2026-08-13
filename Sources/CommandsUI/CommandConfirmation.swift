@@ -28,7 +28,12 @@ public struct CommandConfirmation {
   }
 
   /// Creates a confirmation model by resolving localized resources immediately.
-  public init(titleKey: LocalizedStringResource, cancelKey: LocalizedStringResource, messageKey: LocalizedStringResource, confirmKey: LocalizedStringResource) {
-    self.init(title: String(localized: titleKey), cancel: String(localized: cancelKey), message: String(localized: messageKey), confirm: String(localized: confirmKey))
+  public init(
+    titleKey: LocalizedStringResource, cancelKey: LocalizedStringResource,
+    messageKey: LocalizedStringResource, confirmKey: LocalizedStringResource
+  ) {
+    self.init(
+      title: String(localized: titleKey), cancel: String(localized: cancelKey),
+      message: String(localized: messageKey), confirm: String(localized: confirmKey))
   }
 }

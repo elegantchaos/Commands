@@ -21,23 +21,25 @@ struct ConfirmableCommandButton<C: CommandWithUI, CC: CommandCentre>: View where
 
   /// Role of the button
   let role: ButtonRole?
-  
+
   /// Create the button.
   init(command: C, commander: CC, role: ButtonRole? = nil) {
     self.command = command
     self.commander = commander
     self.role = role
   }
-  
+
   /// Renders the labelled button and its attached confirmation alert.
   var body: some View {
-    let confirmation = command.confirmation(centre: commander) ?? .init(
-      title: command.name(centre: commander),
-      cancel: String(localized: "confirmation.default.cancel"),
-      message: String(localized: "confirmation.default.message"),
-      confirm: String(localized: "confirmation.default.confirm")
-    )
-    
+    let confirmation =
+      command.confirmation(centre: commander)
+      ?? .init(
+        title: command.name(centre: commander),
+        cancel: String(localized: "confirmation.default.cancel"),
+        message: String(localized: "confirmation.default.message"),
+        confirm: String(localized: "confirmation.default.confirm")
+      )
+
     Button(role: role, action: handleShowAlert) {
       Label(command.name(centre: commander), icon: command.icon(centre: commander))
     }

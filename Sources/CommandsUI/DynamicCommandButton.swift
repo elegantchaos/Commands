@@ -12,7 +12,8 @@ import SwiftUI
 
 /// Button that resolves a dynamic command trigger at activation time.
 @MainActor
-struct DynamicCommandButton<Centre: CommandCentre, Wrapped: CommandWithUI, Content: View>: View where Wrapped.Centre == Centre {
+struct DynamicCommandButton<Centre: CommandCentre, Wrapped: CommandWithUI, Content: View>: View
+where Wrapped.Centre == Centre {
   /// Command centre that executes the resolved command.
   let commander: Centre
 
@@ -81,10 +82,11 @@ struct DynamicCommandButton<Centre: CommandCentre, Wrapped: CommandWithUI, Conte
       }
 
       switch event.type {
-        case .leftMouseDown, .leftMouseUp, .rightMouseDown, .rightMouseUp, .otherMouseDown, .otherMouseUp:
-          break
-        default:
-          return .primary
+      case .leftMouseDown, .leftMouseUp, .rightMouseDown, .rightMouseUp, .otherMouseDown,
+        .otherMouseUp:
+        break
+      default:
+        return .primary
       }
 
       let modifiers = event.modifierFlags

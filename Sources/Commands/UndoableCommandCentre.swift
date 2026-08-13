@@ -5,14 +5,16 @@
 
 import Foundation
 
+/// A command centre that records inverses in an undo service.
 @MainActor
-public protocol UndoableCommandCenter: CommandCentre {
+public protocol UndoableCommandCentre: CommandCentre {
   var undoService: UndoService { get }
 }
 
 @MainActor
-public extension UndoableCommandCenter {
-  func recordFinishedCommand<C: Command>(_ command: C, from source: CommandSource) where C.Centre == Self {
+extension UndoableCommandCentre {
+  public func recordFinishedCommand<C: Command>(_ command: C, from source: CommandSource)
+  where C.Centre == Self {
     if let invocation = command.inverse(centre: self), source != .undo {
       undoService.recordUndo(invocation)
     }

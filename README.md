@@ -16,20 +16,24 @@
 
 # Commands
 
-`Commands` is a Swift package for defining commands and presenting command UI.
+`Commands` is a Swift package for defining application actions independently of
+their presentation. `CommandsUI` renders those actions in SwiftUI and adapts
+them to UIKit and Mac Catalyst menus.
 
-## Contents
+## Capabilities
 
-- Command protocols and command centre coordination
-- Availability and confirmation support
-- Trigger-aware command activation for platform-specific interactions
-- SwiftUI-facing command wrappers, buttons, and toolbar helpers
+- Centre-aware command availability and lifecycle tracking
+- Invocation sources, including buttons, menus, importers, intents, and undo
+- Optional inverse commands with a lightweight undo service
+- UI metadata: localized name and help, icons, shortcuts, and confirmation
+- SwiftUI buttons, toolbar items, dynamic-trigger buttons, and file importers
+- UIKit and Mac Catalyst `UICommand` and `UIMenu` adaptation
 
-## Usage
+## Define a command
 
-### Define a command against a narrow centre protocol
-
-Keep commands decoupled from a concrete app type by depending on the smallest command-centre protocol that provides what they need.
+Commands depend on the narrowest command-centre protocol that supplies their
+work. Every command declares an identifier, executes with an invocation source,
+and may supply an inverse for undo.
 
 ```swift
 import Commands
@@ -43,112 +47,100 @@ protocol SessionCommands: CommandCentre {
 struct SignOutCommand<C: SessionCommands>: Command {
   let id = "session.sign-out"
 
-  func perform(centre: C) async throws {
+  func perform(centre: C, from source: CommandSource) async throws {
     centre.signOut()
   }
+
+  func inverse(centre: C) -> CommandInverse? {
+    nil
+  }
 }
 ```
 
-This keeps the command easy to test and lets multiple centres adopt the same command surface.
-
-### Gate execution with availability
-
-Commands can separate visibility and execution rules from the UI that renders them.
+Call `perform(_:from:)` for an awaited result, or
+`performWithoutWaiting(_:from:)` for a task that logs errors. Both helpers
+check availability immediately before execution, then notify the centre that
+the command started and finished.
 
 ```swift
-import Commands
+try await commander.perform(SignOutCommand(), from: .menu)
+commander.performWithoutWaiting(SignOutCommand(), from: .button)
+```
 
-@MainActor
-protocol DocumentCommands: CommandCentre {
-  var hasSelection: Bool { get }
-  func deleteSelection()
-}
+## Model availability
 
-@MainActor
-struct DeleteSelectionCommand<C: DocumentCommands>: Command {
-  let id = "document.delete-selection"
+A command can be enabled, disabled, hidden, running, or running silently. UI
+helpers use this to choose whether to render a command and whether it accepts
+interaction; programmatic execution also rejects commands that are not enabled.
 
-  func availability(centre: C) -> CommandAvailability {
-    centre.hasSelection ? .enabled : .disabled
-  }
-
-  func perform(centre: C) async throws {
-    centre.deleteSelection()
-  }
+```swift
+func availability(centre: C) -> CommandAvailability {
+  centre.hasActiveSession ? .enabled : .disabled
 }
 ```
 
-`CommandCentre.perform(_:)` still rechecks availability before execution, so UI and programmatic callers share the same safety guard.
+Centres that track active commands should implement
+`recordStartedCommand`, `recordFinishedCommand`, and `isRunning`. The default
+implementations are appropriate for centres that do not need tracking.
 
-### Add UI metadata with `CommandWithUI`
+## Add UI metadata and render SwiftUI controls
 
-Use `CommandWithUI` when the same command needs a user-facing name, icon, help text, or confirmation.
+`CommandWithUI` adds the presentation metadata needed by UI clients. Its
+default `name` and `help` look up the command ID and `<id>.help` in the
+command's resource bundle; override them when the metadata depends on live
+centre state.
 
 ```swift
 import CommandsUI
 import Icons
-
-@MainActor
-protocol RepoCommands: CommandCentre {
-  var currentRepoName: String? { get }
-  func openSettings()
-}
-
-@MainActor
-struct ConfigureRepoCommand<C: RepoCommands>: CommandWithUI {
-  let id = "repo.configure"
-
-  func icon(centre: C) -> Icon {
-    .actions
-  }
-
-  func name(centre: C) -> String {
-    if let repoName = centre.currentRepoName {
-      "Configure \(repoName)"
-    } else {
-      "Configure Repo"
-    }
-  }
-
-  func help(centre: C) -> String? {
-    "Edit repository settings"
-  }
-
-  func perform(centre: C) async throws {
-    centre.openSettings()
-  }
-}
-```
-
-The UI metadata methods receive the centre, so labels and icons can reflect live application state without duplicating lookup logic in the view.
-
-### Render commands in SwiftUI
-
-`CommandsUI` provides button and toolbar helpers directly on the command centre.
-
-```swift
-import CommandsUI
 import SwiftUI
 
-struct RepoToolbar<C: RepoCommands>: View {
+@MainActor
+struct ConfigureRepositoryCommand<C: SessionCommands>: CommandWithUI {
+  let id = "repository.configure"
+
+  func icon(centre: C) -> Icon { .actions }
+
+  func perform(centre: C, from source: CommandSource) async throws {
+    // Configure the repository.
+  }
+
+  func inverse(centre: C) -> CommandInverse? { nil }
+}
+
+struct RepositoryToolbar<C: SessionCommands>: View {
   let commander: C
 
   var body: some View {
-    VStack {
-      commander.button(ConfigureRepoCommand<C>())
-    }
-    .toolbar {
-      commander.toolbarItem(ConfigureRepoCommand<C>())
-    }
+    commander.button(ConfigureRepositoryCommand<C>())
+      .toolbar {
+        commander.toolbarItem(ConfigureRepositoryCommand<C>())
+      }
   }
 }
 ```
 
-These helpers automatically respect command availability, shortcuts, help text, and confirmation behavior.
+`confirmableButton` and `confirmableToolbarItem` show a command confirmation.
+Provide a `CommandConfirmation` from `confirmation(centre:)` when the action
+requires explicit approval.
 
-### Build UIKit and Mac Catalyst menus
+## Dynamic commands and importers
 
-Subclass `CommandCentreDelegate` when an iOS or Mac Catalyst application needs to populate UIKit menus from the same command models. Generated commands carry their invocation through the responder chain and preserve command metadata, availability, and keyboard shortcuts.
+Use `dynamicButton` when one control chooses a command variant from its
+activation trigger: `.primary`, `.secondary`, or `.tertiary`. On macOS these
+map to normal, Command-, and Option-clicks; on iOS, the secondary trigger is a
+long press.
+
+`ImporterCommand` carries the result of SwiftUI's file importer into command
+execution. `importer(_:)` supplies both the button and importer sheet. For a
+context menu, pair `importerButton(_:isShowingImportSheet:)` with
+`ImporterCommandModifier` attached to the view that owns the menu.
+
+## UIKit and Mac Catalyst menus
+
+Subclass `CommandCentreDelegate` in an iOS or Mac Catalyst application, then
+create `UICommand` values or inline `UIMenu` values from the same command
+models.
 
 ```swift
 import CommandsUI
@@ -164,7 +156,6 @@ final class AppDelegate: CommandCentreDelegate {
   }
 
   override func buildMenu(with builder: UIMenuBuilder) {
-    super.buildMenu(with: builder)
     let menu = menuForCommand(
       NewDocumentCommand(),
       centre: commander,
@@ -175,112 +166,23 @@ final class AppDelegate: CommandCentreDelegate {
 }
 ```
 
-### Resolve trigger-specific variants with `dynamicButton`
+The delegate stores executable invocations in a private registry and places the
+command's stable string ID in UIKit's `propertyList`. Keep IDs stable: each
+reuse replaces the previous registration, whereas continuously generating IDs
+retains invocations for the delegate's lifetime.
 
-Use `dynamicButton` when the concrete command depends on the activation trigger, such as click, command-click, or long-press.
+## Undo
+
+Adopt `UndoableCommandCenter` and provide an `UndoService` to record inverses
+after successful commands. `undoButton()` renders the package's basic undo
+control; applications can also call `undoService.performUndo()` directly.
 
 ```swift
-import CommandsUI
-import SwiftUI
-
-enum RepoNavigationMode {
-  case edit
-  case showWeb
-  case showActions
-}
-
 @MainActor
-struct NavigateRepoCommand<C: CommandCentre>: CommandWithUI {
-  let id = "repo.navigate"
-  let mode: RepoNavigationMode
-
-  func icon(centre: C) -> Icon {
-    switch mode {
-    case .edit: .actions
-    case .showWeb: .showRepo
-    case .showActions: .showWorkflow
-    }
-  }
-
-  func perform(centre: C) async throws {
-    // Route based on mode.
-  }
-}
-
-struct RepoRow<C: CommandCentre>: View {
-  let commander: C
-
-  var body: some View {
-    commander.dynamicButton { trigger in
-      switch trigger {
-      case .primary: NavigateRepoCommand<C>(mode: .edit)
-      case .secondary: NavigateRepoCommand<C>(mode: .showWeb)
-      case .tertiary: NavigateRepoCommand<C>(mode: .showActions)
-      }
-    }
-  }
+final class EditorCommands: UndoableCommandCenter {
+  let undoService = UndoService()
 }
 ```
 
-This keeps trigger branching in one place while still using the same availability and execution machinery.
-
-### Use importer and confirmation wrappers
-
-`CommandsUI` also provides specialized affordances for common interaction patterns.
-
-```swift
-import CommandsUI
-import UniformTypeIdentifiers
-
-@MainActor
-protocol ImportCommands: CommandCentre {
-  func importFiles(at urls: [URL])
-}
-
-@MainActor
-struct ImportReposCommand<C: ImportCommands>: ImporterCommand {
-  let id = "repos.import"
-  var state: ImporterCommandURLState = .unknown
-
-  var types: [UTType] { [.folder] }
-  var allowsMultipleSelection: Bool { true }
-
-  func icon(centre: C) -> Icon {
-    .addLocalRepo
-  }
-
-  func perform(centre: C) async throws {
-    guard case .chosen(let urls) = state else { return }
-    centre.importFiles(at: urls)
-  }
-}
-
-@MainActor
-struct DeleteRepoCommand<C: CommandCentre>: CommandWithUI {
-  let id = "repo.delete"
-
-  func icon(centre: C) -> Icon {
-    .deleteRepo
-  }
-
-  func confirmation(centre: C) -> CommandConfirmation? {
-    .init(
-      title: "Delete Repo",
-      cancel: "Cancel",
-      message: "This removes the repo from the current list.",
-      confirm: "Delete"
-    )
-  }
-
-  func perform(centre: C) async throws {
-    // Delete the repo.
-  }
-}
-```
-
-```swift
-commander.importer(ImportReposCommand<MyCentre>())
-commander.confirmableButton(DeleteRepoCommand<MyCentre>())
-```
-
-If you need to drive an importer from a context menu, use `importerButton(_:isShowingImportSheet:)` with `ImporterCommandModifier`.
+`CommandProxy` turns a command and its centre into a `CommandInverse`, which is
+useful when two commands are natural inverses of one another.
