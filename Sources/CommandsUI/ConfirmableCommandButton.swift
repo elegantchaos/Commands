@@ -60,7 +60,7 @@ struct ConfirmableCommandButton<C: CommandWithUI, CC: CommandCentre>: View where
   func handlePerformCommand() {
     Task {
       do {
-        _ = try await commander.perform(command)
+        _ = try await commander.perform(command, from: .button)
       } catch {
         commandChannel.log("Error performing confirmed command \(command.id): \(error)")
       }

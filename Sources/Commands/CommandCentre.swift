@@ -16,10 +16,10 @@ public enum CommandError: Error {
 @MainActor
 public protocol CommandCentre {
   /// Records that a command has started executing.
-  func recordStartedCommand<C: Command>(_ command: C) where C.Centre == Self
+  func recordStartedCommand<C: Command>(_ command: C, from: CommandSource) where C.Centre == Self
 
   /// Records that a command has finished executing.
-  func recordFinishedCommand<C: Command>(_ command: C) where C.Centre == Self
+  func recordFinishedCommand<C: Command>(_ command: C, from: CommandSource) where C.Centre == Self
 
   /// Returns whether the given command is already executing.
   func isRunning<C: Command>(_ command: C) -> Bool where C.Centre == Self
@@ -39,8 +39,8 @@ public extension CommandCentre {
   }
 
   /// Performs the given command after checking that it is currently enabled.
-  func perform<C: Command>(_ command: C) async throws -> C.ResultType where C.Centre == Self {
-    commandChannel.debug("performing command «\(command.id)»")
+  func perform<C: Command>(_ command: C, from source: CommandSource) async throws -> C.ResultType where C.Centre == Self {
+    commandChannel.debug("performing command «\(command.id)» from \(source)")
 
     // UI callers should normally gate execution through `availability`, but the
     // command centre still guards execution because availability can change
@@ -49,21 +49,21 @@ public extension CommandCentre {
       throw CommandError.commandUnavailable
     }
 
-    recordStartedCommand(command)
+    recordStartedCommand(command, from: source)
     defer {
-      recordFinishedCommand(command)
+      recordFinishedCommand(command, from: source)
     }
 
-    return try await command.perform(centre: self)
+    return try await command.perform(centre: self, from: source)
   }
 
   /// Starts the given command in a child task and logs any thrown error.
   @discardableResult
-  func performWithoutWaiting<C: Command>(_ command: C) -> Task<Void, Never> where C.Centre == Self {
-    commandChannel.debug("performing command «\(command.id)»")
+  func performWithoutWaiting<C: Command>(_ command: C, from source: CommandSource) -> Task<Void, Never> where C.Centre == Self {
+    commandChannel.debug("performing command «\(command.id)» from \(source) without waiting")
     return Task {
       do {
-        _ = try await perform(command)
+        _ = try await perform(command, from: source)
       } catch {
         commandChannel.log("Error performing command \(command.id): \(error)")
       }
@@ -71,50 +71,15 @@ public extension CommandCentre {
   }
 
   /// Default hook for centres that do not track active commands.
-  func recordStartedCommand<C: Command>(_ command: C) where C.Centre == Self {
+  func recordStartedCommand<C: Command>(_ command: C, from source: CommandSource) where C.Centre == Self {
   }
 
   /// Default hook for centres that do not track completed commands.
-  func recordFinishedCommand<C: Command>(_ command: C) where C.Centre == Self {
+  func recordFinishedCommand<C: Command>(_ command: C, from source: CommandSource) where C.Centre == Self {
   }
 
   /// Returns whether the given command is already executing.
   func isRunning<C: Command>(_ command: C) -> Bool where C.Centre == Self {
     false
-  }
-}
-
-@MainActor
-@Observable
-open class UndoService {
-  public init() {
-  }
-  
-  open var hasUndo: Bool {
-    false
-  }
-  
-  open func recordUndo(_ invocation: CommandInverse) {
-  }
-  
-  open func performUndo() {
-  }
-  
-  open var debugDescription: String {
-    "UndoService()"
-  }
-}
-
-@MainActor
-public protocol UndoableCommandCenter: CommandCentre {
-  var undoService: UndoService { get }
-}
-
-@MainActor
-public extension UndoableCommandCenter {
-  func recordFinishedCommand<C: Command>(_ command: C) where C.Centre == Self {
-    if let invocation = command.inverse(centre: self) {
-      undoService.recordUndo(invocation)
-    }
   }
 }

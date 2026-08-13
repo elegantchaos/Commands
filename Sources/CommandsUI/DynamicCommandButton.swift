@@ -47,7 +47,7 @@ struct DynamicCommandButton<Centre: CommandCentre, Wrapped: CommandWithUI, Conte
 
   /// Performs the wrapped command for the supplied trigger.
   private func performWrappedCommand(_ trigger: CommandTrigger) {
-    commander.performWithoutWaiting(command(trigger))
+    commander.performWithoutWaiting(command(trigger), from: .button)
   }
 
   @ViewBuilder

@@ -41,7 +41,7 @@ public struct CommandButton<C: CommandWithUI, CC: CommandCentre, Content: View>:
   /// Renders the command button, or no view when the command is hidden.
   public var body: some View {
     if commander.availability(command) != .hidden {
-      Button(role: role, action: { commander.performWithoutWaiting(command) }) {
+      Button(role: role, action: { commander.performWithoutWaiting(command, from: .button) }) {
         label
       }
       .disabled(commander.shouldDisable(command))

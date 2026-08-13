@@ -9,6 +9,7 @@ import Logger
 /// Shared log channel for command execution diagnostics.
 public let commandChannel = Channel("Commands")
 
+
 /// Describes an action that a matching command centre can evaluate and perform.
 ///
 /// Commands encapsulate availability and execution separately so callers can
@@ -28,7 +29,7 @@ public protocol Command<Centre> {
   func availability(centre: Centre) -> CommandAvailability
 
   /// Perform the command using the given CommandCentre.
-  func perform(centre: Centre) async throws -> ResultType
+  func perform(centre: Centre, from source: CommandSource) async throws -> ResultType
 
   /// Return the inverse of this command.
   /// The inverse can be invoked to undo whatever state changes this
@@ -42,19 +43,4 @@ public protocol Command<Centre> {
 extension Command {
   /// By default, commands are always enabled.
   public func availability(centre: Centre) -> CommandAvailability { .enabled }
-}
-
-/// Describes the inverse of a command.
-@MainActor
-public protocol CommandInverse {
-  var id: String { get }
-  
-  /// Determine whether the inverse should be regarded as enabled, disabled, etc.
-  var availability: () -> CommandAvailability { get }
-  
-  /// Perform the inverse command.
-  /// Typically this is done by invoking another command on the same command centre
-  /// that was used when the `CommandInverse` instance was created; though this
-  /// is not strictly enforced.
-  var perform: () async throws -> () { get }
 }

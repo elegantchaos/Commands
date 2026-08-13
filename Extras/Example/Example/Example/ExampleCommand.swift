@@ -9,32 +9,6 @@ import CommandsUI
 import Commands
 import Icons
 
-@MainActor
-struct CommandProxy<C: Command>: CommandInverse {
-    let command: C
-    let centre: C.Centre
-  
-  init(command: C, centre: C.Centre) {
-    self.command = command
-    self.centre = centre
-  }
-  
-  var id: String {
-    command.id
-  }
-  
-  var availability: () -> CommandAvailability {
-    {
-      centre.availability(command)
-    }
-  }
-  
-  var perform: @concurrent () async throws -> () {
-    {
-      _ = try await centre.perform(command)
-    }
-  }
-}
 
 struct ExampleCommand<Centre: ExampleServiceProvider>: CommandWithUI {
   let id = "com.elegantchaos.commands.example"
@@ -43,7 +17,7 @@ struct ExampleCommand<Centre: ExampleServiceProvider>: CommandWithUI {
     Icon("command")
   }
 
-  func perform(centre: Centre) async throws {
+  func perform(centre: Centre, from source: CommandSource) async throws {
     centre.service.incrementDone()
   }
   
@@ -59,7 +33,7 @@ struct ExampleUndoCommand<Centre: ExampleServiceProvider>: CommandWithUI {
     Icon("command")
   }
 
-  func perform(centre: Centre) async throws {
+  func perform(centre: Centre, from source: CommandSource) async throws {
     centre.service.decrementDone()
   }
   
