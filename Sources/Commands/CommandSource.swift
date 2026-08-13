@@ -6,7 +6,7 @@
 import Foundation
 
 /// The place that the command was invoked from.
-public enum CommandSource {
+public enum CommandSource: Equatable, Sendable {
   case button
   case menu
   case importer

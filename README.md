@@ -173,13 +173,13 @@ retains invocations for the delegate's lifetime.
 
 ## Undo
 
-Adopt `UndoableCommandCenter` and provide an `UndoService` to record inverses
+Adopt `UndoableCommandCentre` and provide an `UndoService` to record inverses
 after successful commands. `undoButton()` renders the package's basic undo
-control; applications can also call `undoService.performUndo()` directly.
+control; applications can also call `try await undoService.performUndo()` directly.
 
 ```swift
 @MainActor
-final class EditorCommands: UndoableCommandCenter {
+final class EditorCommands: UndoableCommandCentre {
   let undoService = UndoService()
 }
 ```

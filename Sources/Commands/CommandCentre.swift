@@ -7,7 +7,7 @@ import Foundation
 import SwiftUI
 
 /// Errors thrown by the default command-centre execution helpers.
-public enum CommandError: Error {
+public enum CommandError: Error, Equatable {
   /// The command reported that it cannot currently be performed.
   case commandUnavailable
 }

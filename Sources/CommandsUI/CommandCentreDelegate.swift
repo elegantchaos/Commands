@@ -42,7 +42,7 @@
     /// Creates a UIKit command that forwards metadata and execution to a command centre.
     public func uiCommand<C: CommandWithUI>(_ command: C, centre: C.Centre) -> UICommand {
       let invocation = CommandInvocation {
-        centre.performWithoutWaiting(command)
+        centre.performWithoutWaiting(command, from: .menu)
       }
       invocations[command.id] = invocation
       let selector = #selector(handleCommand(_:))

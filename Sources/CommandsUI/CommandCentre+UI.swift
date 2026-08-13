@@ -149,9 +149,18 @@ public struct UndoButton: View {
 
   public var body: some View {
     if undoService.hasUndo {
-      Button(action: undoService.performUndo) {
+      Button {
+        Task {
+          do {
+            try await undoService.performUndo()
+          } catch {
+            commandChannel.log("Error performing undo: \(error)")
+          }
+        }
+      } label: {
         Text("undo")
       }
+      .disabled(undoService.isUndoing)
     } else {
       Text("no undo")
     }

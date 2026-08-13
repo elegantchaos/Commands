@@ -44,5 +44,5 @@ extension Command {
   public func availability(centre: Centre) -> CommandAvailability { .enabled }
 
   /// By default, a command does not have to define an inverse.
-  func inverse(centre: Centre) -> CommandInverse? { nil }
+  public func inverse(centre: Centre) -> CommandInverse? { nil }
 }

@@ -65,7 +65,7 @@ private final class UITestCentre: CommandCentre {
     }
 
     /// Records execution in the test centre.
-    func perform(centre: UITestCentre) async throws {
+    func perform(centre: UITestCentre, from source: CommandSource) async throws {
       centre.performedCommandIDs.append(id)
     }
   }
@@ -83,7 +83,7 @@ private struct DefaultUICommand: CommandWithUI {
   }
 
   /// Performs no work.
-  func perform(centre: UITestCentre) async throws {
+  func perform(centre: UITestCentre, from source: CommandSource) async throws {
   }
 }
 
@@ -107,7 +107,7 @@ private struct AvailabilityUICommand: CommandWithUI {
   }
 
   /// Performs no work.
-  func perform(centre: UITestCentre) async throws {
+  func perform(centre: UITestCentre, from source: CommandSource) async throws {
   }
 }
 
@@ -120,7 +120,7 @@ private struct MetadataCommand: CommandWithUI {
   /// Availability reported to the command centre.
   let reportedAvailability: CommandAvailability
 
-  /// Result returned from `perform(centre:)`.
+  /// Result returned from command execution.
   let result: String
 
   /// Returns the configured availability.
@@ -160,7 +160,7 @@ private struct MetadataCommand: CommandWithUI {
   var bundle: Bundle { Bundle(for: MetadataBundleToken.self) }
 
   /// Returns the configured result.
-  func perform(centre: UITestCentre) async throws -> String {
+  func perform(centre: UITestCentre, from source: CommandSource) async throws -> String {
     result
   }
 }
@@ -331,7 +331,7 @@ struct CommandsUITests {
     #expect(wrapped.shortcut == nil)
     #expect(wrapped.availability(centre: centre) == .disabled)
 
-    let result = try await wrapped.perform(centre: centre)
+    let result = try await wrapped.perform(centre: centre, from: .button)
     #expect(result == "forwarded")
   }
 
