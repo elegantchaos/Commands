@@ -50,7 +50,7 @@ where Wrapped.Centre == Centre {
 
   /// Performs the wrapped command for the supplied trigger.
   private func performWrappedCommand(_ trigger: CommandTrigger) {
-    commander.performWithoutWaiting(command(trigger), from: .button)
+    commander.performWithoutWaiting(command(trigger))
   }
 
   @ViewBuilder

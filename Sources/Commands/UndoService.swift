@@ -9,6 +9,9 @@ import Foundation
 public enum UndoServiceError: Error, Equatable, Sendable {
   /// An undo or redo operation is already in progress.
   case historyOperationInProgress
+
+  /// A forward command must finish before a history operation can begin.
+  case forwardCommandInProgress
 }
 
 /// A lightweight, observable history of command inverses.
@@ -16,17 +19,30 @@ public enum UndoServiceError: Error, Equatable, Sendable {
 /// The cursor separates completed history from entries that can be redone.
 /// Each successful history operation replaces the executed inverse with the
 /// inverse returned by that action, so undo and redo can traverse the same
-/// history in either direction.
+/// history in either direction. Each service owns all state required to
+/// authorize its active history operation; it does not use global or task-local
+/// state.
 @MainActor
 @Observable
 open class UndoService {
-  /// A history operation that is currently in progress.
-  public enum Operation: Equatable, Sendable {
-    /// Reverses a completed history entry.
-    case undo
+  /// An active history operation and the context that it authorizes.
+  ///
+  /// Keeping these values in one enum makes it impossible to expose a history
+  /// mode without its matching authorization capability.
+  private enum ActiveOperation {
+    /// Reverses a completed history entry using the associated context.
+    case undo(CommandExecutionContext)
 
-    /// Reapplies an undone history entry.
-    case redo
+    /// Reapplies an undone history entry using the associated context.
+    case redo(CommandExecutionContext)
+
+    /// The context authorized by the operation.
+    var context: CommandExecutionContext {
+      switch self {
+      case .undo(let context), .redo(let context):
+        context
+      }
+    }
   }
 
   /// Inverses for completed and redoable history entries.
@@ -35,17 +51,39 @@ open class UndoService {
   /// The number of completed entries at the front of `undoStack`.
   var undoCursor = 0
 
-  /// The history operation that is currently being performed, if any.
-  public private(set) var operation: Operation?
+  /// Active history operation and the context that it authorizes.
+  private var activeOperation: ActiveOperation?
+
+  /// Number of forward commands that have started but not yet finished.
+  ///
+  /// Forward commands can overlap, so this is a count rather than another
+  /// active-operation case. History operations wait until the count reaches zero.
+  public private(set) var forwardCommandCount = 0
+
+  /// Whether an undo or redo operation is currently being performed.
+  ///
+  /// This module-internal query lets `UndoableCommandCentre` protect history
+  /// without exposing additional public state.
+  var isPerformingHistoryOperation: Bool {
+    activeOperation != nil
+  }
 
   /// Whether an undo operation is currently being performed.
   public var isUndoing: Bool {
-    operation == .undo
+    if case .undo = activeOperation {
+      true
+    } else {
+      false
+    }
   }
 
   /// Whether a redo operation is currently being performed.
   public var isRedoing: Bool {
-    operation == .redo
+    if case .redo = activeOperation {
+      true
+    } else {
+      false
+    }
   }
 
   public init() {
@@ -84,13 +122,33 @@ open class UndoService {
     undoCursor = undoStack.count
   }
 
+  /// Marks the start of a forward command that can change undo history.
+  ///
+  /// Every call must be paired with `finishForwardCommand()` after the command
+  /// completes, including when it throws.
+  public func beginForwardCommand() {
+    forwardCommandCount += 1
+  }
+
+  /// Marks the completion of a forward command that can change undo history.
+  public func finishForwardCommand() {
+    precondition(forwardCommandCount > 0, "No forward command is in progress.")
+    forwardCommandCount -= 1
+  }
+
   /// Performs the next inverse that reverses a completed history entry.
   ///
   /// The inverse remains available when it throws. Calls made while undo or
   /// redo is in progress throw `UndoServiceError.historyOperationInProgress`.
+  /// Calls made while forward commands are active throw
+  /// `UndoServiceError.forwardCommandInProgress`.
   open func performUndo() async throws {
-    guard operation == nil else {
+    guard isPerformingHistoryOperation == false else {
       throw UndoServiceError.historyOperationInProgress
+    }
+
+    guard forwardCommandCount == 0 else {
+      throw UndoServiceError.forwardCommandInProgress
     }
 
     guard undoCursor > 0 else {
@@ -99,11 +157,14 @@ open class UndoService {
 
     let index = undoCursor - 1
     let inverse = undoStack[index]
-    operation = .undo
-    defer { operation = nil }
+    let context = CommandExecutionContext()
+    activeOperation = .undo(context)
+    defer {
+      activeOperation = nil
+    }
 
     try Task.checkCancellation()
-    let replacement = try await inverse.action(.undo)
+    let replacement = try await inverse.action(context)
     updateHistory(at: index, with: replacement, cursor: index)
   }
 
@@ -111,9 +172,15 @@ open class UndoService {
   ///
   /// The inverse remains available when it throws. Calls made while undo or
   /// redo is in progress throw `UndoServiceError.historyOperationInProgress`.
+  /// Calls made while forward commands are active throw
+  /// `UndoServiceError.forwardCommandInProgress`.
   open func performRedo() async throws {
-    guard operation == nil else {
+    guard isPerformingHistoryOperation == false else {
       throw UndoServiceError.historyOperationInProgress
+    }
+
+    guard forwardCommandCount == 0 else {
+      throw UndoServiceError.forwardCommandInProgress
     }
 
     guard undoCursor < undoStack.count else {
@@ -122,11 +189,14 @@ open class UndoService {
 
     let index = undoCursor
     let inverse = undoStack[index]
-    operation = .redo
-    defer { operation = nil }
+    let context = CommandExecutionContext()
+    activeOperation = .redo(context)
+    defer {
+      activeOperation = nil
+    }
 
     try Task.checkCancellation()
-    let replacement = try await inverse.action(.redo)
+    let replacement = try await inverse.action(context)
     updateHistory(at: index, with: replacement, cursor: index + 1)
   }
 
@@ -139,6 +209,11 @@ open class UndoService {
       undoStack.remove(at: index)
       undoCursor = index
     }
+  }
+
+  /// Returns whether this service owns the supplied active execution context.
+  func authorizes(_ context: CommandExecutionContext?) -> Bool {
+    activeOperation?.context === context
   }
 
   /// Textual description of the stack.

@@ -14,9 +14,11 @@ public protocol CommandInverse {
   /// Returns the inverse command's current availability.
   var availability: () -> CommandAvailability { get }
 
-  /// Performs the inverse from the supplied source and returns its replacement.
+  /// Performs the inverse in the supplied execution context and returns its replacement.
   ///
   /// The returned inverse reverses this action, allowing `UndoService` to move
-  /// between undo and redo states without losing its history.
-  var action: (CommandSource) async throws -> CommandInverse? { get }
+  /// between undo and redo states without losing its history. Implementations
+  /// must use the supplied context only for this invocation and must not retain
+  /// or reuse it.
+  var action: (CommandExecutionContext) async throws -> CommandInverse? { get }
 }

@@ -5,26 +5,27 @@
 
 import Foundation
 
-/// Errors thrown by the default command-centre execution helpers.
-public enum CommandError: Error, Equatable, Sendable {
-  /// The command reported that it cannot currently be performed.
-  case commandUnavailable
-}
-
 /// Coordinates command availability and execution for a concrete application context.
+///
+/// This base protocol deliberately has no history semantics. Services that need
+/// to coordinate a command sequence use the generic `CommandExecutionContext`
+/// capability; history-specific policy remains in `UndoableCommandCentre`.
 @MainActor
 public protocol CommandCentre {
   /// Records that a command has started executing.
-  func recordStartedCommand<C: Command>(_ command: C, from: CommandSource) where C.Centre == Self
+  func recordStartedCommand<C: Command>(_ command: C) where C.Centre == Self
 
   /// Records that a command has finished executing.
-  func recordFinishedCommand<C: Command>(_ command: C, from: CommandSource) where C.Centre == Self
+  func recordFinishedCommand<C: Command>(_ command: C) where C.Centre == Self
 
   /// Returns whether the given command is already executing.
   func isRunning<C: Command>(_ command: C) -> Bool where C.Centre == Self
 
-  /// Returns whether a command can begin from the supplied invocation source.
-  func isAllowed(from source: CommandSource) -> Bool
+  /// Returns whether a command can begin in the supplied execution context.
+  ///
+  /// Normal callers pass no context. A coordinating service supplies a context
+  /// only for commands that belong to its active operation.
+  func isAllowed(during context: CommandExecutionContext?) -> Bool
 }
 
 /// Default implementations of command-related functionality.
@@ -32,15 +33,8 @@ public protocol CommandCentre {
 extension CommandCentre {
   /// Returns the current availability of the given command, including running state.
   public func availability<C: Command>(_ command: C) -> CommandAvailability where C.Centre == Self {
-    availability(command, from: .button)
-  }
-
-  /// Returns availability for a specific invocation source.
-  private func availability<C: Command>(_ command: C, from source: CommandSource)
-    -> CommandAvailability where C.Centre == Self
-  {
     let availability = command.availability(centre: self)
-    guard isAllowed(from: source) else {
+    guard isAllowed(during: nil) else {
       return availability == .hidden ? .hidden : .disabled
     }
     if isRunning(command) {
@@ -49,36 +43,43 @@ extension CommandCentre {
     return availability
   }
 
-  /// Performs the given command after checking that it is currently enabled.
-  public func perform<C: Command>(_ command: C, from source: CommandSource) async throws
-    -> C.ResultType where C.Centre == Self
+  /// Performs a command after checking its availability and execution authorization.
+  ///
+  /// Ordinary callers omit `context`. A coordinating service supplies it only
+  /// while performing work that belongs to its active operation.
+  public func perform<C: Command>(
+    _ command: C, during context: CommandExecutionContext? = nil
+  )
+    async throws -> C.ResultType where C.Centre == Self
   {
-    commandChannel.debug("performing command «\(command.id)» from \(source)")
+    commandChannel.debug("performing command «\(command.id)»")
 
     // UI callers should normally gate execution through `availability`, but the
     // command centre still guards execution because availability can change
     // between rendering a control and the action firing.
-    guard availability(command, from: source) == .enabled else {
+    guard command.availability(centre: self) == .enabled,
+      isAllowed(during: context)
+    else {
       throw CommandError.commandUnavailable
     }
 
-    recordStartedCommand(command, from: source)
+    recordStartedCommand(command)
     defer {
-      recordFinishedCommand(command, from: source)
+      recordFinishedCommand(command)
     }
 
-    return try await command.perform(centre: self, from: source)
+    return try await command.perform(centre: self)
   }
 
   /// Starts the given command in an unstructured task and logs any thrown error.
   @discardableResult
-  public func performWithoutWaiting<C: Command>(_ command: C, from source: CommandSource) -> Task<
+  public func performWithoutWaiting<C: Command>(_ command: C) -> Task<
     Void, Never
   > where C.Centre == Self {
-    commandChannel.debug("performing command «\(command.id)» from \(source) without waiting")
+    commandChannel.debug("performing command «\(command.id)» without waiting")
     return Task {
       do {
-        _ = try await perform(command, from: source)
+        _ = try await perform(command)
       } catch {
         commandChannel.log("Error performing command \(command.id): \(error)")
       }
@@ -86,12 +87,12 @@ extension CommandCentre {
   }
 
   /// Default hook for centres that do not track active commands.
-  public func recordStartedCommand<C: Command>(_ command: C, from source: CommandSource)
+  public func recordStartedCommand<C: Command>(_ command: C)
   where C.Centre == Self {
   }
 
   /// Default hook for centres that do not track completed commands.
-  public func recordFinishedCommand<C: Command>(_ command: C, from source: CommandSource)
+  public func recordFinishedCommand<C: Command>(_ command: C)
   where C.Centre == Self {
   }
 
@@ -100,8 +101,8 @@ extension CommandCentre {
     false
   }
 
-  /// By default, command execution is allowed from every source.
-  public func isAllowed(from source: CommandSource) -> Bool {
+  /// By default, command execution is allowed in every execution context.
+  public func isAllowed(during context: CommandExecutionContext?) -> Bool {
     true
   }
 }

@@ -27,8 +27,8 @@ public protocol Command<Centre> {
   /// Determine whether the command is enabled, disabled, or hidden.
   func availability(centre: Centre) -> CommandAvailability
 
-  /// Perform the command using the given CommandCentre.
-  func perform(centre: Centre, from source: CommandSource) async throws -> ResultType
+  /// Performs the command using the given command centre.
+  func perform(centre: Centre) async throws -> ResultType
 
   /// Return the inverse of this command.
   /// The inverse can be invoked to undo whatever state changes this

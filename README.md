@@ -26,7 +26,6 @@ async execution, undo/redo, and cancellation design.
 ## Capabilities
 
 - Centre-aware command availability and lifecycle tracking
-- Invocation sources, including buttons, menus, importers, intents, undo, and redo
 - Optional inverse commands with a lightweight undo/redo service
 - UI metadata: localized name and help, icons, shortcuts, and confirmation
 - SwiftUI buttons, toolbar items, dynamic-trigger buttons, and file importers
@@ -35,8 +34,8 @@ async execution, undo/redo, and cancellation design.
 ## Define a command
 
 Commands depend on the narrowest command-centre protocol that supplies their
-work. Every command declares an identifier, executes with an invocation source,
-and may supply an inverse for undo.
+work. Every command declares an identifier, executes asynchronously, and may
+supply an inverse for undo.
 
 ```swift
 import Commands
@@ -50,7 +49,7 @@ protocol SessionCommands: CommandCentre {
 struct SignOutCommand<C: SessionCommands>: Command {
   let id = "session.sign-out"
 
-  func perform(centre: C, from source: CommandSource) async throws {
+  func perform(centre: C) async throws {
     centre.signOut()
   }
 
@@ -60,14 +59,14 @@ struct SignOutCommand<C: SessionCommands>: Command {
 }
 ```
 
-Call `perform(_:from:)` for an awaited result, or
-`performWithoutWaiting(_:from:)` for a task that logs errors. Both helpers
+Call `perform(_:)` for an awaited result, or `performWithoutWaiting(_:)` for a
+task that logs errors. Both helpers
 check availability immediately before execution, then notify the centre that
 the command started and finished.
 
 ```swift
-try await commander.perform(SignOutCommand(), from: .menu)
-commander.performWithoutWaiting(SignOutCommand(), from: .button)
+try await commander.perform(SignOutCommand())
+commander.performWithoutWaiting(SignOutCommand())
 ```
 
 ## Model availability
@@ -104,7 +103,7 @@ struct ConfigureRepositoryCommand<C: SessionCommands>: CommandWithUI {
 
   func icon(centre: C) -> Icon { .actions }
 
-  func perform(centre: C, from source: CommandSource) async throws {
+  func perform(centre: C) async throws {
     // Configure the repository.
   }
 

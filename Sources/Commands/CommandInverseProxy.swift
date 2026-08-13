@@ -26,9 +26,9 @@ public struct CommandInverseProxy<C: Command>: CommandInverse {
     }
   }
 
-  public var action: (CommandSource) async throws -> CommandInverse? {
-    { source in
-      _ = try await centre.perform(command, from: source)
+  public var action: (CommandExecutionContext) async throws -> CommandInverse? {
+    { context in
+      _ = try await centre.perform(command, during: context)
       return command.inverse(centre: centre)
     }
   }

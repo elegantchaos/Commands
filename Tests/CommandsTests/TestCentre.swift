@@ -22,27 +22,19 @@ private final class TestCentre: CommandCentre {
   /// Ordered list of command IDs passed to `recordFinishedCommand`.
   var finishedCommandIDs: [String] = []
 
-  /// Ordered sources passed to `recordStartedCommand`.
-  var startedCommandSources: [CommandSource] = []
-
-  /// Ordered sources passed to `recordFinishedCommand`.
-  var finishedCommandSources: [CommandSource] = []
-
   /// Command IDs that should currently report as running.
   var runningCommandIDs: Set<String> = []
 
   /// Records when a command starts.
-  func recordStartedCommand<C: Command>(_ command: C, from source: CommandSource)
+  func recordStartedCommand<C: Command>(_ command: C)
   where C.Centre == TestCentre {
     startedCommandIDs.append(command.id)
-    startedCommandSources.append(source)
   }
 
   /// Records when a command finishes.
-  func recordFinishedCommand<C: Command>(_ command: C, from source: CommandSource)
+  func recordFinishedCommand<C: Command>(_ command: C)
   where C.Centre == TestCentre {
     finishedCommandIDs.append(command.id)
-    finishedCommandSources.append(source)
   }
 
   /// Returns whether a command should report as running.
@@ -80,7 +72,7 @@ private struct TestCommand: Command {
   }
 
   /// Marks the centre as executed and returns the configured result.
-  func perform(centre: TestCentre, from source: CommandSource) async throws -> String {
+  func perform(centre: TestCentre) async throws -> String {
     centre.testRan = true
     return result
   }
@@ -93,7 +85,7 @@ private struct DefaultAvailabilityCommand: Command {
   let id = "test.default-availability"
 
   /// Performs no work and returns a constant value.
-  func perform(centre: TestCentre, from source: CommandSource) async throws -> String {
+  func perform(centre: TestCentre) async throws -> String {
     "default"
   }
 }
@@ -110,7 +102,7 @@ private struct FailingCommand: Command {
   let id = "test.failing"
 
   /// Marks the centre as executed, then throws.
-  func perform(centre: TestCentre, from source: CommandSource) async throws -> String {
+  func perform(centre: TestCentre) async throws -> String {
     centre.testRan = true
     throw TestFailure.expected
   }
@@ -127,14 +119,12 @@ struct TestCentreTests {
     #expect(centre.startedCommandIDs.isEmpty)
     #expect(centre.finishedCommandIDs.isEmpty)
 
-    let result = try await centre.perform(command, from: .menu)
+    let result = try await centre.perform(command)
 
     #expect(result == "performed")
     #expect(centre.testRan == true)
     #expect(centre.startedCommandIDs == [command.id])
     #expect(centre.finishedCommandIDs == [command.id])
-    #expect(centre.startedCommandSources == [.menu])
-    #expect(centre.finishedCommandSources == [.menu])
   }
 
   /// Verifies that unavailable commands throw before lifecycle hooks fire.
@@ -148,7 +138,7 @@ struct TestCentreTests {
     #expect(centre.availability(command) == availability)
 
     await #expect(throws: CommandError.commandUnavailable) {
-      try await centre.perform(command, from: .button)
+      try await centre.perform(command)
     }
 
     #expect(centre.testRan == false)
@@ -162,14 +152,12 @@ struct TestCentreTests {
     let command = FailingCommand()
 
     await #expect(throws: TestFailure.expected) {
-      try await centre.perform(command, from: .intent)
+      try await centre.perform(command)
     }
 
     #expect(centre.testRan == true)
     #expect(centre.startedCommandIDs == [command.id])
     #expect(centre.finishedCommandIDs == [command.id])
-    #expect(centre.startedCommandSources == [.intent])
-    #expect(centre.finishedCommandSources == [.intent])
   }
 
   /// Verifies that the default command availability is `.enabled`.
@@ -207,14 +195,12 @@ struct TestCentreTests {
     let centre = TestCentre()
     let command = TestCommand(id: "test.background")
 
-    let task = centre.performWithoutWaiting(command, from: .button)
+    let task = centre.performWithoutWaiting(command)
     await task.value
 
     #expect(centre.testRan == true)
     #expect(centre.startedCommandIDs == [command.id])
     #expect(centre.finishedCommandIDs == [command.id])
-    #expect(centre.startedCommandSources == [.button])
-    #expect(centre.finishedCommandSources == [.button])
   }
 
   /// Verifies that a protocol-constrained command can execute against a conforming centre.
@@ -222,7 +208,7 @@ struct TestCentreTests {
     let centre = TestCentre()
 
     #expect(centre.didTheThing == false)
-    try await centre.perform(ProtocolCommand(), from: .link)
+    try await centre.perform(ProtocolCommand())
     #expect(centre.didTheThing == true)
   }
 }

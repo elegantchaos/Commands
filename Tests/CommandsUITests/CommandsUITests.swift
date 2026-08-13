@@ -23,9 +23,6 @@ private final class UITestCentre: CommandCentre {
   /// Command identifiers performed through platform UI adapters.
   var performedCommandIDs: [String] = []
 
-  /// Sources used to perform commands through UI adapters.
-  var performedCommandSources: [CommandSource] = []
-
   /// Returns whether the supplied command is marked as running.
   func isRunning<C: Command>(_ command: C) -> Bool where C.Centre == UITestCentre {
     runningCommandIDs.contains(command.id)
@@ -68,7 +65,7 @@ private final class UITestCentre: CommandCentre {
     }
 
     /// Records execution in the test centre.
-    func perform(centre: UITestCentre, from source: CommandSource) async throws {
+    func perform(centre: UITestCentre) async throws {
       centre.performedCommandIDs.append(id)
     }
   }
@@ -86,7 +83,7 @@ private struct DefaultUICommand: CommandWithUI {
   }
 
   /// Performs no work.
-  func perform(centre: UITestCentre, from source: CommandSource) async throws {
+  func perform(centre: UITestCentre) async throws {
   }
 }
 
@@ -110,7 +107,7 @@ private struct AvailabilityUICommand: CommandWithUI {
   }
 
   /// Performs no work.
-  func perform(centre: UITestCentre, from source: CommandSource) async throws {
+  func perform(centre: UITestCentre) async throws {
   }
 }
 
@@ -163,9 +160,8 @@ private struct MetadataCommand: CommandWithUI {
   var bundle: Bundle { Bundle(for: MetadataBundleToken.self) }
 
   /// Returns the configured result.
-  func perform(centre: UITestCentre, from source: CommandSource) async throws -> String {
+  func perform(centre: UITestCentre) async throws -> String {
     centre.performedCommandIDs.append(id)
-    centre.performedCommandSources.append(source)
     return result
   }
 }
@@ -336,7 +332,7 @@ struct CommandsUITests {
     #expect(wrapped.shortcut == nil)
     #expect(wrapped.availability(centre: centre) == .disabled)
 
-    let result = try await wrapped.perform(centre: centre, from: .button)
+    let result = try await wrapped.perform(centre: centre)
     #expect(result == "forwarded")
   }
 
@@ -364,9 +360,9 @@ struct CommandsUITests {
     #expect(inverse.icon().systemImage == "network")
     #expect(inverse.help() == "Helpful metadata")
 
-    let replacement = try await inverse.action(.undo)
-    #expect(replacement == nil)
+    let undoService = UndoService()
+    undoService.recordUndo(inverse)
+    try await undoService.performUndo()
     #expect(centre.performedCommandIDs == [command.id])
-    #expect(centre.performedCommandSources == [.undo])
   }
 }

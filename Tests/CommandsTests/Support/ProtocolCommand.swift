@@ -26,7 +26,7 @@ protocol TestProtocol: CommandCentre {
 struct ProtocolCommand<P: TestProtocol>: Command {
   let id = "test.protocol"
 
-  func perform(centre: P, from source: CommandSource) async throws {
+  func perform(centre: P) async throws {
     centre.doTheThing()
   }
 }

@@ -17,9 +17,8 @@ documentation, and tests.
 - Made `UndoService.performUndo()` asynchronous and added cursor-based undo/redo
   history. A history action returns its replacement inverse, which lets the
   service move repeatedly between undo and redo states.
-- Added `CommandSource.redo`, `UndoService.performRedo()`, `hasRedo`,
-  `nextRedo`, and the single `UndoService.Operation?` state. `isUndoing` and
-  `isRedoing` are derived convenience properties.
+- Added `UndoService.performRedo()`, `hasRedo`, `nextRedo`, `isUndoing`, and
+  `isRedoing`.
 - Added `RedoCommandButton`, `redoButton()`, and localized Redo labels.
 - Updated unit tests for the current command API and added coverage for undo/redo
   traversal, redo-branch truncation, failure preservation, and concurrent
@@ -28,8 +27,12 @@ documentation, and tests.
   Command coordination remains main-actor isolated; CPU-heavy work belongs in
   injected concurrent services. Undoable centres now block forward commands
   while an undo or redo action is suspended, preventing re-entrant history
-  corruption. `CommandCentre.isAllowed(from:)` delegates source-specific policy
-  to the concrete centre, leaving undo/redo semantics in
+  corruption. `CommandCentre` uses a generic `CommandExecutionContext`, leaving
+  undo/redo semantics in `UndoableCommandCentre`. The undo service tracks active
+  forward commands and owns the context that authorises its active undo or redo
+  action.
+- Simplified the command API by removing invocation-source parameters. History
+  coordination now lives entirely within `UndoService` and
   `UndoableCommandCentre`.
 
 ## Validation

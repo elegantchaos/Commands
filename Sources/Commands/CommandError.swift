@@ -5,13 +5,8 @@
 
 import Foundation
 
-/// The place that the command was invoked from.
-public enum CommandSource: Equatable, Sendable {
-  case button
-  case menu
-  case importer
-  case link
-  case intent
-  case undo
-  case redo
+/// Errors thrown by the default command-centre execution helpers.
+public enum CommandError: Error, Equatable, Sendable {
+  /// The command reported that it cannot currently be performed.
+  case commandUnavailable
 }

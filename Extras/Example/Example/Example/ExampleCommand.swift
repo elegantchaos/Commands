@@ -15,7 +15,7 @@ struct ExampleCommand<Centre: ExampleServiceProvider>: CommandWithUI {
     Icon("command")
   }
 
-  func perform(centre: Centre, from source: CommandSource) async throws {
+  func perform(centre: Centre) async throws {
     centre.service.incrementDone()
   }
 
@@ -32,7 +32,7 @@ struct ExampleUndoCommand<Centre: ExampleServiceProvider>: CommandWithUI {
     Icon("command")
   }
 
-  func perform(centre: Centre, from source: CommandSource) async throws {
+  func perform(centre: Centre) async throws {
     centre.service.decrementDone()
   }
 

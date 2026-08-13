@@ -6,6 +6,10 @@
 import Foundation
 
 /// A command centre that records inverses in an undo service.
+///
+/// This protocol owns the package's history-specific execution policy. While
+/// its service performs undo or redo, it admits only commands authorized by
+/// that service and prevents forward commands from changing history.
 @MainActor
 public protocol UndoableCommandCentre: CommandCentre {
   var undoService: UndoService { get }
@@ -13,14 +17,34 @@ public protocol UndoableCommandCentre: CommandCentre {
 
 @MainActor
 extension UndoableCommandCentre {
-  /// Allows history commands to finish while a history operation is suspended.
-  public func isAllowed(from source: CommandSource) -> Bool {
-    undoService.operation == nil || source == .undo || source == .redo
+  /// Allows only the context owned by the active undo or redo operation.
+  ///
+  /// Keeping this rule here ensures `CommandCentre` remains independent of
+  /// undo and redo.
+  public func isAllowed(during context: CommandExecutionContext?) -> Bool {
+    undoService.isPerformingHistoryOperation == false || undoService.authorizes(context)
   }
 
-  public func recordFinishedCommand<C: Command>(_ command: C, from source: CommandSource)
+  /// Records the start of a forward command so history operations can wait for it to finish.
+  public func recordStartedCommand<C: Command>(_ command: C)
   where C.Centre == Self {
-    if let invocation = command.inverse(centre: self), source != .undo, source != .redo {
+    guard undoService.isPerformingHistoryOperation == false else {
+      return
+    }
+    undoService.beginForwardCommand()
+  }
+
+  /// Records an inverse and the completion of a forward command.
+  ///
+  /// Custom lifecycle implementations must preserve the paired forward-command
+  /// tracking and must not record inverses for an active history operation.
+  public func recordFinishedCommand<C: Command>(_ command: C)
+  where C.Centre == Self {
+    guard undoService.isPerformingHistoryOperation == false else {
+      return
+    }
+    defer { undoService.finishForwardCommand() }
+    if let invocation = command.inverse(centre: self) {
       undoService.recordUndo(invocation)
     }
   }

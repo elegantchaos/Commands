@@ -50,7 +50,7 @@ where C.Centre == CC {
           case .failure(let error):
             command.state = .error(error)
           }
-          centre.performWithoutWaiting(command, from: .importer)
+          centre.performWithoutWaiting(command)
         }
       #endif
   }

@@ -39,7 +39,7 @@ where C.Centre == CC {
   public var body: some View {
     let availability = commander.availability(command)
     if availability != .hidden {
-      Button(role: role, action: { commander.performWithoutWaiting(command, from: .button) }) {
+      Button(role: role, action: { commander.performWithoutWaiting(command) }) {
         label
       }
       .commandPresentation(
