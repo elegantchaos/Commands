@@ -13,4 +13,5 @@ public enum CommandSource: Equatable, Sendable {
   case link
   case intent
   case undo
+  case redo
 }

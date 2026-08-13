@@ -15,7 +15,7 @@ public protocol UndoableCommandCentre: CommandCentre {
 extension UndoableCommandCentre {
   public func recordFinishedCommand<C: Command>(_ command: C, from source: CommandSource)
   where C.Centre == Self {
-    if let invocation = command.inverse(centre: self), source != .undo {
+    if let invocation = command.inverse(centre: self), source != .undo, source != .redo {
       undoService.recordUndo(invocation)
     }
   }

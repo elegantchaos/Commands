@@ -22,16 +22,24 @@ private final class UndoTestCentre: UndoableCommandCentre {
 /// Command used to verify inverse proxy and undo-stack behavior.
 @MainActor
 private struct UndoCommand: Command {
-  /// Identifier used to verify last-in-first-out execution.
+  /// Identifier used to verify history execution order.
   let id: String
 
   /// Availability reported through an inverse proxy.
   let reportedAvailability: CommandAvailability
 
-  /// Creates a command with the supplied identifier and availability.
-  init(id: String, reportedAvailability: CommandAvailability = .enabled) {
+  /// Identifier of the command that reverses this command.
+  let inverseID: String?
+
+  /// Creates a command with the supplied identifier, availability, and inverse.
+  init(
+    id: String,
+    reportedAvailability: CommandAvailability = .enabled,
+    inverseID: String? = nil
+  ) {
     self.id = id
     self.reportedAvailability = reportedAvailability
+    self.inverseID = inverseID
   }
 
   /// Returns the configured availability.
@@ -43,6 +51,17 @@ private struct UndoCommand: Command {
   func perform(centre: UndoTestCentre, from source: CommandSource) async throws {
     centre.performedCommandIDs.append(id)
     centre.commandSources.append(source)
+  }
+
+  /// Returns the command that reverses this history action.
+  func inverse(centre: UndoTestCentre) -> CommandInverse? {
+    guard let inverseID else {
+      return nil
+    }
+    return CommandInverseProxy(
+      command: UndoCommand(id: inverseID, inverseID: id),
+      centre: centre
+    )
   }
 }
 
@@ -136,33 +155,72 @@ private struct SuspendedUndoCommand: Command {
   }
 }
 
-/// Tests undo registration, execution, and inverse-command adaptation.
+/// Tests undo and redo registration, execution, and inverse-command adaptation.
 @MainActor
 struct UndoServiceTests {
-  /// Verifies that the undo service performs inverses in last-in-first-out order.
-  @Test func undoServicePerformsRecordedInversesInReverseOrder() async throws {
+  /// Verifies that undo actions can be reversed by matching redo actions.
+  @Test func undoAndRedoTraverseHistoryInOrder() async throws {
     let centre = UndoTestCentre()
     centre.undoService.recordUndo(
-      CommandInverseProxy(command: UndoCommand(id: "first"), centre: centre))
+      CommandInverseProxy(
+        command: UndoCommand(id: "undo.first", inverseID: "redo.first"),
+        centre: centre
+      ))
     centre.undoService.recordUndo(
-      CommandInverseProxy(command: UndoCommand(id: "second"), centre: centre))
+      CommandInverseProxy(
+        command: UndoCommand(id: "undo.second", inverseID: "redo.second"),
+        centre: centre
+      ))
 
     #expect(centre.undoService.hasUndo)
-    #expect(centre.undoService.stackDescription == "first > second")
-    #expect(centre.undoService.nextUndo?.id == "second")
+    #expect(centre.undoService.hasRedo == false)
+    #expect(centre.undoService.stackDescription == "undo.first > undo.second")
+    #expect(centre.undoService.nextUndo?.id == "undo.second")
 
     try await centre.undoService.performUndo()
-    #expect(centre.performedCommandIDs == ["second"])
+    #expect(centre.performedCommandIDs == ["undo.second"])
     #expect(centre.commandSources == [.undo])
-    #expect(centre.undoService.stackDescription == "first")
+    #expect(centre.undoService.hasUndo)
+    #expect(centre.undoService.hasRedo)
+    #expect(centre.undoService.nextUndo?.id == "undo.first")
+    #expect(centre.undoService.nextRedo?.id == "redo.second")
 
     try await centre.undoService.performUndo()
-    #expect(centre.performedCommandIDs == ["second", "first"])
+    #expect(centre.performedCommandIDs == ["undo.second", "undo.first"])
     #expect(centre.undoService.hasUndo == false)
-    #expect(centre.undoService.nextUndo == nil)
+    #expect(centre.undoService.hasRedo)
+    #expect(centre.undoService.nextRedo?.id == "redo.first")
+
+    try await centre.undoService.performRedo()
+    try await centre.undoService.performRedo()
+    #expect(
+      centre.performedCommandIDs == ["undo.second", "undo.first", "redo.first", "redo.second"])
+    #expect(centre.commandSources == [.undo, .undo, .redo, .redo])
+    #expect(centre.undoService.hasUndo)
+    #expect(centre.undoService.hasRedo == false)
+    #expect(centre.undoService.nextUndo?.id == "undo.second")
+    #expect(centre.undoService.nextRedo == nil)
+  }
+
+  /// Verifies that recording a new command after undoing discards the redo branch.
+  @Test func recordingAfterUndoDiscardsRedoHistory() async throws {
+    let centre = UndoTestCentre()
+    centre.undoService.recordUndo(
+      CommandInverseProxy(
+        command: UndoCommand(id: "undo.original", inverseID: "redo.original"),
+        centre: centre
+      ))
 
     try await centre.undoService.performUndo()
-    #expect(centre.performedCommandIDs == ["second", "first"])
+    #expect(centre.undoService.hasRedo)
+
+    centre.undoService.recordUndo(
+      CommandInverseProxy(command: UndoCommand(id: "undo.replacement"), centre: centre))
+
+    #expect(centre.undoService.stackDescription == "undo.replacement")
+    #expect(centre.undoService.hasUndo)
+    #expect(centre.undoService.hasRedo == false)
+    #expect(centre.undoService.nextUndo?.id == "undo.replacement")
   }
 
   /// Verifies that undoable centres record successful forward commands but not undo commands.
@@ -189,7 +247,8 @@ struct UndoServiceTests {
     let executableProxy = CommandInverseProxy(
       command: UndoCommand(id: "test.proxy"), centre: centre)
 
-    try await executableProxy.action(.intent)
+    let replacement = try await executableProxy.action(.intent)
+    #expect(replacement == nil)
     #expect(centre.performedCommandIDs == ["test.proxy"])
     #expect(centre.commandSources == [.intent])
   }
@@ -209,8 +268,8 @@ struct UndoServiceTests {
     #expect(centre.undoService.isUndoing == false)
   }
 
-  /// Verifies that a second undo cannot remove the same inverse while the first is suspended.
-  @Test func concurrentUndoIsRejected() async throws {
+  /// Verifies that redo cannot start while an undo operation is suspended.
+  @Test func concurrentHistoryOperationIsRejected() async throws {
     let centre = UndoTestCentre()
     let gate = UndoGate()
     centre.undoService.recordUndo(
@@ -221,15 +280,18 @@ struct UndoServiceTests {
     }
     await gate.waitUntilStarted()
 
-    await #expect(throws: UndoServiceError.undoInProgress) {
-      try await centre.undoService.performUndo()
+    await #expect(throws: UndoServiceError.historyOperationInProgress) {
+      try await centre.undoService.performRedo()
     }
     #expect(centre.undoService.isUndoing)
+    #expect(centre.undoService.isRedoing == false)
+    #expect(centre.undoService.operation == .undo)
     #expect(centre.undoService.hasUndo)
 
     gate.release()
     try await firstUndo.value
     #expect(centre.undoService.isUndoing == false)
+    #expect(centre.undoService.operation == nil)
     #expect(centre.undoService.hasUndo == false)
   }
 }

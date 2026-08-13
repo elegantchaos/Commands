@@ -19,6 +19,7 @@ struct ContentView: View {
       Text("Done: \(commander.service.count)")
       commander.button(ExampleCommand())
       commander.undoButton(showsCommandPresentation: true)
+      commander.redoButton(showsCommandPresentation: true)
       Text("Stack: \(commander.undoService.debugDescription)")
     }
     .padding()

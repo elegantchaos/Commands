@@ -364,7 +364,8 @@ struct CommandsUITests {
     #expect(inverse.icon().systemImage == "network")
     #expect(inverse.help() == "Helpful metadata")
 
-    try await inverse.action(.undo)
+    let replacement = try await inverse.action(.undo)
+    #expect(replacement == nil)
     #expect(centre.performedCommandIDs == [command.id])
     #expect(centre.performedCommandSources == [.undo])
   }

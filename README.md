@@ -23,8 +23,8 @@ them to UIKit and Mac Catalyst menus.
 ## Capabilities
 
 - Centre-aware command availability and lifecycle tracking
-- Invocation sources, including buttons, menus, importers, intents, and undo
-- Optional inverse commands with a lightweight undo service
+- Invocation sources, including buttons, menus, importers, intents, undo, and redo
+- Optional inverse commands with a lightweight undo/redo service
 - UI metadata: localized name and help, icons, shortcuts, and confirmation
 - SwiftUI buttons, toolbar items, dynamic-trigger buttons, and file importers
 - UIKit and Mac Catalyst `UICommand` and `UIMenu` adaptation
@@ -174,11 +174,14 @@ retains invocations for the delegate's lifetime.
 ## Undo
 
 Adopt `UndoableCommandCentre` and provide an `UndoService` to record inverses
-after successful commands. `undoButton()` renders the package's basic undo
-control; applications can also call `try await undoService.performUndo()` directly.
-Pass `showsCommandPresentation: true` to `undoButton()` when inverse commands
-use `CommandInverseProxyWithUI` and the button should display their localized name
-and icon instead of the standard Undo label.
+after successful commands. The service retains a history cursor, so each successful
+undo can be reversed with `try await undoService.performRedo()`. Recording a new
+command after undoing discards the redo branch. `undoButton()` and `redoButton()`
+render the package's standard history controls; applications can also call
+`try await undoService.performUndo()` and `try await undoService.performRedo()`
+directly. Pass `showsCommandPresentation: true` to either button when inverse
+commands use `CommandInverseProxyWithUI` and the button should display their
+localized name and icon instead of the standard Undo or Redo label.
 
 ```swift
 @MainActor
@@ -187,5 +190,6 @@ final class EditorCommands: UndoableCommandCentre {
 }
 ```
 
-`CommandProxy` turns a command and its centre into a `CommandInverse`, which is
-useful when two commands are natural inverses of one another.
+`CommandInverseProxy` turns a command and its centre into a `CommandInverse`. The
+wrapped command's `inverse(centre:)` provides the inverse required to return from
+undo to redo (and back again).

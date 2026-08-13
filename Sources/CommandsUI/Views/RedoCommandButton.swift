@@ -7,22 +7,22 @@ import Commands
 import Icons
 import SwiftUI
 
-/// A button that performs the next inverse held by an undo service.
+/// A button that performs the next redo action held by an undo service.
 ///
-/// The button remains visible but disabled when there is no inverse. It is
-/// hidden only when the pending inverse reports `.hidden` availability.
+/// The button remains visible but disabled when there is no redo action. It is
+/// hidden only when the pending action reports `.hidden` availability.
 @MainActor
-public struct UndoCommandButton: View {
-  /// Undo service that owns the pending inverse.
+public struct RedoCommandButton: View {
+  /// Undo service that owns the pending redo action.
   private let undoService: UndoService
 
   /// Optional semantic role for the button.
   private let role: ButtonRole?
 
-  /// Whether the pending inverse's UI metadata should replace the standard Undo label.
+  /// Whether the pending action's UI metadata should replace the standard Redo label.
   private let showsCommandPresentation: Bool
 
-  /// Creates an undo button for the supplied service.
+  /// Creates a redo button for the supplied service.
   public init(
     undoService: UndoService,
     role: ButtonRole? = nil,
@@ -33,46 +33,46 @@ public struct UndoCommandButton: View {
     self.showsCommandPresentation = showsCommandPresentation
   }
 
-  /// Renders the pending inverse unless it is hidden.
+  /// Renders the pending redo action unless it is hidden.
   public var body: some View {
-    let inverse = undoService.nextUndo
+    let inverse = undoService.nextRedo
     let availability = inverse?.availability() ?? .disabled
     let presentation = showsCommandPresentation ? inverse as? any CommandInverseWithUI : nil
 
     if availability != .hidden {
-      Button(role: role, action: performUndo) {
+      Button(role: role, action: performRedo) {
         label(presentation: presentation)
       }
       .commandPresentation(
         availability: availability,
         help: presentation?.help(),
-        isPerforming: undoService.isUndoing
+        isPerforming: undoService.isRedoing
       )
     }
   }
 
-  /// Button label for the pending inverse or the standard Undo action.
+  /// Button label for the pending action or the standard Redo action.
   @ViewBuilder private func label(presentation: (any CommandInverseWithUI)?) -> some View {
     if let presentation {
       Label(
         String.localizedStringWithFormat(
-          String(localized: "action.undo", bundle: #bundle),
+          String(localized: "action.redo", bundle: #bundle),
           presentation.name()
         ),
         icon: presentation.icon()
       )
     } else {
-      Text("action.undo.simple", bundle: #bundle)
+      Text("action.redo.simple", bundle: #bundle)
     }
   }
 
-  /// Starts the undo operation and logs any user-facing execution failure.
-  private func performUndo() {
+  /// Starts the redo operation and logs any user-facing execution failure.
+  private func performRedo() {
     Task {
       do {
-        try await undoService.performUndo()
+        try await undoService.performRedo()
       } catch {
-        commandChannel.log("Error performing undo: \(error)")
+        commandChannel.log("Error performing redo: \(error)")
       }
     }
   }

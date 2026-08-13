@@ -143,4 +143,16 @@ extension UndoableCommandCentre {
       showsCommandPresentation: showsCommandPresentation
     )
   }
+
+  /// Returns a button that performs the next redo operation.
+  @ViewBuilder public func redoButton(
+    role: ButtonRole? = nil,
+    showsCommandPresentation: Bool = false
+  ) -> some View {
+    RedoCommandButton(
+      undoService: undoService,
+      role: role,
+      showsCommandPresentation: showsCommandPresentation
+    )
+  }
 }
