@@ -7,9 +7,9 @@ import Foundation
 
 /// A command centre that records inverses in an undo service.
 ///
-/// This protocol owns the package's history-specific execution policy. While
-/// its service performs undo or redo, it admits only commands authorized by
-/// that service and prevents forward commands from changing history.
+/// This protocol owns the package's undo/redo execution policy. While its
+/// service performs undo or redo, it allows only commands with that service's
+/// active context and prevents forward commands from changing history.
 @MainActor
 public protocol UndoableCommandCentre: CommandCentre {
   var undoService: UndoService { get }
@@ -22,7 +22,7 @@ extension UndoableCommandCentre {
   /// Keeping this rule here ensures `CommandCentre` remains independent of
   /// undo and redo.
   public func isAllowed(during context: CommandExecutionContext?) -> Bool {
-    undoService.isPerformingHistoryOperation == false || undoService.authorizes(context)
+    undoService.isPerformingHistoryOperation == false || undoService.isActive(context)
   }
 
   /// Records the start of a forward command so history operations can wait for it to finish.

@@ -34,18 +34,17 @@ best fits that operation's domain.
 or redo until they finish. While undo or redo awaits an inverse command, it
 disables and rejects new forward commands. This prevents main-actor reentrancy
 from changing the history cursor during a suspended history operation. The
-matching undo or redo command is authorised through an opaque
-`CommandExecutionContext` owned by its `UndoService` and replaces the history
-entry with its returned inverse.
+matching undo or redo command runs with the `CommandExecutionContext` supplied
+by its `UndoService` and replaces the history entry with its returned inverse.
 
-`CommandExecutionContext` is a generic capability: `CommandCentre` has no
-undo or redo knowledge. `UndoableCommandCentre` owns the history-specific rule:
+`CommandExecutionContext` is generic: `CommandCentre` has no undo or redo
+knowledge. `UndoableCommandCentre` owns the undo/redo rule:
 while its undo service has an active operation, it allows only the context owned
 by that service.
 
 The service owns the context and all active-operation state. Do not use global,
-static mutable, or task-scoped state to authorize history execution. The active
-mode and its context are represented by one private value, so neither can exist
+static mutable, or task-scoped state to track history execution. The active mode
+and its context are represented by one private value, so neither can exist
 without the other. Inverse implementations must use the supplied context only
 for their invocation and must not retain it.
 

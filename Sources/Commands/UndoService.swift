@@ -19,16 +19,15 @@ public enum UndoServiceError: Error, Equatable, Sendable {
 /// The cursor separates completed history from entries that can be redone.
 /// Each successful history operation replaces the executed inverse with the
 /// inverse returned by that action, so undo and redo can traverse the same
-/// history in either direction. Each service owns all state required to
-/// authorize its active history operation; it does not use global or task-local
-/// state.
+/// history in either direction. Each service owns all state for its active
+/// history operation; it does not use global or task-local state.
 @MainActor
 @Observable
 open class UndoService {
-  /// An active history operation and the context that it authorizes.
+  /// An active history operation and its execution context.
   ///
   /// Keeping these values in one enum makes it impossible to expose a history
-  /// mode without its matching authorization capability.
+  /// mode without its matching execution context.
   private enum ActiveOperation {
     /// Reverses a completed history entry using the associated context.
     case undo(CommandExecutionContext)
@@ -36,7 +35,7 @@ open class UndoService {
     /// Reapplies an undone history entry using the associated context.
     case redo(CommandExecutionContext)
 
-    /// The context authorized by the operation.
+    /// The execution context carried by the operation.
     var context: CommandExecutionContext {
       switch self {
       case .undo(let context), .redo(let context):
@@ -51,14 +50,14 @@ open class UndoService {
   /// The number of completed entries at the front of `undoStack`.
   var undoCursor = 0
 
-  /// Active history operation and the context that it authorizes.
+  /// Active history operation and its execution context.
   private var activeOperation: ActiveOperation?
 
   /// Number of forward commands that have started but not yet finished.
   ///
   /// Forward commands can overlap, so this is a count rather than another
   /// active-operation case. History operations wait until the count reaches zero.
-  public private(set) var forwardCommandCount = 0
+  private var forwardCommandCount = 0
 
   /// Whether an undo or redo operation is currently being performed.
   ///
@@ -211,8 +210,8 @@ open class UndoService {
     }
   }
 
-  /// Returns whether this service owns the supplied active execution context.
-  func authorizes(_ context: CommandExecutionContext?) -> Bool {
+  /// Returns whether the supplied context is active for this service.
+  func isActive(_ context: CommandExecutionContext?) -> Bool {
     activeOperation?.context === context
   }
 

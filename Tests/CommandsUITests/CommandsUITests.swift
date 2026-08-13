@@ -87,30 +87,6 @@ private struct DefaultUICommand: CommandWithUI {
   }
 }
 
-/// Configurable UI command used to verify `shouldDisable` mapping.
-@MainActor
-private struct AvailabilityUICommand: CommandWithUI {
-  /// Stable identifier used by assertions.
-  let id = "test.ui.availability"
-
-  /// Availability reported to the command centre.
-  let reportedAvailability: CommandAvailability
-
-  /// Returns the configured availability.
-  func availability(centre: UITestCentre) -> CommandAvailability {
-    reportedAvailability
-  }
-
-  /// Returns a fixed icon for metadata assertions.
-  func icon(centre: UITestCentre) -> Icon {
-    Icon("square.and.pencil")
-  }
-
-  /// Performs no work.
-  func perform(centre: UITestCentre) async throws {
-  }
-}
-
 /// UI command with non-default metadata used to verify `WrappedCommand` forwarding.
 @MainActor
 private struct MetadataCommand: CommandWithUI {
@@ -287,34 +263,6 @@ struct CommandsUITests {
     #expect(command.shortcut == nil)
     #expect(command.bundle == .main)
     #expect(command.icon(centre: centre).systemImage == "square.and.pencil")
-  }
-
-  /// Verifies that `shouldDisable` only disables commands that are unavailable or already running.
-  @Test(arguments: [
-    (CommandAvailability.enabled, false),
-    (CommandAvailability.disabled, true),
-    (CommandAvailability.hidden, false),
-    (CommandAvailability.running, true),
-    (CommandAvailability.runningSilently, true),
-  ])
-  func shouldDisableMatchesAvailability(
-    availabilityAndExpectation: (availability: CommandAvailability, expected: Bool)
-  ) {
-    let centre = UITestCentre()
-    let command = AvailabilityUICommand(
-      reportedAvailability: availabilityAndExpectation.availability)
-
-    #expect(centre.shouldDisable(command) == availabilityAndExpectation.expected)
-  }
-
-  /// Verifies that a running command is disabled even if its base availability is enabled.
-  @Test func shouldDisableUsesRunningStateFromCentre() {
-    let centre = UITestCentre()
-    let command = AvailabilityUICommand(reportedAvailability: .enabled)
-    centre.runningCommandIDs.insert(command.id)
-
-    #expect(centre.availability(command) == .running)
-    #expect(centre.shouldDisable(command) == true)
   }
 
   /// Verifies that `WrappedCommand` forwards all metadata, availability, and execution by default.

@@ -7,9 +7,9 @@ import Foundation
 
 /// Coordinates command availability and execution for a concrete application context.
 ///
-/// This base protocol deliberately has no history semantics. Services that need
-/// to coordinate a command sequence use the generic `CommandExecutionContext`
-/// capability; history-specific policy remains in `UndoableCommandCentre`.
+/// This base protocol deliberately remains independent of undo and redo.
+/// Services that coordinate a command sequence use `CommandExecutionContext`;
+/// `UndoableCommandCentre` defines the undo/redo policy.
 @MainActor
 public protocol CommandCentre {
   /// Records that a command has started executing.
@@ -43,7 +43,7 @@ extension CommandCentre {
     return availability
   }
 
-  /// Performs a command after checking its availability and execution authorization.
+  /// Performs a command after checking its availability and execution context.
   ///
   /// Ordinary callers omit `context`. A coordinating service supplies it only
   /// while performing work that belongs to its active operation.

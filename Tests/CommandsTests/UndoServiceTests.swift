@@ -341,7 +341,6 @@ struct UndoServiceTests {
     }
     await gate.waitUntilStarted()
 
-    #expect(centre.undoService.forwardCommandCount == 1)
     await #expect(throws: UndoServiceError.forwardCommandInProgress) {
       try await centre.undoService.performUndo()
     }
@@ -349,13 +348,12 @@ struct UndoServiceTests {
 
     gate.release()
     try await forwardCommand.value
-    #expect(centre.undoService.forwardCommandCount == 0)
 
     try await centre.undoService.performUndo()
     #expect(centre.performedCommandIDs == ["undo.pending"])
   }
 
-  /// Verifies that one undo service cannot authorize work in another service's history operation.
+  /// Verifies that one undo service cannot use another service's active context.
   @Test func executionContextIsRestrictedToItsOwningService() async throws {
     let activeCentre = UndoTestCentre()
     let activeGate = UndoGate()

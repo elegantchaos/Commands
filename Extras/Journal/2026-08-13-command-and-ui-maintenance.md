@@ -29,8 +29,7 @@ documentation, and tests.
   while an undo or redo action is suspended, preventing re-entrant history
   corruption. `CommandCentre` uses a generic `CommandExecutionContext`, leaving
   undo/redo semantics in `UndoableCommandCentre`. The undo service tracks active
-  forward commands and owns the context that authorises its active undo or redo
-  action.
+  forward commands and supplies the context for its active undo or redo action.
 - Simplified the command API by removing invocation-source parameters. History
   coordination now lives entirely within `UndoService` and
   `UndoableCommandCentre`.

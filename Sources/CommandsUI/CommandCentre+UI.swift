@@ -10,14 +10,6 @@ import UniformTypeIdentifiers
 /// SwiftUI helpers for rendering and invoking commands from a `CommandCentre`.
 @MainActor
 extension CommandCentre {
-  /// Returns whether the given command should be disabled in the current UI state.
-  public func shouldDisable<C: CommandWithUI>(_ command: C) -> Bool where C.Centre == Self {
-    switch availability(command) {
-    case .disabled, .running, .runningSilently: return true
-    default: return false
-    }
-  }
-
   /// Returns a labelled button for the given command, or nothing when it is hidden.
   @ViewBuilder public func button<C: CommandWithUI>(_ command: C, role: ButtonRole? = nil)
     -> some View where C.Centre == Self
