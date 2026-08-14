@@ -7,10 +7,9 @@ import Commands
 import CommandsUI
 import SwiftUI
 
-// TODO: ability to extract the name of the command(s) to undo
-
 /// Coordinates command execution, example state, and undo history.
-class ExampleCommander: UndoableCommandCentre, ExampleServiceProvider {
+@MainActor
+final class ExampleCommander: UndoableCommandCentre, ExampleServiceProvider {
   var service = ExampleService()
   var undoService: UndoService = UndoService()
 }

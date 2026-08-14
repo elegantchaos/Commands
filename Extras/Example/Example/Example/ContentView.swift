@@ -7,26 +7,44 @@ import Commands
 import CommandsUI
 import SwiftUI
 
-/// Demonstrates command execution and undo in a SwiftUI view.
+/// Demonstrates commands across buttons, toolbars, contextual menus, and app menus.
 struct ContentView: View {
-  @State var commander = ExampleCommander()
+  /// Shared command centre for every control in the example.
+  let commander: ExampleCommander
+
+  /// Controls the importer launched from the contextual menu.
+  @State private var isShowingContextImporter = false
+
+  /// Holds importer state while the contextual importer is presented.
+  @State private var contextImportCommand = ImportExampleFilesCommand<ExampleCommander>()
 
   var body: some View {
-    VStack {
-      Image(systemName: "globe")
-        .imageScale(.large)
-        .foregroundStyle(.tint)
-      Text("Done: \(commander.service.count)")
-      commander.button(ExampleCommand())
-      commander.undoButton(showsCommandPresentation: true)
-      commander.redoButton(showsCommandPresentation: true)
-      Text("Stack: \(commander.undoService.debugDescription)")
+    NavigationStack {
+      Form {
+        CommandStateSection(service: commander.service)
+        CommandButtonsSection(commander: commander)
+        ImportedFilesSection(fileNames: commander.service.importedFileNames)
+        UndoSection(commander: commander)
+      }
+      .navigationTitle("example.navigation.title")
+      .toolbar { ExampleToolbar(commander: commander) }
     }
-    .padding()
+    .contextMenu {
+      ExampleContextMenu(
+        commander: commander,
+        isShowingImporter: $isShowingContextImporter
+      )
+    }
+    .modifier(
+      ImporterCommandModifier(
+        isShowing: $isShowingContextImporter,
+        command: $contextImportCommand,
+        centre: commander
+      )
+    )
   }
-
 }
 
 #Preview {
-  ContentView()
+  ContentView(commander: ExampleCommander())
 }

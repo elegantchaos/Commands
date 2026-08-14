@@ -186,7 +186,7 @@
 			packageReferences = (
 				2281C4EA3023900F00E4D148 /* XCLocalSwiftPackageReference "../../../../Commands" */,
 			);
-			preferredProjectObjectVersion = 77;
+			preferredProjectObjectVersion = 100;
 			productRefGroup = 2281C4C330238FCF00E4D148 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";

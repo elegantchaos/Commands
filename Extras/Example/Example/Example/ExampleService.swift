@@ -4,19 +4,51 @@
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 import Commands
+import Foundation
 import Observation
 
-/// Observable counter state used by the example commands.
+/// Observable state used to demonstrate command availability and results.
+@MainActor
 @Observable
-class ExampleService {
-  var count = 0
+final class ExampleService {
+  /// Maximum number of completed items allowed by the example.
+  let maximumCompletedItems = 5
 
-  func incrementDone() {
-    count += 1
+  /// Number of items completed through the add command.
+  var completedItems = 0
+
+  /// Names of files selected by the importer command.
+  var importedFileNames: [String] = []
+
+  /// Number of items processed by the advanced review command.
+  var reviewedItems = 0
+
+  /// Controls whether the advanced command is surfaced.
+  var showsAdvancedCommands = false
+
+  /// Adds a completed item.
+  func addCompletedItem() {
+    completedItems += 1
   }
 
-  func decrementDone() {
-    count -= 1
+  /// Removes the most recently completed item.
+  func removeCompletedItem() {
+    completedItems -= 1
+  }
+
+  /// Removes every completed item.
+  func removeAllCompletedItems() {
+    completedItems = 0
+  }
+
+  /// Records the names of selected files.
+  func importFiles(at urls: [URL]) {
+    importedFileNames = urls.map(\.lastPathComponent)
+  }
+
+  /// Records the current completed-item count as having been reviewed.
+  func reviewCompletedItems() {
+    reviewedItems = completedItems
   }
 }
 

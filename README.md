@@ -42,5 +42,6 @@ async execution, undo/redo, and cancellation design.
 
 ## Example
 
-The [example application](Extras/Example) demonstrates commands, localized UI
-metadata, and undo/redo controls working together.
+The [example application](Extras/Example) is a command playground with menus,
+toolbar and contextual controls, standard buttons, undo/redo, confirmation,
+file importing, and state-driven enabled and hidden commands.
