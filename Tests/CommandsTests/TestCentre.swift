@@ -22,6 +22,9 @@ private final class TestCentre: CommandCentre {
   /// Ordered list of command IDs passed to `recordFinishedCommand`.
   var finishedCommandIDs: [String] = []
 
+  /// Ordered outcomes passed to `recordFinishedCommand`.
+  var finishedCommandOutcomes: [CommandOutcome] = []
+
   /// Command IDs that should currently report as running.
   var runningCommandIDs: Set<String> = []
 
@@ -32,9 +35,12 @@ private final class TestCentre: CommandCentre {
   }
 
   /// Records when a command finishes.
-  func recordFinishedCommand<C: Command>(_ command: C)
-  where C.Centre == TestCentre {
+  func recordFinishedCommand<C: Command>(
+    _ command: C,
+    outcome: CommandOutcome
+  ) where C.Centre == TestCentre {
     finishedCommandIDs.append(command.id)
+    finishedCommandOutcomes.append(outcome)
   }
 
   /// Returns whether a command should report as running.
@@ -125,6 +131,11 @@ struct TestCentreTests {
     #expect(centre.testRan == true)
     #expect(centre.startedCommandIDs == [command.id])
     #expect(centre.finishedCommandIDs == [command.id])
+    #expect(centre.finishedCommandOutcomes.count == 1)
+    if case .succeeded = try #require(centre.finishedCommandOutcomes.first) {
+    } else {
+      Issue.record("Expected a successful command outcome.")
+    }
   }
 
   /// Verifies that unavailable commands throw before lifecycle hooks fire.
@@ -158,6 +169,12 @@ struct TestCentreTests {
     #expect(centre.testRan == true)
     #expect(centre.startedCommandIDs == [command.id])
     #expect(centre.finishedCommandIDs == [command.id])
+    #expect(centre.finishedCommandOutcomes.count == 1)
+    guard case .failed(let error) = try #require(centre.finishedCommandOutcomes.first) else {
+      Issue.record("Expected a failed command outcome.")
+      return
+    }
+    #expect((error as? TestFailure) == .expected)
   }
 
   /// Verifies that the default command availability is `.enabled`.

@@ -15,8 +15,11 @@ public protocol CommandCentre {
   /// Records that a command has started executing.
   func recordStartedCommand<C: Command>(_ command: C) where C.Centre == Self
 
-  /// Records that a command has finished executing.
-  func recordFinishedCommand<C: Command>(_ command: C) where C.Centre == Self
+  /// Records that a command has finished executing with the supplied outcome.
+  func recordFinishedCommand<C: Command>(
+    _ command: C,
+    outcome: CommandOutcome
+  ) where C.Centre == Self
 
   /// Returns whether the given command is already executing.
   func isRunning<C: Command>(_ command: C) -> Bool where C.Centre == Self
@@ -64,11 +67,14 @@ extension CommandCentre {
     }
 
     recordStartedCommand(command)
-    defer {
-      recordFinishedCommand(command)
+    do {
+      let result = try await command.perform(centre: self)
+      recordFinishedCommand(command, outcome: .succeeded)
+      return result
+    } catch {
+      recordFinishedCommand(command, outcome: .failed(error))
+      throw error
     }
-
-    return try await command.perform(centre: self)
   }
 
   /// Starts the given command in an unstructured task and logs any thrown error.
@@ -91,9 +97,11 @@ extension CommandCentre {
   where C.Centre == Self {
   }
 
-  /// Default hook for centres that do not track completed commands.
-  public func recordFinishedCommand<C: Command>(_ command: C)
-  where C.Centre == Self {
+  /// Default hook for centres that do not track completed commands or their outcomes.
+  public func recordFinishedCommand<C: Command>(
+    _ command: C,
+    outcome: CommandOutcome
+  ) where C.Centre == Self {
   }
 
   /// Returns whether the given command is already executing.

@@ -34,17 +34,19 @@ extension UndoableCommandCentre {
     undoService.beginForwardCommand()
   }
 
-  /// Records a reversal and the completion of a forward command.
+  /// Records the completion of a forward command and its reversal when it succeeded.
   ///
   /// Custom lifecycle implementations must preserve the paired forward-command
-  /// tracking and must not record reversals for an active history operation.
-  public func recordFinishedCommand<C: Command>(_ command: C)
-  where C.Centre == Self {
+  /// tracking and must not record reversals for failed commands or active history operations.
+  public func recordFinishedCommand<C: Command>(
+    _ command: C,
+    outcome: CommandOutcome
+  ) where C.Centre == Self {
     guard undoService.isPerformingHistoryOperation == false else {
       return
     }
     defer { undoService.finishForwardCommand() }
-    if let reversal = command.reversal(centre: self) {
+    if case .succeeded = outcome, let reversal = command.reversal(centre: self) {
       undoService.recordUndo(reversal)
     }
   }

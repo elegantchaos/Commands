@@ -77,6 +77,26 @@ private struct UndoableTestCommand: Command {
   }
 }
 
+/// Command that supplies a reversal but fails before completing its forward operation.
+@MainActor
+private struct FailingUndoableTestCommand: Command {
+  /// Stable identifier for the failing forward operation.
+  let id = "test.undoable.failing-forward"
+
+  /// Throws the expected test error.
+  func perform(centre: UndoTestCentre) async throws {
+    throw UndoFailure.expected
+  }
+
+  /// Returns a reversal that must not be recorded for the failed operation.
+  func reversal(centre: UndoTestCentre) -> (any CommandReversal)? {
+    CommandReversalAdapter(
+      command: UndoCommand(id: "test.undoable.unexpected-reversal"),
+      centre: centre
+    )
+  }
+}
+
 /// Error thrown by a deliberately failing reversal command.
 private enum UndoFailure: Error, Equatable {
   /// The expected failure used to verify retry behavior.
@@ -260,6 +280,21 @@ struct UndoServiceTests {
 
     try await centre.perform(command)
     #expect(centre.undoService.stackDescription == "test.undoable.reversal")
+  }
+
+  /// Verifies that failed forward commands finish tracking without registering a reversal.
+  @Test func failedForwardCommandDoesNotRecordAReversal() async throws {
+    let centre = UndoTestCentre()
+    centre.undoService.recordUndo(
+      CommandReversalAdapter(command: UndoCommand(id: "undo.existing"), centre: centre))
+
+    await #expect(throws: UndoFailure.expected) {
+      try await centre.perform(FailingUndoableTestCommand())
+    }
+
+    #expect(centre.undoService.stackDescription == "undo.existing")
+    try await centre.undoService.performUndo()
+    #expect(centre.performedCommandIDs == ["undo.existing"])
   }
 
   /// Verifies that reversal adapters preserve availability and execution behavior.
