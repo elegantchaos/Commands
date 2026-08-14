@@ -4,12 +4,12 @@
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 import Commands
-import Icons
 import SwiftUI
 
 /// Button that renders and performs a command for a concrete command centre.
 @MainActor
-public struct CommandButton<C: CommandWithUI, CC: CommandCentre, Content: View>: View where C.Centre == CC {
+public struct CommandButton<C: CommandWithUI, CC: CommandCentre, Content: View>: View
+where C.Centre == CC {
   /// Command to render and perform.
   public let command: C
 
@@ -21,9 +21,6 @@ public struct CommandButton<C: CommandWithUI, CC: CommandCentre, Content: View>:
 
   /// Optional custom content for the button label.
   private let content: ((C) -> Content)?
-
-  /// Current requested label visibility.
-  @Environment(\.labelsVisibility) private var labelsVisibility
 
   /// Creates a command button with custom label content.
   public init(
@@ -40,13 +37,16 @@ public struct CommandButton<C: CommandWithUI, CC: CommandCentre, Content: View>:
 
   /// Renders the command button, or no view when the command is hidden.
   public var body: some View {
-    if commander.availability(command) != .hidden {
+    let availability = commander.availability(command)
+    if availability != .hidden {
       Button(role: role, action: { commander.performWithoutWaiting(command) }) {
         label
       }
-      .disabled(commander.shouldDisable(command))
-      .commandShortcut(command)
-      .help(command.help(centre: commander) ?? "")
+      .commandPresentation(
+        availability: availability,
+        help: command.help(centre: commander),
+        shortcut: command.shortcut
+      )
     }
   }
 
@@ -55,28 +55,14 @@ public struct CommandButton<C: CommandWithUI, CC: CommandCentre, Content: View>:
     if let content {
       content(command)
     } else {
-      defaultLabel
+      CommandLabel(command: command, centre: commander)
     }
-  }
-
-  /// Default command label.
-  @ViewBuilder private var defaultLabel: some View {
-    #if os(tvOS)
-      if labelsVisibility == .hidden {
-        Image(icon: command.icon(centre: commander))
-          .accessibilityLabel(command.name(centre: commander))
-      } else {
-        Label(command.name(centre: commander), icon: command.icon(centre: commander))
-      }
-    #else
-      Label(command.name(centre: commander), icon: command.icon(centre: commander))
-    #endif
   }
 }
 
-public extension CommandButton where Content == EmptyView {
+extension CommandButton where Content == EmptyView {
   /// Creates a command button with the default command label.
-  init(command: C, commander: CC, role: ButtonRole? = nil) {
+  public init(command: C, commander: CC, role: ButtonRole? = nil) {
     self.command = command
     self.commander = commander
     self.role = role

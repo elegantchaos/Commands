@@ -40,7 +40,6 @@ import SwiftUI
   public typealias CommandKey = KeyEquivalent
 #endif
 
-
 /// A command that can be surfaced by a UI.
 @MainActor
 public protocol CommandWithUI: Command {
@@ -65,31 +64,24 @@ public protocol CommandWithUI: Command {
 }
 
 @MainActor
-public extension CommandWithUI {
+extension CommandWithUI {
 
   /// By default, the name is a localized String using the command ID as the key.
-  func name(centre: Centre) -> String { String(localized: String.LocalizationValue(id), bundle: bundle) }
+  public func name(centre: Centre) -> String {
+    String(localized: String.LocalizationValue(id), bundle: bundle)
+  }
 
   /// By default, no confirmation is required.
-  func confirmation(centre: Centre) -> CommandConfirmation? { nil }
+  public func confirmation(centre: Centre) -> CommandConfirmation? { nil }
 
   /// By default, the help string is looked up using the command ID.
-  func help(centre: Centre) -> String? { String(localized: String.LocalizationValue(id + ".help"), bundle: bundle) }
+  public func help(centre: Centre) -> String? {
+    String(localized: String.LocalizationValue(id + ".help"), bundle: bundle)
+  }
 
   /// By default, use the main bundle for localization and resources.
-  var bundle: Bundle { .main }
+  public var bundle: Bundle { .main }
 
   /// By default, no shortcut is provided.
-  var shortcut: CommandShortcut? { nil }
-}
-
-extension View {
-  /// Apply shortcut if the command has one and the platform supports it.
-  func commandShortcut<C: CommandWithUI>(_ command: C) -> some View {
-    #if os(tvOS) || os(watchOS)
-    self
-    #else
-    self.keyboardShortcut(command.shortcut)
-    #endif
-  }
+  public var shortcut: CommandShortcut? { nil }
 }

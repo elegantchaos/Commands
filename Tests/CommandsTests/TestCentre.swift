@@ -22,17 +22,25 @@ private final class TestCentre: CommandCentre {
   /// Ordered list of command IDs passed to `recordFinishedCommand`.
   var finishedCommandIDs: [String] = []
 
+  /// Ordered outcomes passed to `recordFinishedCommand`.
+  var finishedCommandOutcomes: [CommandOutcome] = []
+
   /// Command IDs that should currently report as running.
   var runningCommandIDs: Set<String> = []
 
   /// Records when a command starts.
-  func recordStartedCommand<C: Command>(_ command: C) where C.Centre == TestCentre {
+  func recordStartedCommand<C: Command>(_ command: C)
+  where C.Centre == TestCentre {
     startedCommandIDs.append(command.id)
   }
 
   /// Records when a command finishes.
-  func recordFinishedCommand<C: Command>(_ command: C) where C.Centre == TestCentre {
+  func recordFinishedCommand<C: Command>(
+    _ command: C,
+    outcome: CommandOutcome
+  ) where C.Centre == TestCentre {
     finishedCommandIDs.append(command.id)
+    finishedCommandOutcomes.append(outcome)
   }
 
   /// Returns whether a command should report as running.
@@ -106,17 +114,6 @@ private struct FailingCommand: Command {
   }
 }
 
-/// Waits for asynchronous detached command execution to complete.
-@MainActor
-private func waitUntil(
-  timeoutIterations: Int = 50,
-  _ condition: @MainActor () -> Bool
-) async {
-  for _ in 0..<timeoutIterations where condition() == false {
-    await Task.yield()
-  }
-}
-
 @MainActor
 struct TestCentreTests {
   /// Verifies that a command returns its result and records lifecycle hooks.
@@ -134,11 +131,18 @@ struct TestCentreTests {
     #expect(centre.testRan == true)
     #expect(centre.startedCommandIDs == [command.id])
     #expect(centre.finishedCommandIDs == [command.id])
+    #expect(centre.finishedCommandOutcomes.count == 1)
+    if case .succeeded = try #require(centre.finishedCommandOutcomes.first) {
+    } else {
+      Issue.record("Expected a successful command outcome.")
+    }
   }
 
   /// Verifies that unavailable commands throw before lifecycle hooks fire.
   @Test(arguments: [CommandAvailability.disabled, .hidden])
-  func testUnavailableCommandsThrowBeforeLifecycleHooks(_ availability: CommandAvailability) async throws {
+  func testUnavailableCommandsThrowBeforeLifecycleHooks(_ availability: CommandAvailability)
+    async throws
+  {
     let centre = TestCentre()
     let command = TestCommand(reportingAvailabilityAs: availability)
 
@@ -165,6 +169,12 @@ struct TestCentreTests {
     #expect(centre.testRan == true)
     #expect(centre.startedCommandIDs == [command.id])
     #expect(centre.finishedCommandIDs == [command.id])
+    #expect(centre.finishedCommandOutcomes.count == 1)
+    guard case .failed(let error) = try #require(centre.finishedCommandOutcomes.first) else {
+      Issue.record("Expected a failed command outcome.")
+      return
+    }
+    #expect((error as? TestFailure) == .expected)
   }
 
   /// Verifies that the default command availability is `.enabled`.
@@ -174,13 +184,15 @@ struct TestCentreTests {
 
     #expect(command.availability(centre: centre) == .enabled)
     #expect(centre.availability(command) == .enabled)
+    #expect(command.reversal(centre: centre) == nil)
   }
 
   /// Verifies that non-hidden running commands are surfaced as `.running`.
   @Test(arguments: [CommandAvailability.enabled, .disabled, .running, .runningSilently])
   func testAvailabilityMapsRunningStates(_ baseAvailability: CommandAvailability) async throws {
     let centre = TestCentre()
-    let command = TestCommand(id: "test.running.\(baseAvailability)", reportingAvailabilityAs: baseAvailability)
+    let command = TestCommand(
+      id: "test.running.\(baseAvailability)", reportingAvailabilityAs: baseAvailability)
     centre.runningCommandIDs.insert(command.id)
 
     #expect(centre.availability(command) == .running)
@@ -200,10 +212,8 @@ struct TestCentreTests {
     let centre = TestCentre()
     let command = TestCommand(id: "test.background")
 
-    centre.performWithoutWaiting(command)
-    await waitUntil {
-      centre.finishedCommandIDs.contains(command.id)
-    }
+    let task = centre.performWithoutWaiting(command)
+    await task.value
 
     #expect(centre.testRan == true)
     #expect(centre.startedCommandIDs == [command.id])

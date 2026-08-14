@@ -8,7 +8,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 /// Resolution state for an importer-backed command before and after the picker runs.
-public enum ImporterCommandURLState {
+public enum ImporterState {
   /// No importer result has been received yet.
   case unknown
 
@@ -28,7 +28,7 @@ public protocol ImporterCommand: CommandWithUI {
   var allowsMultipleSelection: Bool { get }
 
   /// Mutable importer result state carried between picker presentation and execution.
-  var state: ImporterCommandURLState { get set }
+  var state: ImporterState { get set }
 }
 
 /// Button wrapper that presents an importer sheet before invoking a command.
@@ -49,11 +49,13 @@ struct ImporterCommandButton<C: ImporterCommand, CC: CommandCentre>: View where 
     let availability = centre.availability(command)
     if availability != .hidden {
       Button(role: role, action: { isShowingSheet = true }) {
-        Label(command.name(centre: centre), icon: command.icon(centre: centre))
+        CommandLabel(command: command, centre: centre)
       }
-      .disabled(centre.shouldDisable(command))
-      .help(command.help(centre: centre) ?? "")
-      .commandShortcut(command)
+      .commandPresentation(
+        availability: availability,
+        help: command.help(centre: centre),
+        shortcut: command.shortcut
+      )
       .modifier(
         ImporterCommandModifier(isShowing: $isShowingSheet, command: $command, centre: centre))
     }

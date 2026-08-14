@@ -87,30 +87,6 @@ private struct DefaultUICommand: CommandWithUI {
   }
 }
 
-/// Configurable UI command used to verify `shouldDisable` mapping.
-@MainActor
-private struct AvailabilityUICommand: CommandWithUI {
-  /// Stable identifier used by assertions.
-  let id = "test.ui.availability"
-
-  /// Availability reported to the command centre.
-  let reportedAvailability: CommandAvailability
-
-  /// Returns the configured availability.
-  func availability(centre: UITestCentre) -> CommandAvailability {
-    reportedAvailability
-  }
-
-  /// Returns a fixed icon for metadata assertions.
-  func icon(centre: UITestCentre) -> Icon {
-    Icon("square.and.pencil")
-  }
-
-  /// Performs no work.
-  func perform(centre: UITestCentre) async throws {
-  }
-}
-
 /// UI command with non-default metadata used to verify `WrappedCommand` forwarding.
 @MainActor
 private struct MetadataCommand: CommandWithUI {
@@ -120,7 +96,7 @@ private struct MetadataCommand: CommandWithUI {
   /// Availability reported to the command centre.
   let reportedAvailability: CommandAvailability
 
-  /// Result returned from `perform(centre:)`.
+  /// Result returned from command execution.
   let result: String
 
   /// Returns the configured availability.
@@ -161,7 +137,8 @@ private struct MetadataCommand: CommandWithUI {
 
   /// Returns the configured result.
   func perform(centre: UITestCentre) async throws -> String {
-    result
+    centre.performedCommandIDs.append(id)
+    return result
   }
 }
 
@@ -288,34 +265,6 @@ struct CommandsUITests {
     #expect(command.icon(centre: centre).systemImage == "square.and.pencil")
   }
 
-  /// Verifies that `shouldDisable` only disables commands that are unavailable or already running.
-  @Test(arguments: [
-    (CommandAvailability.enabled, false),
-    (CommandAvailability.disabled, true),
-    (CommandAvailability.hidden, false),
-    (CommandAvailability.running, true),
-    (CommandAvailability.runningSilently, true),
-  ])
-  func shouldDisableMatchesAvailability(
-    availabilityAndExpectation: (availability: CommandAvailability, expected: Bool)
-  ) {
-    let centre = UITestCentre()
-    let command = AvailabilityUICommand(
-      reportedAvailability: availabilityAndExpectation.availability)
-
-    #expect(centre.shouldDisable(command) == availabilityAndExpectation.expected)
-  }
-
-  /// Verifies that a running command is disabled even if its base availability is enabled.
-  @Test func shouldDisableUsesRunningStateFromCentre() {
-    let centre = UITestCentre()
-    let command = AvailabilityUICommand(reportedAvailability: .enabled)
-    centre.runningCommandIDs.insert(command.id)
-
-    #expect(centre.availability(command) == .running)
-    #expect(centre.shouldDisable(command) == true)
-  }
-
   /// Verifies that `WrappedCommand` forwards all metadata, availability, and execution by default.
   @Test func wrappedCommandForwardsWrappedBehavior() async throws {
     let centre = UITestCentre()
@@ -345,5 +294,23 @@ struct CommandsUITests {
     #expect(wrapped.help(centre: centre) == "Helpful metadata")
     #expect(wrapped.icon(centre: centre).systemImage == "network")
     #expect(wrapped.confirmation(centre: centre)?.confirm == "Proceed")
+  }
+
+  /// Verifies that UI reversal adapters preserve current metadata and execution behavior.
+  @Test func commandReversalAdapterWithUIForwardsMetadataAndExecution() async throws {
+    let centre = UITestCentre()
+    let command = MetadataCommand(reportedAvailability: .enabled, result: "ignored")
+    let reversal = CommandReversalAdapterWithUI(command: command, centre: centre)
+
+    #expect(reversal.id == command.id)
+    #expect(reversal.availability() == .enabled)
+    #expect(reversal.name() == "Metadata Command")
+    #expect(reversal.icon().systemImage == "network")
+    #expect(reversal.help() == "Helpful metadata")
+
+    let undoService = UndoService()
+    undoService.recordUndo(reversal)
+    try await undoService.performUndo()
+    #expect(centre.performedCommandIDs == [command.id])
   }
 }
