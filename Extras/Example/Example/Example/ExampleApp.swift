@@ -5,6 +5,10 @@
 
 import SwiftUI
 
+// TODO: Fix import sheet from button on macOS
+// TODO: Fix import sheet from menu on iPad
+// TODO: Integrate with the system Undo/Redo menus.
+
 @main
 /// Launches the Commands example application.
 struct ExampleApp: App {
