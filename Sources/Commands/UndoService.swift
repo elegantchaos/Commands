@@ -4,6 +4,7 @@
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 import Foundation
+import Observation
 
 /// Errors reported while performing a history operation.
 public enum UndoServiceError: Error, Equatable, Sendable {
