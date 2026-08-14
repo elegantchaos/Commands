@@ -7,21 +7,21 @@ import CommandsUI
 import SwiftUI
 
 /// Adds the same commands to the root view's contextual menu.
-struct ExampleContextMenu: View {
+struct AppContextMenu: View {
   /// Shared command centre that supplies contextual buttons.
-  let commander: ExampleCommander
+  let commander: Commander
 
   /// Controls presentation of the contextual importer sheet.
   @Binding var isShowingImporter: Bool
 
   var body: some View {
-    commander.button(AddCompletedItemCommand())
-    commander.button(RemoveCompletedItemCommand())
-    commander.importerButton(ImportExampleFilesCommand(), isShowingImportSheet: $isShowingImporter)
+    commander.button(AddCommand())
+    commander.button(RemoveCommand())
+    commander.importerButton(ImportCommand(), isShowingImportSheet: $isShowingImporter)
 
     Divider()
 
-    commander.button(ToggleAdvancedCommandsCommand())
-    commander.button(ReviewCompletedItemsCommand())
+    commander.button(ToggleAdvancedCommand())
+    commander.button(ReviewCommand())
   }
 }

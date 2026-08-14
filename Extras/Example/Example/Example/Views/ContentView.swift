@@ -10,22 +10,22 @@ import SwiftUI
 /// Demonstrates commands across buttons, toolbars, contextual menus, and app menus.
 struct ContentView: View {
   /// Shared command centre for every control in the example.
-  let commander: ExampleCommander
+  let commander: Commander
 
   /// Controls the importer launched from the contextual menu.
   @State private var isShowingContextImporter = false
 
   /// Holds importer state while the contextual importer is presented.
-  @State private var contextImportCommand = ImportExampleFilesCommand<ExampleCommander>()
+  @State private var contextImportCommand = ImportCommand<Commander>()
 
   var body: some View {
     NavigationStack {
-      ExamplePlayground(commander: commander)
+      Playground(commander: commander)
         .navigationTitle("example.navigation.title")
-        .toolbar { ExampleToolbar(commander: commander) }
+        .toolbar { AppToolbar(commander: commander) }
     }
     .contextMenu {
-      ExampleContextMenu(
+      AppContextMenu(
         commander: commander,
         isShowingImporter: $isShowingContextImporter
       )
@@ -41,5 +41,5 @@ struct ContentView: View {
 }
 
 #Preview {
-  ContentView(commander: ExampleCommander())
+  ContentView(commander: Commander())
 }

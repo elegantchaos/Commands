@@ -4,6 +4,7 @@
 - Keep commands decoupled from concrete app types by depending on the smallest command-centre protocol that provides what they need.
 - Keep command execution, availability, confirmation, and UI metadata aligned so programmatic and UI callers share the same safety rules.
 - Localize user-facing strings when adding UI-facing command metadata.
+- Maintain an example SwiftUI app in `Extras/Example/` which illustrates how to use the `Commands` and `CommandUI` libraries.            
 - Keep a development journal in `Extras/Journal/`.
 
 ## Standard Rules

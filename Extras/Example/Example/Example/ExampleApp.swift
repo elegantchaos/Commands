@@ -9,12 +9,12 @@ import SwiftUI
 /// Launches the Commands example application.
 struct ExampleApp: App {
   /// Shared commander used by every command surface in the app.
-  @State private var commander = ExampleCommander()
+  @State private var commander = Commander()
 
   var body: some Scene {
     WindowGroup {
       ContentView(commander: commander)
     }
-    .commands { ExampleCommands(commander: commander) }
+    .commands { AppCommands(commander: commander) }
   }
 }

@@ -7,24 +7,24 @@ import CommandsUI
 import SwiftUI
 
 /// Adds example commands to the platform command menus.
-struct ExampleCommands: Commands {
+struct AppCommands: Commands {
   /// Shared command centre used to resolve command state.
-  let commander: ExampleCommander
+  let commander: Commander
 
   var body: some Commands {
     CommandGroup(after: .newItem) {
-      commander.importer(ImportExampleFilesCommand())
+      commander.importer(ImportCommand())
     }
 
     CommandMenu("example.menu.title") {
-      commander.button(AddCompletedItemCommand())
-      commander.button(RemoveCompletedItemCommand())
-      commander.confirmableButton(ClearCompletedItemsCommand(), role: .destructive)
+      commander.button(AddCommand())
+      commander.button(RemoveCommand())
+      commander.confirmableButton(ClearCommand(), role: .destructive)
 
       Divider()
 
-      commander.button(ToggleAdvancedCommandsCommand())
-      commander.button(ReviewCompletedItemsCommand())
+      commander.button(ToggleAdvancedCommand())
+      commander.button(ReviewCommand())
     }
   }
 }

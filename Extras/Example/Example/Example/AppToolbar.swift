@@ -7,14 +7,14 @@ import CommandsUI
 import SwiftUI
 
 /// Adds commands to the app toolbar on macOS and iOS.
-struct ExampleToolbar: ToolbarContent {
+struct AppToolbar: ToolbarContent {
   /// Shared command centre that supplies toolbar items.
-  let commander: ExampleCommander
+  let commander: Commander
 
   var body: some ToolbarContent {
-    commander.toolbarItem(AddCompletedItemCommand(), placement: .primaryAction)
-    commander.toolbarItem(RemoveCompletedItemCommand(), placement: .secondaryAction)
-    commander.confirmableToolbarItem(ClearCompletedItemsCommand(), placement: .secondaryAction)
-    commander.toolbarItem(ReviewCompletedItemsCommand(), placement: .secondaryAction)
+    commander.toolbarItem(AddCommand(), placement: .primaryAction)
+    commander.toolbarItem(RemoveCommand(), placement: .primaryAction)
+    commander.confirmableToolbarItem(ClearCommand(), placement: .primaryAction)
+    commander.toolbarItem(ReviewCommand(), placement: .primaryAction)
   }
 }

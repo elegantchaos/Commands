@@ -3,22 +3,23 @@
 //  Copyright © 2026 Elegant Chaos Limited. All rights reserved.
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-import Commands
-import Foundation
 import Observation
 
-/// Observable state used to demonstrate command availability and results.
+/// Holds the observable item state used by the item-management commands.
+///
+/// This service owns only the completed-item, review, and advanced-mode state
+/// that its commands need. Keeping that state out of `Commander` lets commands
+/// depend on the focused `ItemServiceProvider` capability instead of the whole
+/// application command centre. Import results belong to `ImportService`, which
+/// keeps the importing area independent from these item-management commands.
 @MainActor
 @Observable
-final class ExampleService {
+final class ItemService {
   /// Maximum number of completed items allowed by the example.
   let maximumCompletedItems = 5
 
   /// Number of items completed through the add command.
   var completedItems = 0
-
-  /// Names of files selected by the importer command.
-  var importedFileNames: [String] = []
 
   /// Number of items processed by the advanced review command.
   var reviewedItems = 0
@@ -41,19 +42,8 @@ final class ExampleService {
     completedItems = 0
   }
 
-  /// Records the names of selected files.
-  func importFiles(at urls: [URL]) {
-    importedFileNames = urls.map(\.lastPathComponent)
-  }
-
   /// Records the current completed-item count as having been reviewed.
   func reviewCompletedItems() {
     reviewedItems = completedItems
   }
-}
-
-/// Supplies the service required by the example commands.
-protocol ExampleServiceProvider: CommandCentre {
-  var service: ExampleService { get }
-
 }

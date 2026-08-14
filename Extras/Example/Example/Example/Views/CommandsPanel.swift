@@ -8,9 +8,9 @@ import CommandsUI
 import SwiftUI
 
 /// Displays ordinary command buttons with a concise explanation of each one.
-struct ExampleCommandsPanel: View {
+struct CommandsPanel: View {
   /// Shared command centre that supplies the buttons.
-  let commander: ExampleCommander
+  let commander: Commander
 
   var body: some View {
     GroupBox {
@@ -19,34 +19,29 @@ struct ExampleCommandsPanel: View {
           .font(.footnote)
           .foregroundStyle(.secondary)
 
-        ExampleCommandRow(
-          command: AddCompletedItemCommand(),
+        CommandRow(
+          command: AddCommand(),
           commander: commander,
-          hint: "example.command.add.help",
           style: .prominent
         )
-        ExampleCommandRow(
-          command: RemoveCompletedItemCommand(),
-          commander: commander,
-          hint: "example.command.remove.help"
+        CommandRow(
+          command: RemoveCommand(),
+          commander: commander
         )
-        ExampleCommandRow(
-          command: ClearCompletedItemsCommand(),
+        CommandRow(
+          command: ClearCommand(),
           commander: commander,
-          hint: "example.command.clear.help",
           role: .destructive,
           requiresConfirmation: true
         )
-        ExampleImporterCommandRow(commander: commander)
-        ExampleCommandRow(
-          command: ToggleAdvancedCommandsCommand(),
-          commander: commander,
-          hint: "example.command.toggleAdvanced.help"
+        ImporterCommandRow(commander: commander)
+        CommandRow(
+          command: ToggleAdvancedCommand(),
+          commander: commander
         )
-        ExampleCommandRow(
-          command: ReviewCompletedItemsCommand(),
-          commander: commander,
-          hint: "example.command.review.help"
+        CommandRow(
+          command: ReviewCommand(),
+          commander: commander
         )
       }
     } label: {
@@ -56,7 +51,7 @@ struct ExampleCommandsPanel: View {
 }
 
 /// Button styling options for ordinary example command rows.
-private enum ExampleCommandButtonStyle {
+private enum CommandButtonStyle {
   /// Uses the platform's regular bordered style.
   case regular
 
@@ -65,16 +60,13 @@ private enum ExampleCommandButtonStyle {
 }
 
 /// Renders one command button and its explanatory hint when it is not hidden.
-private struct ExampleCommandRow<Command: CommandWithUI>: View
-where Command.Centre == ExampleCommander {
+private struct CommandRow<Command: CommandWithUI>: View
+where Command.Centre == Commander {
   /// Command represented by the row.
   let command: Command
 
   /// Command centre that resolves metadata and availability.
-  let commander: ExampleCommander
-
-  /// Explanation displayed below the command button.
-  let hint: LocalizedStringKey
+  let commander: Commander
 
   /// Optional semantic role for the command button.
   let role: ButtonRole?
@@ -83,20 +75,18 @@ where Command.Centre == ExampleCommander {
   let requiresConfirmation: Bool
 
   /// Requested presentation emphasis for the button.
-  let style: ExampleCommandButtonStyle
+  let style: CommandButtonStyle
 
   /// Creates a row with the regular button style and no confirmation requirement.
   init(
     command: Command,
-    commander: ExampleCommander,
-    hint: LocalizedStringKey,
+    commander: Commander,
     role: ButtonRole? = nil,
     requiresConfirmation: Bool = false,
-    style: ExampleCommandButtonStyle = .regular
+    style: CommandButtonStyle = .regular
   ) {
     self.command = command
     self.commander = commander
-    self.hint = hint
     self.role = role
     self.requiresConfirmation = requiresConfirmation
     self.style = style
@@ -125,10 +115,12 @@ where Command.Centre == ExampleCommander {
           }
         }
 
-        Text(hint)
-          .font(.footnote)
-          .foregroundStyle(.secondary)
-          .padding(.bottom)
+        if let help = command.help(centre: commander) {
+          Text(help)
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+            .padding(.bottom)
+        }
       }
       .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -136,19 +128,23 @@ where Command.Centre == ExampleCommander {
 }
 
 /// Renders the importer command with its icon and explanatory hint.
-private struct ExampleImporterCommandRow: View {
+private struct ImporterCommandRow: View {
   /// Shared command centre that presents and executes imports.
-  let commander: ExampleCommander
+  let commander: Commander
 
   var body: some View {
+    let command = ImportCommand<Commander>()
+
     VStack(alignment: .leading) {
-      commander.importer(ImportExampleFilesCommand())
+      commander.importer(command)
         .buttonStyle(.bordered)
 
-      Text("example.command.import.help")
-        .font(.footnote)
-        .foregroundStyle(.secondary)
-        .padding(.bottom)
+      if let help = command.help(centre: commander) {
+        Text(help)
+          .font(.footnote)
+          .foregroundStyle(.secondary)
+          .padding(.bottom)
+      }
     }
     .frame(maxWidth: .infinity, alignment: .leading)
   }

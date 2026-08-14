@@ -40,7 +40,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Clear Completed Items?"
+            "value" : "Clear Items?"
           }
         }
       }
@@ -51,7 +51,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Add Completed Item"
+            "value" : "Add Item"
           }
         }
       }
@@ -73,7 +73,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Clear Completed Items"
+            "value" : "Clear Items"
           }
         }
       }
@@ -85,6 +85,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Removes every completed item after confirmation."
+          }
+        }
+      }
+    },
+    "example.command.hideAdvanced" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide Extras"
+          }
+        }
+      }
+    },
+    "example.command.hideAdvanced.help" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hides the extra review command from every command surface."
           }
         }
       }
@@ -117,7 +139,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Remove Completed Item"
+            "value" : "Remove Item"
           }
         }
       }
@@ -139,7 +161,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Review Completed Items"
+            "value" : "Review Items"
           }
         }
       }
@@ -150,29 +172,29 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Only available when advanced commands are shown and items exist."
+            "value" : "Only available when extra commands are shown and items exist."
           }
         }
       }
     },
-    "example.command.toggleAdvanced" : {
+    "example.command.showAdvanced" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Toggle Advanced"
+            "value" : "Show Extras"
           }
         }
       }
     },
-    "example.command.toggleAdvanced.help" : {
+    "example.command.showAdvanced.help" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Shows or hides the advanced review command."
+            "value" : "Shows the extra review command so its availability can be tested."
           }
         }
       }
@@ -249,7 +271,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "To test hidden commands, toggle advanced commands. \n\nTo test disabled controls, empty the completed items or reach the item limit."
+            "value" : "To test hidden commands, toggle hide/show extra commands. \n\nTo test disabled controls, empty the completed items or reach the item limit."
           }
         }
       }
@@ -304,7 +326,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Advanced command"
+            "value" : "Extra command"
           }
         }
       }

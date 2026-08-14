@@ -7,9 +7,9 @@ import CommandsUI
 import SwiftUI
 
 /// Displays undo and redo controls with guidance about reversible commands.
-struct ExampleUndoPanel: View {
+struct UndoPanel: View {
   /// Shared command centre that owns the undo service.
-  let commander: ExampleCommander
+  let commander: Commander
 
   var body: some View {
     GroupBox {
@@ -20,7 +20,7 @@ struct ExampleUndoPanel: View {
           commander.redoButton(showsCommandPresentation: true)
             .buttonStyle(.bordered)
         }
-        
+
         Text("example.panel.undo.hint")
           .font(.footnote)
           .foregroundStyle(.secondary)

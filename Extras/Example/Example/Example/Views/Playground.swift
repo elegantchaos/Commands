@@ -6,20 +6,23 @@
 import SwiftUI
 
 /// Renders three panels that explain and exercise the example's command state.
-struct ExamplePlayground: View {
+struct Playground: View {
   /// Shared command centre that supplies every command surface.
-  let commander: ExampleCommander
+  let commander: Commander
 
   var body: some View {
     ScrollView {
       VStack {
         HStack(alignment: .top) {
-          ExampleCommandsPanel(commander: commander)
+          CommandsPanel(commander: commander)
 
           VStack {
-            ExampleStatePanel(service: commander.service)
+            StatePanel(
+              itemService: commander.itemService,
+              importService: commander.importService
+            )
             Spacer()
-            ExampleUndoPanel(commander: commander)
+            UndoPanel(commander: commander)
           }
         }
 

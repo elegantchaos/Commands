@@ -5,25 +5,28 @@
 
 import SwiftUI
 
-/// Displays the live values that determine command availability.
-struct ExampleStatePanel: View {
-  /// Current example state.
-  let service: ExampleService
+/// Displays the live values exposed by the example's independent service areas.
+struct StatePanel: View {
+  /// Current item-management state.
+  let itemService: ItemService
+
+  /// Current importing state.
+  let importService: ImportService
 
   var body: some View {
     GroupBox {
       VStack(alignment: .leading) {
         LabeledContent("example.state.completed") {
-          Text(service.completedItems, format: .number)
+          Text(itemService.completedItems, format: .number)
         }
         LabeledContent("example.state.limit") {
-          Text(service.maximumCompletedItems, format: .number)
+          Text(itemService.maximumCompletedItems, format: .number)
         }
         LabeledContent("example.state.reviewed") {
-          Text(service.reviewedItems, format: .number)
+          Text(itemService.reviewedItems, format: .number)
         }
         LabeledContent("example.state.advanced") {
-          if service.showsAdvancedCommands {
+          if itemService.showsAdvancedCommands {
             Text("example.state.visible")
           } else {
             Text("example.state.hidden")
@@ -32,7 +35,7 @@ struct ExampleStatePanel: View {
 
         Divider()
 
-        ImportedFilesState(fileNames: service.importedFileNames)
+        ImportedFilesState(fileNames: importService.importedFileNames)
 
         Text("example.panel.state.hint")
           .font(.footnote)

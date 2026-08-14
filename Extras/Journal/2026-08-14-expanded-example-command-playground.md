@@ -18,3 +18,8 @@ buttons on macOS and iOS.
   README description of the expanded example.
 - Reworked the example into three adaptive panels with command icons, inline
   hints, and footnote guidance for testing availability and undo behaviour.
+- Split the example commands into individually named files under
+  `Extras/Example/Example/Example/Commands`.
+- Separated importer state into `ImportService`; `ImportCommand` now requires
+  only `ImportServiceProvider`, while item commands use `ItemServiceProvider`,
+  demonstrating focused service dependencies for unrelated command areas.
