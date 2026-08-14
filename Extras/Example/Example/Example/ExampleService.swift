@@ -6,8 +6,8 @@
 import Commands
 import Observation
 
-@Observable
 /// Observable counter state used by the example commands.
+@Observable
 class ExampleService {
   var count = 0
 
