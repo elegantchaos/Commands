@@ -106,7 +106,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Selects text files and lists their names."
+            "value" : "Select a text file to pretend to import."
           }
         }
       }
@@ -161,7 +161,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Toggle Advanced Commands"
+            "value" : "Toggle Advanced"
           }
         }
       }
@@ -210,13 +210,57 @@
         }
       }
     },
+    "example.panel.commands.hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try these controls, then compare their behaviour with the toolbar, contextual menu, and main menu."
+          }
+        }
+      }
+    },
+    "example.panel.state.hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The state determines which commands are enabled and/or visible."
+          }
+        }
+      }
+    },
+    "example.panel.undo.hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add and remove commands record reversals. \nClear, import, and review intentionally do not."
+          }
+        }
+      }
+    },
+    "example.playground.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To test hidden commands, toggle advanced commands. \n\nTo test disabled controls, empty the completed items or reach the item limit."
+          }
+        }
+      }
+    },
     "example.section.buttons" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Buttons"
+            "value" : "Commands"
           }
         }
       }
@@ -238,7 +282,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Command State"
+            "value" : "State"
           }
         }
       }

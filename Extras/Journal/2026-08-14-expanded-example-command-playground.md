@@ -16,3 +16,5 @@ buttons on macOS and iOS.
   according to the current completed-item count.
 - Added command menus, toolbars, localised state presentation, and a concise
   README description of the expanded example.
+- Reworked the example into three adaptive panels with command icons, inline
+  hints, and footnote guidance for testing availability and undo behaviour.

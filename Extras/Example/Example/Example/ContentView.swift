@@ -20,14 +20,9 @@ struct ContentView: View {
 
   var body: some View {
     NavigationStack {
-      Form {
-        CommandStateSection(service: commander.service)
-        CommandButtonsSection(commander: commander)
-        ImportedFilesSection(fileNames: commander.service.importedFileNames)
-        UndoSection(commander: commander)
-      }
-      .navigationTitle("example.navigation.title")
-      .toolbar { ExampleToolbar(commander: commander) }
+      ExamplePlayground(commander: commander)
+        .navigationTitle("example.navigation.title")
+        .toolbar { ExampleToolbar(commander: commander) }
     }
     .contextMenu {
       ExampleContextMenu(
