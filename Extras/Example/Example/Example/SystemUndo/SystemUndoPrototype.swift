@@ -36,29 +36,6 @@ enum SystemUndoPrototype: String, CaseIterable, Identifiable {
     return prototype
   }
 
-  /// A localized name suitable for diagnostic UI in the example.
-  var name: LocalizedStringKey {
-    switch self {
-    case .swiftUI:
-      "example.undo.prototype.swiftui"
-    case .router:
-      "example.undo.prototype.router"
-    case .undoManager:
-      "example.undo.prototype.manager"
-    }
-  }
-
-  /// A concise explanation of the active experiment.
-  var summary: LocalizedStringKey {
-    switch self {
-    case .swiftUI:
-      "example.undo.prototype.swiftui.summary"
-    case .router:
-      "example.undo.prototype.router.summary"
-    case .undoManager:
-      "example.undo.prototype.manager.summary"
-    }
-  }
 }
 
 /// Displays the selected Undo and Redo experiment and its reproducible launch argument.
@@ -70,10 +47,10 @@ struct SystemUndoPrototypePanel: View {
     GroupBox {
       VStack(alignment: .leading) {
         LabeledContent("example.undo.prototype.active") {
-          Text(prototype.name)
+          prototypeName
         }
 
-        Text(prototype.summary)
+        prototypeSummary
           .font(.footnote)
           .foregroundStyle(.secondary)
 
@@ -85,5 +62,29 @@ struct SystemUndoPrototypePanel: View {
       Label("example.undo.prototype.title", systemImage: "arrow.uturn.backward.circle")
     }
     .frame(maxWidth: .infinity, alignment: .leading)
+  }
+
+  /// The localized name of the active experiment.
+  @ViewBuilder private var prototypeName: some View {
+    switch prototype {
+    case .swiftUI:
+      Text("example.undo.prototype.swiftui")
+    case .router:
+      Text("example.undo.prototype.router")
+    case .undoManager:
+      Text("example.undo.prototype.manager")
+    }
+  }
+
+  /// The localized explanation of the active experiment.
+  @ViewBuilder private var prototypeSummary: some View {
+    switch prototype {
+    case .swiftUI:
+      Text("example.undo.prototype.swiftui.summary")
+    case .router:
+      Text("example.undo.prototype.router.summary")
+    case .undoManager:
+      Text("example.undo.prototype.manager.summary")
+    }
   }
 }

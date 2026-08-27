@@ -12,6 +12,9 @@ struct ContentView: View {
   /// Shared command centre for every control in the example.
   let commander: Commander
 
+  /// The system Undo and Redo experiment selected for this run.
+  let systemUndoPrototype: SystemUndoPrototype
+
   /// Controls the importer launched from the contextual menu.
   @State private var isShowingContextImporter = false
 
@@ -37,9 +40,13 @@ struct ContentView: View {
         centre: commander
       )
     )
+    .undoManagerProxyPrototype(
+      undoService: commander.undoService,
+      isEnabled: systemUndoPrototype == .undoManager
+    )
   }
 }
 
 #Preview {
-  ContentView(commander: Commander())
+  ContentView(commander: Commander(), systemUndoPrototype: .router)
 }

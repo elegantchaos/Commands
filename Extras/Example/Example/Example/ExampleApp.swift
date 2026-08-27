@@ -23,7 +23,10 @@ struct ExampleApp: App {
 
   var body: some Scene {
     WindowGroup {
-      ContentView(commander: commander)
+      ContentView(
+        commander: commander,
+        systemUndoPrototype: systemUndoPrototype
+      )
         .background(SystemUndoWindowAnchor())
         .task {
           systemUndoRouter.configure(undoService: commander.undoService)

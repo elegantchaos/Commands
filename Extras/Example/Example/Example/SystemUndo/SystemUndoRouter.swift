@@ -5,6 +5,7 @@
 
 import Commands
 import Foundation
+import Logger
 import Observation
 import SwiftUI
 
