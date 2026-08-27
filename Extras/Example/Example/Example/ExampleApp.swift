@@ -3,6 +3,7 @@
 //  Copyright © 2026 Elegant Chaos Limited. All rights reserved.
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+import Commands
 import SwiftUI
 
 // TODO: Fix import sheet from button on macOS
@@ -27,10 +28,17 @@ struct ExampleApp: App {
         commander: commander,
         systemUndoPrototype: systemUndoPrototype
       )
-        .background(SystemUndoWindowAnchor())
-        .task {
-          systemUndoRouter.configure(undoService: commander.undoService)
+      .background(SystemUndoWindowAnchor())
+      .task {
+        systemUndoRouter.configure(undoService: commander.undoService)
+      }
+      .onChange(of: commander.undoService.stackDescription) {
+        guard systemUndoPrototype == .router else {
+          return
         }
+
+        systemUndoRouter.preferCommandsHistory()
+      }
     }
     .commands {
       AppCommands(

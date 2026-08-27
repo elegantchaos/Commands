@@ -33,10 +33,23 @@ final class SystemUndoRouter: NSObject {
   /// Changes whenever the system Undo and Redo menu needs revalidation.
   private var validationRevision = 0
 
+  /// Whether Commands history owns the route until native text changes again.
+  private var commandsHistoryHasPriority = false
+
   /// Configures the history used by this example app run.
   func configure(undoService: UndoService) {
     self.undoService = undoService
     observeNativeUndoChanges()
+    refreshMenuState()
+  }
+
+  /// Gives Commands history ownership after a completed Commands operation.
+  ///
+  /// SwiftUI buttons do not necessarily move AppKit's first responder away from
+  /// a text field. Keeping this state lets the most recent completed Commands
+  /// action remain the next undo action until the person edits native text again.
+  func preferCommandsHistory() {
+    commandsHistoryHasPriority = true
     refreshMenuState()
   }
 
@@ -104,6 +117,13 @@ final class SystemUndoRouter: NSObject {
 
   /// Resolves ownership each time an action is queried or invoked.
   private var owner: Owner? {
+    if commandsHistoryHasPriority,
+      let undoService,
+      undoService.hasUndo || undoService.hasRedo
+    {
+      return .commands(undoService)
+    }
+
     if let manager = nativeTextUndoManager {
       return .native(manager)
     }
@@ -150,7 +170,11 @@ final class SystemUndoRouter: NSObject {
   }
 
   /// Revalidates SwiftUI commands after native text editing or Undo changes.
-  @objc private func refreshMenuStateAfterNativeChange() {
+  @objc private func refreshMenuStateAfterNativeChange(_ notification: Notification) {
+    if nativeTextChangeNotifications.contains(notification.name) {
+      commandsHistoryHasPriority = false
+    }
+
     refreshMenuState()
   }
 
@@ -247,6 +271,11 @@ private enum Direction {
       ]
     }
 
+    /// Notifications that mark a new native text-editing action.
+    private var nativeTextChangeNotifications: Set<Notification.Name> {
+      [NSText.didChangeNotification]
+    }
+
     /// The manager for a focused AppKit text editor, when present.
     private var nativeTextUndoManager: UndoManager? {
       guard let responder = NSApp.keyWindow?.firstResponder, responder is NSTextView else {
@@ -278,6 +307,14 @@ private enum Direction {
         UITextView.textDidBeginEditingNotification,
         UITextView.textDidChangeNotification,
         UITextView.textDidEndEditingNotification,
+      ]
+    }
+
+    /// Notifications that mark a new native text-editing action.
+    private var nativeTextChangeNotifications: Set<Notification.Name> {
+      [
+        UITextField.textDidChangeNotification,
+        UITextView.textDidChangeNotification,
       ]
     }
 

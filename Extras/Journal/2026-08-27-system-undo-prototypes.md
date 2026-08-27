@@ -52,3 +52,12 @@ the active owner's current action name for each menu title. This allows a
 focused text editor to display “Undo Typing” rather than a fixed localization
 key, while Commands history continues to supply its own named action when it
 owns the route.
+
+## Router ownership after a command
+
+A SwiftUI button can run while an `NSTextView` remains first responder. The
+router now treats a completed Commands history change as the current Undo and
+Redo owner, so Add Item is followed by “Undo Add Item” rather than stale text
+editing history. A subsequent native text change restores the text editor as
+the route owner. This is an explicit prototype policy for switching between the
+separate histories; it does not merge them.

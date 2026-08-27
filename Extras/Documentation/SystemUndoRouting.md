@@ -47,9 +47,12 @@ System Undo or Redo
         +-- no native editing context --> active scene UndoService
 ```
 
-The exact selection policy must favour a focused text editor even if that
-editor's manager currently has no action. This prevents an application reversal
-from unexpectedly changing application state while someone is editing text.
+The selection policy must be explicit about a SwiftUI button's relationship to
+text focus. A button does not necessarily cause an AppKit text field to resign
+first-responder status. The prototype therefore gives a completed application
+command temporary ownership of the route, until the person makes another native
+text edit. This keeps “Undo Add Item” as the next action after an Add Item
+button press, while typing afterwards restores the native text editor's route.
 
 ## Proposed responsibilities
 
@@ -162,8 +165,9 @@ the adapter public:
 ## Test plan
 
 - A focused text field handles Undo and Redo through its native manager.
-- A focused text editor with no native action does not execute an application
-  reversal.
+- A completed application command routes Undo and Redo to its `UndoService`,
+  even when a text field retained first-responder status during the button press.
+- A subsequent native text edit restores the text editor's Undo and Redo route.
 - With no native editing focus, Undo and Redo invoke the correct scene's
   `UndoService`.
 - Switching focus and switching windows changes the selected owner.
