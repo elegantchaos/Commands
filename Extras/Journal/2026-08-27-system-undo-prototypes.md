@@ -42,3 +42,13 @@ redo state, which cannot be reconstructed if the command fails or is cancelled.
 The router experiment remains the preferred direction: it leaves native text
 editing history untouched and routes the single system Undo and Redo UI to the
 active `UndoService` only when Commands owns the context.
+
+## Router menu revalidation
+
+The router now invalidates its SwiftUI command presentation when native text
+editing focus or `UndoManager` state changes. It observes the platform text
+editing, window-focus, and UndoManager checkpoint notifications, then resolves
+the active owner's current action name for each menu title. This allows a
+focused text editor to display “Undo Typing” rather than a fixed localization
+key, while Commands history continues to supply its own named action when it
+owns the route.

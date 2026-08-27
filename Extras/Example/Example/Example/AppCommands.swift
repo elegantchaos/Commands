@@ -42,11 +42,11 @@ struct AppCommands: Commands {
 
     if systemUndoPrototype == .router {
       CommandGroup(replacing: .undoRedo) {
-        Button("action.undo.simple", action: systemUndoRouter.undo)
+        Button(systemUndoRouter.undoTitle, action: systemUndoRouter.undo)
           .keyboardShortcut("z", modifiers: .command)
           .disabled(systemUndoRouter.canUndo == false)
 
-        Button("action.redo.simple", action: systemUndoRouter.redo)
+        Button(systemUndoRouter.redoTitle, action: systemUndoRouter.redo)
           .keyboardShortcut("Z", modifiers: .command)
           .disabled(systemUndoRouter.canRedo == false)
       }
