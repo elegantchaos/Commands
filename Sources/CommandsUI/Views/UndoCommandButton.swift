@@ -57,7 +57,7 @@ public struct UndoCommandButton: View {
       Label(
         String.localizedStringWithFormat(
           String(localized: "action.undo", bundle: #bundle),
-          presentation.name()
+          presentation.historyActionName()
         ),
         icon: presentation.icon()
       )

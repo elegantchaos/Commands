@@ -31,6 +31,10 @@ struct RemoveCommand<Centre: ItemServiceProvider>: CommandWithUI {
   }
 
   func reversal(centre: Centre) -> (any CommandReversal)? {
-    CommandReversalAdapterWithUI(command: AddCommand(), centre: centre)
+    CommandReversalAdapterWithUI(
+      command: AddCommand(),
+      centre: centre,
+      historyActionName: name(centre: centre)
+    )
   }
 }

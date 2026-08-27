@@ -26,7 +26,9 @@ commander.dynamicButton(command: command(for:))
 `importer(_:)` and `importerButton(_:isShowingImportSheet:)` support file-import
 commands. `undoButton()` and `redoButton()` remain visible but disabled when no
 operation is available. Set `showsCommandPresentation: true` to use a pending
-`CommandReversalWithUI`'s localized name and icon.
+`CommandReversalWithUI`'s history-action name and icon. The history-action name
+describes the action being undone, rather than the reversal that executes it;
+for example, “Undo Add Item” executes a removal reversal.
 
 ## UIKit and Mac Catalyst
 

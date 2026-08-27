@@ -4,6 +4,7 @@
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 import Commands
+import CommandsUI
 import Foundation
 import Logger
 import SwiftUI
@@ -105,6 +106,7 @@ final class CommandsUndoManagerProxy {
 
     let direction = desiredDirection
     guard direction != registeredDirection else {
+      updateActionName(for: direction)
       return
     }
 
@@ -119,6 +121,8 @@ final class CommandsUndoManagerProxy {
     case nil:
       break
     }
+
+    updateActionName(for: direction)
   }
 
   /// The native direction matching Commands history while no action is active.
@@ -146,6 +150,22 @@ final class CommandsUndoManagerProxy {
     undoManager?.registerUndo(withTarget: self) { proxy in
       proxy.performRedo()
     }
+  }
+
+  /// Sets the native menu title from the history action represented by a proxy.
+  private func updateActionName(for direction: Direction?) {
+    let reversal: (any CommandReversal)?
+    switch direction {
+    case .undo:
+      reversal = undoService.nextUndo
+    case .redo:
+      reversal = undoService.nextRedo
+    case nil:
+      return
+    }
+
+    let actionName = (reversal as? any CommandReversalWithUI)?.historyActionName() ?? ""
+    undoManager?.setActionName(actionName)
   }
 
   /// Handles a native undo invocation after its manager has moved the proxy.

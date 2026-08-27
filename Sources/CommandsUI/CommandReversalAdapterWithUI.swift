@@ -18,11 +18,19 @@ public struct CommandReversalAdapterWithUI<C: CommandWithUI>: CommandReversalWit
   /// Command centre used to resolve dynamic metadata.
   private let centre: C.Centre
 
+  /// The original action represented by this entry in undo history.
+  private let actionName: String
+
   /// Creates a reversal that forwards execution and UI metadata from a command.
-  public init(command: C, centre: C.Centre) {
+  ///
+  /// - Parameter historyActionName: The name shown in Undo and Redo labels for
+  ///   the action being reversed. When omitted, the reversal command's name is
+  ///   used for compatibility with existing adapters.
+  public init(command: C, centre: C.Centre, historyActionName: String? = nil) {
     reversal = CommandReversalAdapter(command: command, centre: centre)
     self.command = command
     self.centre = centre
+    actionName = historyActionName ?? command.name(centre: centre)
   }
 
   /// Stable identifier forwarded from the wrapped command.
@@ -43,6 +51,11 @@ public struct CommandReversalAdapterWithUI<C: CommandWithUI>: CommandReversalWit
   /// Returns the command's current display name.
   public func name() -> String {
     command.name(centre: centre)
+  }
+
+  /// Returns the original action's display name for an Undo or Redo label.
+  public func historyActionName() -> String {
+    actionName
   }
 
   /// Returns the command's current icon.

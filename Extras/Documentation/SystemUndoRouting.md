@@ -95,9 +95,11 @@ framework-provided menu items and prevents native text editing from retaining
 its default behaviour.
 
 When the adapter is selected, it should validate the standard menu items from
-the active `UndoService`. It may use a pending `CommandReversalWithUI` to
-present a descriptive title, while retaining the standard Undo and Redo
-semantics and shortcuts.
+the active `UndoService`. It may use a pending `CommandReversalWithUI`'s
+history-action name to present a descriptive title, while retaining the
+standard Undo and Redo semantics and shortcuts. The history-action name must
+describe the original action (“Undo Add Item”), not the reversal that executes
+it (“Remove Item”).
 
 ## iPadOS 26 design
 

@@ -57,7 +57,7 @@ public struct RedoCommandButton: View {
       Label(
         String.localizedStringWithFormat(
           String(localized: "action.redo", bundle: #bundle),
-          presentation.name()
+          presentation.historyActionName()
         ),
         icon: presentation.icon()
       )

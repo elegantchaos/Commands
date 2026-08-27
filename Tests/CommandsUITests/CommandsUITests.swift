@@ -305,6 +305,7 @@ struct CommandsUITests {
     #expect(reversal.id == command.id)
     #expect(reversal.availability() == .enabled)
     #expect(reversal.name() == "Metadata Command")
+    #expect(reversal.historyActionName() == "Metadata Command")
     #expect(reversal.icon().systemImage == "network")
     #expect(reversal.help() == "Helpful metadata")
 
@@ -312,5 +313,18 @@ struct CommandsUITests {
     undoService.recordUndo(reversal)
     try await undoService.performUndo()
     #expect(centre.performedCommandIDs == [command.id])
+  }
+
+  /// Verifies that reversal execution metadata can differ from its history label.
+  @Test func commandReversalAdapterWithUIUsesExplicitHistoryActionName() {
+    let centre = UITestCentre()
+    let reversal = CommandReversalAdapterWithUI(
+      command: MetadataCommand(reportedAvailability: .enabled, result: "ignored"),
+      centre: centre,
+      historyActionName: "Original Action"
+    )
+
+    #expect(reversal.name() == "Metadata Command")
+    #expect(reversal.historyActionName() == "Original Action")
   }
 }

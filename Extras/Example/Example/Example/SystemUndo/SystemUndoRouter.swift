@@ -138,7 +138,7 @@ private enum Owner {
     private var nativeTextUndoManager: UndoManager? {
       guard
         let window = UndoWindowLocator.shared.window,
-        let responder = window.firstResponder,
+        let responder = window.undoLabFirstResponder,
         responder is UITextField || responder is UITextView
       else {
         return nil
@@ -159,14 +159,21 @@ private enum Owner {
   }
 
   /// Adds a UIKit view that records the window hosting the SwiftUI example.
+  @MainActor
   struct SystemUndoWindowAnchor: UIViewRepresentable {
+    /// The UIKit view type inserted into the SwiftUI hierarchy.
+    typealias UIViewType = UndoWindowAnchorView
+
     /// Creates the inert view used to observe its hosting window.
-    func makeUIView(context: Context) -> UndoWindowAnchorView {
+    func makeUIView(context: UIViewRepresentableContext<SystemUndoWindowAnchor>) -> UIViewType {
       UndoWindowAnchorView()
     }
 
     /// Updates the locator after SwiftUI attaches the view to its window.
-    func updateUIView(_ view: UndoWindowAnchorView, context: Context) {
+    func updateUIView(
+      _ view: UIViewType,
+      context: UIViewRepresentableContext<SystemUndoWindowAnchor>
+    ) {
       UndoWindowLocator.shared.window = view.window
     }
   }
@@ -182,20 +189,20 @@ private enum Owner {
 
   extension UIWindow {
     /// The first responder contained in this window's view hierarchy.
-    fileprivate var firstResponder: UIResponder? {
-      rootViewController?.view.firstResponder
+    fileprivate var undoLabFirstResponder: UIResponder? {
+      rootViewController?.view.undoLabFirstResponder()
     }
   }
 
   extension UIView {
     /// Searches this view hierarchy for the current first responder.
-    fileprivate var firstResponder: UIResponder? {
+    fileprivate func undoLabFirstResponder() -> UIResponder? {
       if isFirstResponder {
         return self
       }
 
       for subview in subviews {
-        if let responder = subview.firstResponder {
+        if let responder = subview.undoLabFirstResponder() {
           return responder
         }
       }
