@@ -39,9 +39,9 @@ solution. A deferred command cannot safely add an eventual native undo action
 after unrelated native text editing without misrepresenting chronological
 order. Registering a native action before completion can also discard native
 redo state, which cannot be reconstructed if the command fails or is cancelled.
-The router experiment remains the preferred direction: it leaves native text
-editing history untouched and routes the single system Undo and Redo UI to the
-active `UndoService` only when Commands owns the context.
+The router experiment remains useful for investigating native text integration,
+but separate native and Commands histories cannot preserve global chronological
+order when text edits and application commands interleave.
 
 ## Router menu revalidation
 
@@ -61,3 +61,29 @@ Redo owner, so Add Item is followed by “Undo Add Item” rather than stale tex
 editing history. A subsequent native text change restores the text editor as
 the route owner. This is an explicit prototype policy for switching between the
 separate histories; it does not merge them.
+
+## Generic undoable bindings
+
+A possible direction for a single, application-owned history is a generic
+binding wrapper rather than replacement text-control views. A caller would pass
+an explicitly identified binding to a helper such as
+`commander.undoable(_:id:actionName:grouping:)`, then supply the returned
+binding to `TextField`, `TextEditor`, or another standard SwiftUI control.
+
+The wrapper would synchronously read the old value, write the new value, read
+back the committed value, and record a reversal that writes through the
+original binding. It must avoid recording changes made by its own undo or redo
+reversal. Values should be snapshot-friendly and equatable; reference values
+need an explicit snapshot strategy.
+
+Grouping is control-specific: text editing should coalesce a typing session,
+sliders and press-and-hold steppers should coalesce continuous changes, and
+toggles or picker selections can record a single change each. A command start,
+focus loss, or an idle boundary should close a pending typing group so the
+history order remains clear.
+
+This would require opting individual bindings into the wrapper, but not
+creating replacement `TextField` or `TextEditor` views. It remains deferred.
+The system Undo and Redo UI would need to route exclusively through Commands,
+with native text undo gestures and context-menu actions separately investigated
+to prevent two active histories.
