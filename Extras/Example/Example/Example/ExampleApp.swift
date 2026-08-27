@@ -15,10 +15,26 @@ struct ExampleApp: App {
   /// Shared commander used by every command surface in the app.
   @State private var commander = Commander()
 
+  /// The router used by the context-sensitive menu prototype.
+  @State private var systemUndoRouter = SystemUndoRouter()
+
+  /// The experiment selected from the process launch arguments.
+  private let systemUndoPrototype = SystemUndoPrototype.selected
+
   var body: some Scene {
     WindowGroup {
       ContentView(commander: commander)
+        .background(SystemUndoWindowAnchor())
+        .task {
+          systemUndoRouter.configure(undoService: commander.undoService)
+        }
     }
-    .commands { AppCommands(commander: commander) }
+    .commands {
+      AppCommands(
+        commander: commander,
+        systemUndoPrototype: systemUndoPrototype,
+        systemUndoRouter: systemUndoRouter
+      )
+    }
   }
 }

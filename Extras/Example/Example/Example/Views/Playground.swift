@@ -18,6 +18,7 @@ struct Playground: View {
           CommandsPanel(commander: commander)
 
           VStack {
+            SystemUndoPrototypePanel(prototype: SystemUndoPrototype.selected)
             StatePanel(
               itemService: commander.itemService,
               importService: commander.importService
@@ -32,55 +33,24 @@ struct Playground: View {
           .font(.footnote)
           .foregroundStyle(.secondary)
           .padding()
-
-        UndoInfo()
-
       }
       .padding()
     }
   }
 }
 
-struct UndoInfo: View {
-  @Environment(\.undoManager) var undoManager
-
-  var body: some View {
-    HStack {
-      Text(undoManager.debugDescription)
-      if let undoManager, undoManager.canUndo {
-        Text(undoManager.undoMenuItemTitle)
-      } else {
-        Text("no undo")
-      }
-
-    }
-  }
-}
-
 struct EditPanel: View {
-  @Environment(\.undoManager) var undoManager
-
-  @State var text = "Some text"
+  /// Editable text used to compare native-editor ownership across prototypes.
+  @State private var text = "Some text"
 
   var body: some View {
-    print(undoManager?.undoInfo ?? "")
-    return GroupBox {
+    GroupBox {
       VStack(alignment: .leading) {
-        TextField(">", text: $text)
+        TextField("example.undo.text.placeholder", text: $text)
       }
     } label: {
-      Label("example.section.state", systemImage: "chart.bar.xaxis")
+      Label("example.undo.text.title", systemImage: "text.cursor")
     }
     .frame(maxWidth: .infinity, alignment: .leading)
-  }
-}
-
-extension UndoManager {
-  var undoInfo: String {
-    if canUndo {
-      return undoMenuItemTitle + undoActionName
-    } else {
-      return "no undo"
-    }
   }
 }

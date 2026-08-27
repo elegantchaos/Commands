@@ -11,6 +11,12 @@ struct AppCommands: Commands {
   /// Shared command centre used to resolve command state.
   let commander: Commander
 
+  /// The system Undo and Redo experiment selected for this run.
+  let systemUndoPrototype: SystemUndoPrototype
+
+  /// Routes menu invocations for the router experiment.
+  let systemUndoRouter: SystemUndoRouter
+
   var body: some Commands {
     CommandGroup(after: .newItem) {
       commander.importer(ImportCommand())
@@ -25,6 +31,25 @@ struct AppCommands: Commands {
 
       commander.button(ToggleAdvancedCommand())
       commander.button(ReviewCommand())
+    }
+
+    if systemUndoPrototype == .swiftUI {
+      CommandGroup(replacing: .undoRedo) {
+        commander.undoButton(showsCommandPresentation: true)
+        commander.redoButton(showsCommandPresentation: true)
+      }
+    }
+
+    if systemUndoPrototype == .router {
+      CommandGroup(replacing: .undoRedo) {
+        Button("action.undo.simple", action: systemUndoRouter.undo)
+          .keyboardShortcut("z", modifiers: .command)
+          .disabled(systemUndoRouter.canUndo == false)
+
+        Button("action.redo.simple", action: systemUndoRouter.redo)
+          .keyboardShortcut("Z", modifiers: .command)
+          .disabled(systemUndoRouter.canRedo == false)
+      }
     }
   }
 }
