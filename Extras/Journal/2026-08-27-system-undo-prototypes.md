@@ -17,3 +17,28 @@ is the default experiment.
 name of the original history action. This keeps labels such as “Undo Add Item”
 accurate even though the operation that executes is a removal reversal. The
 UndoManager proxy supplies that name to the native menu through its action name.
+
+## Deferred command and UndoManager observations
+
+The discussion of long-running commands identified a useful possible evolution
+of the command lifecycle, but no implementation work is planned yet.
+
+- A command could synchronously validate and either throw or return a common
+  processing result: an immediate result or a deferred operation.
+- The command centre would own a deferred operation's task, cancellation,
+  progress reporting, and eventual success or failure. A successful deferred
+  operation could then record its reversal in `UndoService` as “Undo Remove
+  Duplicates”, for example.
+- An immediate command may fail synchronously before it commits. Once it
+  returns successfully, it must have completed atomically and have a valid
+  reversal. This gives a native `UndoManager` proxy a reliable action title and
+  ordering point.
+
+The same constraints make the UndoManager-proxy experiment a poor general
+solution. A deferred command cannot safely add an eventual native undo action
+after unrelated native text editing without misrepresenting chronological
+order. Registering a native action before completion can also discard native
+redo state, which cannot be reconstructed if the command fails or is cancelled.
+The router experiment remains the preferred direction: it leaves native text
+editing history untouched and routes the single system Undo and Redo UI to the
+active `UndoService` only when Commands owns the context.
