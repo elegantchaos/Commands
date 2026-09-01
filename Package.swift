@@ -22,7 +22,6 @@ let package = Package(
   dependencies: [
     .package(url: "https://github.com/elegantchaos/Icons.git", from: "1.0.2"),
     .package(url: "https://github.com/elegantchaos/Logger", from: "2.0.0"),
-    .package(url: "https://github.com/elegantchaos/ActionBuilderPlugin.git", from: "2.1.5"),
   ],
 
   targets: [
