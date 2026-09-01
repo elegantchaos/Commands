@@ -23,14 +23,16 @@ public protocol CommandCentre {
 
   /// Returns whether the given command is already executing.
   func isRunning<C: Command>(_ command: C) -> Bool where C.Centre == Self
-}
 
+  /// Handles an error thrown while a fire-and-forget command is executing.
+  func recordCommandFailure<C: Command>(_ command: C, error: any Error) where C.Centre == Self
+}
 
 /// Default implementations of command-related functionality.
 @MainActor
-public extension CommandCentre {
+extension CommandCentre {
   /// Returns the current availability of the given command, including running state.
-  func availability<C: Command>(_ command: C) -> CommandAvailability where C.Centre == Self {
+  public func availability<C: Command>(_ command: C) -> CommandAvailability where C.Centre == Self {
     let availability = command.availability(centre: self)
     if isRunning(command) {
       return availability == .hidden ? .runningSilently : .running
@@ -39,7 +41,8 @@ public extension CommandCentre {
   }
 
   /// Performs the given command after checking that it is currently enabled.
-  func perform<C: Command>(_ command: C) async throws -> C.ResultType where C.Centre == Self {
+  public func perform<C: Command>(_ command: C) async throws -> C.ResultType
+  where C.Centre == Self {
     commandChannel.debug("performing command «\(command.id)»")
 
     // UI callers should normally gate execution through `availability`, but the
@@ -59,27 +62,34 @@ public extension CommandCentre {
 
   /// Starts the given command in a child task and logs any thrown error.
   @discardableResult
-  func performWithoutWaiting<C: Command>(_ command: C) -> Task<Void, Never> where C.Centre == Self {
+  public func performWithoutWaiting<C: Command>(_ command: C) -> Task<Void, Never>
+  where C.Centre == Self {
     commandChannel.debug("performing command «\(command.id)»")
     return Task {
       do {
         _ = try await perform(command)
       } catch {
-        commandChannel.log("Error performing command \(command.id): \(error)")
+        recordCommandFailure(command, error: error)
       }
     }
   }
 
   /// Default hook for centres that do not track active commands.
-  func recordStartedCommand<C: Command>(_ command: C) where C.Centre == Self {
+  public func recordStartedCommand<C: Command>(_ command: C) where C.Centre == Self {
   }
 
   /// Default hook for centres that do not track completed commands.
-  func recordFinishedCommand<C: Command>(_ command: C) where C.Centre == Self {
+  public func recordFinishedCommand<C: Command>(_ command: C) where C.Centre == Self {
   }
 
   /// Returns whether the given command is already executing.
-  func isRunning<C: Command>(_ command: C) -> Bool where C.Centre == Self {
+  public func isRunning<C: Command>(_ command: C) -> Bool where C.Centre == Self {
     false
+  }
+
+  /// Logs a fire-and-forget command failure when the centre has no user-facing error surface.
+  public func recordCommandFailure<C: Command>(_ command: C, error: any Error)
+  where C.Centre == Self {
+    commandChannel.log("Error performing command \(command.id): \(error)")
   }
 }
