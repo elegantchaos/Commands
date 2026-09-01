@@ -28,6 +28,9 @@ private final class TestCentre: CommandCentre {
   /// Command IDs that should currently report as running.
   var runningCommandIDs: Set<String> = []
 
+  /// Errors reported after fire-and-forget command execution fails.
+  var reportedCommandErrors: [any Error] = []
+
   /// Records when a command starts.
   func recordStartedCommand<C: Command>(_ command: C)
   where C.Centre == TestCentre {
@@ -46,6 +49,12 @@ private final class TestCentre: CommandCentre {
   /// Returns whether a command should report as running.
   func isRunning<C: Command>(_ command: C) -> Bool where C.Centre == TestCentre {
     runningCommandIDs.contains(command.id)
+  }
+
+  /// Captures a command execution error for assertions.
+  func recordCommandFailure<C: Command>(_ command: C, error: any Error)
+  where C.Centre == TestCentre {
+    reportedCommandErrors.append(error)
   }
 }
 
@@ -218,6 +227,19 @@ struct TestCentreTests {
     #expect(centre.testRan == true)
     #expect(centre.startedCommandIDs == [command.id])
     #expect(centre.finishedCommandIDs == [command.id])
+  }
+
+  /// Verifies that fire-and-forget command failures are reported to the command centre.
+  @Test func testPerformWithoutWaitingReportsFailure() async {
+    let centre = TestCentre()
+    let command = FailingCommand()
+
+    await centre.performWithoutWaiting(command).value
+
+    #expect(centre.testRan == true)
+    #expect(centre.finishedCommandIDs == [command.id])
+    #expect(centre.reportedCommandErrors.count == 1)
+    #expect(centre.reportedCommandErrors.first as? TestFailure == .expected)
   }
 
   /// Verifies that a protocol-constrained command can execute against a conforming centre.

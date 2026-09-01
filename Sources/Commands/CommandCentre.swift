@@ -29,6 +29,9 @@ public protocol CommandCentre {
   /// Normal callers pass no context. A coordinating service supplies a context
   /// only for commands that belong to its active operation.
   func isAllowed(during context: CommandExecutionContext?) -> Bool
+
+  /// Handles an error thrown while a fire-and-forget command is executing.
+  func recordCommandFailure<C: Command>(_ command: C, error: any Error) where C.Centre == Self
 }
 
 /// Default implementations of command-related functionality.
@@ -77,7 +80,7 @@ extension CommandCentre {
     }
   }
 
-  /// Starts the given command in an unstructured task and logs any thrown error.
+  /// Starts the given command in an unstructured task and reports any thrown error to the centre.
   @discardableResult
   public func performWithoutWaiting<C: Command>(_ command: C) -> Task<
     Void, Never
@@ -87,7 +90,7 @@ extension CommandCentre {
       do {
         _ = try await perform(command)
       } catch {
-        commandChannel.log("Error performing command \(command.id): \(error)")
+        recordCommandFailure(command, error: error)
       }
     }
   }
@@ -112,5 +115,11 @@ extension CommandCentre {
   /// By default, command execution is allowed in every execution context.
   public func isAllowed(during context: CommandExecutionContext?) -> Bool {
     true
+  }
+
+  /// Logs a fire-and-forget command failure when the centre has no user-facing error surface.
+  public func recordCommandFailure<C: Command>(_ command: C, error: any Error)
+  where C.Centre == Self {
+    commandChannel.log("Error performing command \(command.id): \(error)")
   }
 }
