@@ -35,7 +35,7 @@
 - Use the `swiftui` skill when working on SwiftUI code.
 - Use the `swift-concurrency-pro` skill when working on concurrent Swift code.
 - Use the `swift-testing-pro` skill when working on Swift tests.
-- Use the `validation-flow` skill when validating code changes.
+- Use the `swift-validation` skill when validating code changes.
 - Use the `codex-git` skill for git operations.
 - Use the `codex-github` skill for GitHub operations.
 
