@@ -121,7 +121,7 @@ private func waitUntil(
   timeoutIterations: Int = 50,
   _ condition: @MainActor () -> Bool
 ) async {
-  for _ in 0..<timeoutIterations where condition() == false {
+  for _ in 0..<timeoutIterations where !condition() {
     await Task.yield()
   }
 }
@@ -133,14 +133,14 @@ struct TestCentreTests {
     let centre = TestCentre()
     let command = TestCommand()
     #expect(centre.availability(command) == .enabled)
-    #expect(centre.testRan == false)
+    #expect(!centre.testRan)
     #expect(centre.startedCommandIDs.isEmpty)
     #expect(centre.finishedCommandIDs.isEmpty)
 
     let result = try await centre.perform(command)
 
     #expect(result == "performed")
-    #expect(centre.testRan == true)
+    #expect(centre.testRan)
     #expect(centre.startedCommandIDs == [command.id])
     #expect(centre.finishedCommandIDs == [command.id])
   }
@@ -159,7 +159,7 @@ struct TestCentreTests {
       try await centre.perform(command)
     }
 
-    #expect(centre.testRan == false)
+    #expect(!centre.testRan)
     #expect(centre.startedCommandIDs.isEmpty)
     #expect(centre.finishedCommandIDs.isEmpty)
   }
@@ -173,7 +173,7 @@ struct TestCentreTests {
       try await centre.perform(command)
     }
 
-    #expect(centre.testRan == true)
+    #expect(centre.testRan)
     #expect(centre.startedCommandIDs == [command.id])
     #expect(centre.finishedCommandIDs == [command.id])
   }
@@ -217,7 +217,7 @@ struct TestCentreTests {
       centre.finishedCommandIDs.contains(command.id)
     }
 
-    #expect(centre.testRan == true)
+    #expect(centre.testRan)
     #expect(centre.startedCommandIDs == [command.id])
     #expect(centre.finishedCommandIDs == [command.id])
   }
@@ -229,7 +229,7 @@ struct TestCentreTests {
 
     await centre.performWithoutWaiting(command).value
 
-    #expect(centre.testRan == true)
+    #expect(centre.testRan)
     #expect(centre.finishedCommandIDs == [command.id])
     #expect(centre.reportedCommandErrors.count == 1)
     #expect(centre.reportedCommandErrors.first as? TestFailure == .expected)
@@ -239,9 +239,9 @@ struct TestCentreTests {
   @Test func testProtocolCommand() async throws {
     let centre = TestCentre()
 
-    #expect(centre.didTheThing == false)
+    #expect(!centre.didTheThing)
     try await centre.perform(ProtocolCommand())
-    #expect(centre.didTheThing == true)
+    #expect(centre.didTheThing)
   }
 }
 

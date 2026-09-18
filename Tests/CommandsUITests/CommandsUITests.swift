@@ -313,7 +313,7 @@ struct CommandsUITests {
     centre.runningCommandIDs.insert(command.id)
 
     #expect(centre.availability(command) == .running)
-    #expect(centre.shouldDisable(command) == true)
+    #expect(centre.shouldDisable(command))
   }
 
   /// Verifies that `WrappedCommand` forwards all metadata, availability, and execution by default.
