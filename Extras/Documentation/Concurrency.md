@@ -20,8 +20,11 @@ actor boundaries. Small immutable values that cross those boundaries, such as
 ## Fire-and-forget execution
 
 `performWithoutWaiting(_:)` starts an unstructured task and returns its
-handle. It logs failures because callers may intentionally discard that handle.
-Use `perform(_:)` when a caller needs the result, error, or task lifetime.
+handle. It reports failures to the centre through `recordFailedCommand(_:error:)`
+because callers may intentionally discard that handle. The default
+implementation logs the error; a centre overrides it to surface errors
+elsewhere. Use `perform(_:)` when a caller needs the result, error, or task
+lifetime.
 
 Commands do not provide a general cancellation mechanism. Applications should
 model a long-running operation and its explicit cancel command in the way that
