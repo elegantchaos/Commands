@@ -9,8 +9,8 @@ on: [push, pull_request]
 
 jobs:
 
-    iOS-swift63:
-        name: iOS (Swift 6.3, Xcode matching Swift 6.3)
+    iOS-swift64:
+        name: iOS (Swift 6.4, Xcode matching Swift 6.4)
         runs-on: macos-26
         steps:
         - name: Checkout
@@ -48,8 +48,8 @@ jobs:
         - name: Resolve Xcode Version
           id: resolve-xcode
           run: |
-            REQUESTED_SWIFT="6.3"
-            PREFERRED_XCODE="26.4"
+            REQUESTED_SWIFT="6.4"
+            PREFERRED_XCODE="27.0"
             ls -d /Applications/Xcode* > logs/xcode-versions.log
             FOUND_XCODE=""
             while read -r APP
@@ -264,12 +264,12 @@ jobs:
           uses: actions/upload-artifact@v7
           if: always()
           with:
-            name: iOS-swift63-logs
+            name: iOS-swift64-logs
             path: logs
 
 
-    macOS-swift63:
-        name: macOS (Swift 6.3)
+    macOS-swift64:
+        name: macOS (Swift 6.4)
         runs-on: macos-26
         steps:
         - name: Checkout
@@ -307,7 +307,7 @@ jobs:
         - name: Select Swift
           uses: elegantchaos/setup-swift@allow-patch
           with:
-            swift-version: "6.3"
+            swift-version: "6.4"
             allow-patch: true
         - name: Swift Version
           run: swift --version
@@ -351,12 +351,12 @@ jobs:
           uses: actions/upload-artifact@v7
           if: always()
           with:
-            name: macOS-swift63-logs
+            name: macOS-swift64-logs
             path: logs
 
 
-    watchOS-swift63:
-        name: watchOS (Swift 6.3, Xcode matching Swift 6.3)
+    watchOS-swift64:
+        name: watchOS (Swift 6.4, Xcode matching Swift 6.4)
         runs-on: macos-26
         steps:
         - name: Checkout
@@ -394,8 +394,8 @@ jobs:
         - name: Resolve Xcode Version
           id: resolve-xcode
           run: |
-            REQUESTED_SWIFT="6.3"
-            PREFERRED_XCODE="26.4"
+            REQUESTED_SWIFT="6.4"
+            PREFERRED_XCODE="27.0"
             ls -d /Applications/Xcode* > logs/xcode-versions.log
             FOUND_XCODE=""
             while read -r APP
@@ -610,6 +610,6 @@ jobs:
           uses: actions/upload-artifact@v7
           if: always()
           with:
-            name: watchOS-swift63-logs
+            name: watchOS-swift64-logs
             path: logs
 

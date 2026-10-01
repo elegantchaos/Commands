@@ -84,18 +84,18 @@ struct CommandConfirmationModeTests {
     #expect(confirmation.title == "Delete Everything")
   }
 
+  /// Swift 6.4's build system compiles string catalogs, so the stock strings resolve in a test.
   @Test
-  func defaultConfirmationHasText() {
+  func defaultConfirmationStringsResolve() {
     let confirmation = StockConfirmationCommand().defaultConfirmation(centre: ConfirmationTestCentre())
 
-    #expect(!confirmation.cancel.isEmpty)
-    #expect(!confirmation.confirm.isEmpty)
-    #expect(!confirmation.message.isEmpty)
+    #expect(confirmation.cancel == "Cancel")
+    #expect(confirmation.confirm == "Confirm")
+    #expect(confirmation.message == "Are you sure you want to continue?")
   }
 
   /// The stock strings must exist in the catalog, or a build that compiles catalogs shows the raw
-  /// key. Whether a lookup resolves in a test depends on the build system (SwiftPM's own does not
-  /// compile catalogs), so this reads the catalog source instead.
+  /// key. This reads the catalog source, so it also says which key is missing when a lookup fails.
   @Test
   func defaultConfirmationStringsHaveEnglishValues() throws {
     let root = URL(fileURLWithPath: #filePath)
