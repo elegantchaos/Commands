@@ -11,7 +11,7 @@ jobs:
 
     iOS-swift64:
         name: iOS (Swift 6.4, Xcode matching Swift 6.4)
-        runs-on: macos-26
+        runs-on: xcode-27
         steps:
         - name: Checkout
           uses: actions/checkout@v6
@@ -270,7 +270,7 @@ jobs:
 
     macOS-swift64:
         name: macOS (Swift 6.4)
-        runs-on: macos-26
+        runs-on: xcode-27
         steps:
         - name: Checkout
           uses: actions/checkout@v6
@@ -357,7 +357,7 @@ jobs:
 
     watchOS-swift64:
         name: watchOS (Swift 6.4, Xcode matching Swift 6.4)
-        runs-on: macos-26
+        runs-on: xcode-27
         steps:
         - name: Checkout
           uses: actions/checkout@v6
