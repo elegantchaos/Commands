@@ -50,8 +50,9 @@ button finds in the environment, or through the focused scene in the menu bar.
 `button(_:)` and `confirmableButton(_:)` both ask the host to confirm when the command declares
 a confirmation. Pass `confirming: false` to `button(_:)` to run the command immediately.
 
-Without a host, `confirmableButton(_:)` falls back to an alert on the button itself, which works
-outside menus, and `button(_:)` runs the command unconfirmed and logs a warning.
+Without a host, `confirmableButton(_:)` falls back to a confirmation dialog on the button itself,
+which the system anchors to the button where it can (a popover on a regular-width iPad), and which
+works outside menus, and `button(_:)` runs the command unconfirmed and logs a warning.
 
 ## UIKit and Mac Catalyst
 

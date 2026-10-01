@@ -9,11 +9,12 @@ import SwiftUI
 /// Button wrapper that confirms with the user before invoking a command.
 ///
 /// Inside a `CommandsHost`, the button asks the host to show the confirmation, which works in
-/// menus. Without a host it falls back to an alert attached to the button itself, which does not
-/// survive inside a menu.
+/// menus. Without a host it falls back to a confirmation dialog attached to the button itself,
+/// which does not survive inside a menu. The system anchors that dialog to the button where it can,
+/// for example as a popover pointing at the button on a regular-width iPad.
 @MainActor
 struct ConfirmableCommandButton<C: CommandWithUI, CC: CommandCentre>: View where C.Centre == CC {
-  /// Tracks whether the fallback alert is currently visible.
+  /// Tracks whether the fallback dialog is currently visible.
   @State var isPresented = false
 
   /// The presenter of the enclosing window's host.
@@ -38,7 +39,7 @@ struct ConfirmableCommandButton<C: CommandWithUI, CC: CommandCentre>: View where
     self.role = role
   }
 
-  /// Renders the labelled button and its fallback alert.
+  /// Renders the labelled button and its fallback dialog.
   var body: some View {
     let availability = commander.availability(command)
 
@@ -51,9 +52,11 @@ struct ConfirmableCommandButton<C: CommandWithUI, CC: CommandCentre>: View where
         help: command.help(centre: commander),
         shortcut: command.shortcut
       )
-      .alert(confirmation.title, isPresented: $isPresented) {
-        Button(confirmation.cancel, role: .cancel) {}
+      .confirmationDialog(
+        confirmation.title, isPresented: $isPresented, titleVisibility: .visible
+      ) {
         Button(confirmation.confirm, role: .destructive) { handlePerformCommand() }
+        Button(confirmation.cancel, role: .cancel) {}
       } message: {
         Text(confirmation.message)
       }
@@ -71,7 +74,7 @@ struct ConfirmableCommandButton<C: CommandWithUI, CC: CommandCentre>: View where
       )
   }
 
-  /// Asks the host to confirm, or shows the fallback alert when there is no host.
+  /// Asks the host to confirm, or shows the fallback dialog when there is no host.
   func handleShowAlert() {
     if let presenter = environmentPresenter ?? focusedPresenter {
       presenter.confirm(confirmation) { [command, commander] in
@@ -80,13 +83,13 @@ struct ConfirmableCommandButton<C: CommandWithUI, CC: CommandCentre>: View where
       return
     }
 
-    commandChannel.debug("no CommandsHost for \(command.id): confirming with a local alert")
+    commandChannel.debug("no CommandsHost for \(command.id): confirming with a local dialog")
     withAnimation {
       isPresented = true
     }
   }
 
-  /// Executes the command confirmed in the fallback alert.
+  /// Executes the command confirmed in the fallback dialog.
   func handlePerformCommand() {
     commander.performWithoutWaiting(command)
     withAnimation {
