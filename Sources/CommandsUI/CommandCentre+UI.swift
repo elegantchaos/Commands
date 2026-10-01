@@ -11,17 +11,21 @@ import UniformTypeIdentifiers
 @MainActor
 extension CommandCentre {
   /// Returns a labelled button for the given command, or nothing when it is hidden.
-  @ViewBuilder public func button<C: CommandWithUI>(_ command: C, role: ButtonRole? = nil)
-    -> some View where C.Centre == Self
-  {
-    CommandButton(command: command, commander: self, role: role)
+  ///
+  /// When the command declares a confirmation, the button asks the enclosing `CommandsHost` to
+  /// confirm first. Pass `confirming: false` to run the command immediately.
+  @ViewBuilder public func button<C: CommandWithUI>(
+    _ command: C, role: ButtonRole? = nil, confirming: Bool = true
+  ) -> some View where C.Centre == Self {
+    CommandButton(command: command, commander: self, role: role, confirming: confirming)
   }
 
   /// Returns a button for the given command with custom content, or nothing when it is hidden.
   @ViewBuilder public func button<C: CommandWithUI, Content: View>(
-    _ command: C, role: ButtonRole? = nil, content: @escaping () -> Content
+    _ command: C, role: ButtonRole? = nil, confirming: Bool = true,
+    content: @escaping () -> Content
   ) -> some View where C.Centre == Self {
-    CommandButton(command: command, commander: self, role: role) { _ in
+    CommandButton(command: command, commander: self, role: role, confirming: confirming) { _ in
       content()
     }
   }

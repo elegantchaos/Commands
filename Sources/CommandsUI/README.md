@@ -28,6 +28,31 @@ commands. `undoButton()` and `redoButton()` remain visible but disabled when no
 operation is available. Set `showsCommandPresentation: true` to use a pending
 `CommandReversalWithUI`'s localized name and icon.
 
+## The commands host
+
+Place a `CommandsHost` at the root of each window, and inside any sheet that contains command
+buttons:
+
+```swift
+WindowGroup {
+  CommandsHost(commander: engine.commander) {
+    RootView()
+  }
+}
+```
+
+The host injects the commander into the environment, and presents the alerts that command
+buttons request. This is what lets a confirmation work from a menu: a button inside a menu is
+discarded when the menu closes, and a macOS `CommandMenu` has no view hierarchy, so the button
+cannot present an alert of its own. Instead it asks the host's `CommandPresenter`, which the
+button finds in the environment, or through the focused scene in the menu bar.
+
+`button(_:)` and `confirmableButton(_:)` both ask the host to confirm when the command declares
+a confirmation. Pass `confirming: false` to `button(_:)` to run the command immediately.
+
+Without a host, `confirmableButton(_:)` falls back to an alert on the button itself, which works
+outside menus, and `button(_:)` runs the command unconfirmed and logs a warning.
+
 ## UIKit and Mac Catalyst
 
 Subclass `CommandCentreDelegate` to build `UICommand`, `UIKeyCommand`, and

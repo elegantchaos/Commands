@@ -6,11 +6,21 @@
 import Commands
 import SwiftUI
 
-/// Button wrapper that presents a confirmation dialog before invoking a command.
+/// Button wrapper that confirms with the user before invoking a command.
+///
+/// Inside a `CommandsHost`, the button asks the host to show the confirmation, which works in
+/// menus. Without a host it falls back to an alert attached to the button itself, which does not
+/// survive inside a menu.
 @MainActor
 struct ConfirmableCommandButton<C: CommandWithUI, CC: CommandCentre>: View where C.Centre == CC {
-  /// Tracks whether the confirmation alert is currently visible.
+  /// Tracks whether the fallback alert is currently visible.
   @State var isPresented = false
+
+  /// The presenter of the enclosing window's host.
+  @Environment(\.commandPresenter) private var environmentPresenter
+
+  /// The presenter of the focused window's host, for menu-bar commands.
+  @FocusedValue(\.commandPresenter) private var focusedPresenter
 
   /// Command to present and eventually execute.
   let command: C
@@ -28,17 +38,9 @@ struct ConfirmableCommandButton<C: CommandWithUI, CC: CommandCentre>: View where
     self.role = role
   }
 
-  /// Renders the labelled button and its attached confirmation alert.
+  /// Renders the labelled button and its fallback alert.
   var body: some View {
     let availability = commander.availability(command)
-    let confirmation =
-      command.confirmation(centre: commander)
-      ?? .init(
-        title: command.name(centre: commander),
-        cancel: String(localized: "confirmation.default.cancel"),
-        message: String(localized: "confirmation.default.message"),
-        confirm: String(localized: "confirmation.default.confirm")
-      )
 
     if availability != .hidden {
       Button(role: role, action: handleShowAlert) {
@@ -58,25 +60,37 @@ struct ConfirmableCommandButton<C: CommandWithUI, CC: CommandCentre>: View where
     }
   }
 
-  /// Presents the confirmation alert with animation.
+  /// The dialog to show, defaulting to a generic one for commands that declare none.
+  private var confirmation: CommandConfirmation {
+    command.confirmation(centre: commander)
+      ?? .init(
+        title: command.name(centre: commander),
+        cancel: String(localized: "confirmation.default.cancel"),
+        message: String(localized: "confirmation.default.message"),
+        confirm: String(localized: "confirmation.default.confirm")
+      )
+  }
+
+  /// Asks the host to confirm, or shows the fallback alert when there is no host.
   func handleShowAlert() {
+    if let presenter = environmentPresenter ?? focusedPresenter {
+      presenter.confirm(confirmation) { [command, commander] in
+        commander.performWithoutWaiting(command)
+      }
+      return
+    }
+
+    commandChannel.debug("no CommandsHost for \(command.id): confirming with a local alert")
     withAnimation {
       isPresented = true
     }
   }
 
-  /// Executes the confirmed command and dismisses the alert afterward.
+  /// Executes the command confirmed in the fallback alert.
   func handlePerformCommand() {
-    Task {
-      do {
-        _ = try await commander.perform(command)
-      } catch {
-        commandChannel.log("Error performing confirmed command \(command.id): \(error)")
-      }
-
-      withAnimation {
-        isPresented = false
-      }
+    commander.performWithoutWaiting(command)
+    withAnimation {
+      isPresented = false
     }
   }
 }
