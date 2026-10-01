@@ -52,7 +52,7 @@ private final class TestCentre: CommandCentre {
   }
 
   /// Captures a command execution error for assertions.
-  func recordCommandFailure<C: Command>(_ command: C, error: any Error)
+  func recordFailedCommand<C: Command>(_ command: C, error: any Error)
   where C.Centre == TestCentre {
     reportedCommandErrors.append(error)
   }

@@ -31,7 +31,7 @@ public protocol CommandCentre {
   func isAllowed(during context: CommandExecutionContext?) -> Bool
 
   /// Handles an error thrown while a fire-and-forget command is executing.
-  func recordCommandFailure<C: Command>(_ command: C, error: any Error) where C.Centre == Self
+  func recordFailedCommand<C: Command>(_ command: C, error: any Error) where C.Centre == Self
 }
 
 /// Default implementations of command-related functionality.
@@ -90,7 +90,7 @@ extension CommandCentre {
       do {
         _ = try await perform(command)
       } catch {
-        recordCommandFailure(command, error: error)
+        recordFailedCommand(command, error: error)
       }
     }
   }
@@ -118,7 +118,7 @@ extension CommandCentre {
   }
 
   /// Logs a fire-and-forget command failure when the centre has no user-facing error surface.
-  public func recordCommandFailure<C: Command>(_ command: C, error: any Error)
+  public func recordFailedCommand<C: Command>(_ command: C, error: any Error)
   where C.Centre == Self {
     commandChannel.log("Error performing command \(command.id): \(error)")
   }
