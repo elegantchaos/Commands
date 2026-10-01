@@ -32,9 +32,11 @@ extension CommandCentre {
 
   /// Returns a button that passes the command into the content builder, or nothing when it is hidden.
   @ViewBuilder public func button<C: CommandWithUI, Content: View>(
-    _ command: C, role: ButtonRole? = nil, content: @escaping (C) -> Content
+    _ command: C, role: ButtonRole? = nil, confirming: Bool = true,
+    content: @escaping (C) -> Content
   ) -> some View where C.Centre == Self {
-    CommandButton(command: command, commander: self, role: role, content: content)
+    CommandButton(
+      command: command, commander: self, role: role, confirming: confirming, content: content)
   }
 
   /// Return a button that resolves a concrete command from an activation trigger.
