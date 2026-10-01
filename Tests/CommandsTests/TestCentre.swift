@@ -28,6 +28,9 @@ private final class TestCentre: CommandCentre {
   /// Command IDs that should currently report as running.
   var runningCommandIDs: Set<String> = []
 
+  /// Errors reported after fire-and-forget command execution fails.
+  var reportedCommandErrors: [any Error] = []
+
   /// Records when a command starts.
   func recordStartedCommand<C: Command>(_ command: C)
   where C.Centre == TestCentre {
@@ -46,6 +49,12 @@ private final class TestCentre: CommandCentre {
   /// Returns whether a command should report as running.
   func isRunning<C: Command>(_ command: C) -> Bool where C.Centre == TestCentre {
     runningCommandIDs.contains(command.id)
+  }
+
+  /// Captures a command execution error for assertions.
+  func recordFailedCommand<C: Command>(_ command: C, error: any Error)
+  where C.Centre == TestCentre {
+    reportedCommandErrors.append(error)
   }
 }
 
@@ -121,14 +130,14 @@ struct TestCentreTests {
     let centre = TestCentre()
     let command = TestCommand()
     #expect(centre.availability(command) == .enabled)
-    #expect(centre.testRan == false)
+    #expect(!centre.testRan)
     #expect(centre.startedCommandIDs.isEmpty)
     #expect(centre.finishedCommandIDs.isEmpty)
 
     let result = try await centre.perform(command)
 
     #expect(result == "performed")
-    #expect(centre.testRan == true)
+    #expect(centre.testRan)
     #expect(centre.startedCommandIDs == [command.id])
     #expect(centre.finishedCommandIDs == [command.id])
     #expect(centre.finishedCommandOutcomes.count == 1)
@@ -152,7 +161,7 @@ struct TestCentreTests {
       try await centre.perform(command)
     }
 
-    #expect(centre.testRan == false)
+    #expect(!centre.testRan)
     #expect(centre.startedCommandIDs.isEmpty)
     #expect(centre.finishedCommandIDs.isEmpty)
   }
@@ -166,7 +175,7 @@ struct TestCentreTests {
       try await centre.perform(command)
     }
 
-    #expect(centre.testRan == true)
+    #expect(centre.testRan)
     #expect(centre.startedCommandIDs == [command.id])
     #expect(centre.finishedCommandIDs == [command.id])
     #expect(centre.finishedCommandOutcomes.count == 1)
@@ -215,18 +224,31 @@ struct TestCentreTests {
     let task = centre.performWithoutWaiting(command)
     await task.value
 
-    #expect(centre.testRan == true)
+    #expect(centre.testRan)
     #expect(centre.startedCommandIDs == [command.id])
     #expect(centre.finishedCommandIDs == [command.id])
+  }
+
+  /// Verifies that fire-and-forget command failures are reported to the command centre.
+  @Test func testPerformWithoutWaitingReportsFailure() async {
+    let centre = TestCentre()
+    let command = FailingCommand()
+
+    await centre.performWithoutWaiting(command).value
+
+    #expect(centre.testRan)
+    #expect(centre.finishedCommandIDs == [command.id])
+    #expect(centre.reportedCommandErrors.count == 1)
+    #expect(centre.reportedCommandErrors.first as? TestFailure == .expected)
   }
 
   /// Verifies that a protocol-constrained command can execute against a conforming centre.
   @Test func testProtocolCommand() async throws {
     let centre = TestCentre()
 
-    #expect(centre.didTheThing == false)
+    #expect(!centre.didTheThing)
     try await centre.perform(ProtocolCommand())
-    #expect(centre.didTheThing == true)
+    #expect(centre.didTheThing)
   }
 }
 

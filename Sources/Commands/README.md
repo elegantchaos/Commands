@@ -42,8 +42,10 @@ struct SignOutCommand<C: SessionCommands>: Command {
 ```
 
 Call `try await centre.perform(command)` when the caller needs the result or
-error. `performWithoutWaiting(_:)` starts an unstructured task and logs any
-error.
+error. `performWithoutWaiting(_:)` starts an unstructured task and reports any
+error to the centre through `recordFailedCommand(_:error:)`. The default
+implementation logs it; a centre with a user-facing error surface, such as a
+status bar, overrides it to show the error there.
 
 ## Add undo and redo
 
