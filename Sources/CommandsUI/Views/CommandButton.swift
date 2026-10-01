@@ -19,30 +19,27 @@ where C.Centre == CC {
   /// Optional SwiftUI button role.
   public let role: ButtonRole?
 
-  /// Whether the button confirms first, when the command declares a confirmation.
-  public let confirming: Bool
+  /// Where the button presents the command's confirmation, or nil to use the environment's.
+  public let confirmation: CommandConfirmationMode?
 
   /// Optional custom content for the button label.
   private let content: ((C) -> Content)?
 
-  /// The presenter of the enclosing window's host.
-  @Environment(\.commandPresenter) private var environmentPresenter
-
-  /// The presenter of the focused window's host, for menu-bar commands.
-  @FocusedValue(\.commandPresenter) private var focusedPresenter
+  /// Confirms before performing, when the command declares a confirmation.
+  private let confirmationState = CommandConfirmationState()
 
   /// Creates a command button with custom label content.
   public init(
     command: C,
     commander: CC,
     role: ButtonRole? = nil,
-    confirming: Bool = true,
+    confirmation: CommandConfirmationMode? = nil,
     @ViewBuilder content: @escaping (C) -> Content
   ) {
     self.command = command
     self.commander = commander
     self.role = role
-    self.confirming = confirming
+    self.confirmation = confirmation
     self.content = content
   }
 
@@ -53,6 +50,7 @@ where C.Centre == CC {
       Button(role: role, action: handleAction) {
         label
       }
+      .commandLocalConfirmation(confirmationState)
       .commandPresentation(
         availability: availability,
         help: command.help(centre: commander),
@@ -61,21 +59,11 @@ where C.Centre == CC {
     }
   }
 
-  /// Performs the command, after asking the host to confirm when the command declares a confirmation.
+  /// Performs the command, confirming first when the command declares a confirmation.
   private func handleAction() {
-    guard confirming, let confirmation = command.confirmation(centre: commander) else {
-      commander.performWithoutWaiting(command)
-      return
-    }
-
-    guard let presenter = environmentPresenter ?? focusedPresenter else {
-      commandChannel.log(
-        "\(command.id) declares a confirmation but there is no CommandsHost, so it ran unconfirmed")
-      commander.performWithoutWaiting(command)
-      return
-    }
-
-    presenter.confirm(confirmation) { [command, commander] in
+    confirmationState.request(
+      command.confirmation(centre: commander), mode: confirmation
+    ) { [command, commander] in
       commander.performWithoutWaiting(command)
     }
   }
@@ -92,11 +80,14 @@ where C.Centre == CC {
 
 extension CommandButton where Content == EmptyView {
   /// Creates a command button with the default command label.
-  public init(command: C, commander: CC, role: ButtonRole? = nil, confirming: Bool = true) {
+  public init(
+    command: C, commander: CC, role: ButtonRole? = nil,
+    confirmation: CommandConfirmationMode? = nil
+  ) {
     self.command = command
     self.commander = commander
     self.role = role
-    self.confirming = confirming
+    self.confirmation = confirmation
     content = nil
   }
 }

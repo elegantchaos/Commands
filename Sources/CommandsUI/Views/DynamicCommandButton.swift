@@ -26,6 +26,12 @@ where Wrapped.Centre == Centre {
   /// Content displayed inside the button.
   let content: Content
 
+  /// Where the button presents the resolved command's confirmation, or nil to use the environment's.
+  var confirmation: CommandConfirmationMode?
+
+  /// Confirms before performing, when the resolved command declares a confirmation.
+  private let confirmationState = CommandConfirmationState()
+
   @State private var suppressPrimaryAction = false
 
   var body: some View {
@@ -45,12 +51,18 @@ where Wrapped.Centre == Centre {
           help: primaryCommand.help(centre: commander),
           shortcut: primaryCommand.shortcut
         )
+        .commandLocalConfirmation(confirmationState)
     }
   }
 
   /// Performs the wrapped command for the supplied trigger.
   private func performWrappedCommand(_ trigger: CommandTrigger) {
-    commander.performWithoutWaiting(command(trigger))
+    let resolved = command(trigger)
+    confirmationState.request(
+      resolved.confirmation(centre: commander), mode: confirmation
+    ) { [commander] in
+      commander.performWithoutWaiting(resolved)
+    }
   }
 
   @ViewBuilder

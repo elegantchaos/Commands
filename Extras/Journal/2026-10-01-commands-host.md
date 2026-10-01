@@ -19,33 +19,49 @@ they use `confirmableButton` in toolbars and forms, where a local alert works.
 - Added `CommandPresenter`, which holds the pending confirmation. Buttons find
   it in the environment, or through a focused scene value when they are in the
   macOS menu bar, which has no environment.
-- `confirmableButton(_:)` and `button(_:)` both ask the host to confirm when the
-  command declares a confirmation. `confirming: false` opts out, on every
-  `button` overload.
-- Without a host, behaviour is unchanged for existing apps: `confirmableButton`
-  keeps a local dialog, and `button` runs the command unconfirmed with a logged
-  warning.
-- The no-host fallback now uses `confirmationDialog` instead of `alert`, so the
-  system anchors it to the button (a popover pointing at it on a regular-width
-  iPad, an action sheet on iPhone).
+- Added `CommandConfirmationMode` (`.local`, `.hosted`, `.never`). The
+  environment supplies the default (`.local`), set for a subtree with
+  `commandConfirmation(_:)` or `withoutConfirmation()`. A `confirmation:`
+  parameter on `button`, `toolbarItem`, `toolbarItemGroup` and `dynamicButton`
+  overrides it for one button.
+- `button(_:)` is now the only confirming button. It confirms whenever its
+  command declares a confirmation, so a command opts in by returning one from
+  `confirmation(centre:)`, which describes the command rather than the UI.
+  `defaultConfirmation(centre:)` supplies a stock one.
+- `confirmableButton` and `confirmableToolbarItem` are deprecated and forward
+  to `button` and `toolbarItem`.
+- `.local` is a `confirmationDialog` attached to the button, which the system
+  anchors to it (a popover pointing at the button on a regular-width iPad, an
+  action sheet on iPhone). `.hosted` is the host's centred alert.
+- `.hosted` without a host falls back to `.local`, with a debug log.
 
 ## Decisions
 
-- Presentation is hosted for everything, not detected per button. SwiftUI has
-  no public way to ask whether a view is inside a menu, so a button that
-  "stays local unless in a menu" cannot be built without the call site saying
-  so. A possible later step is an environment value set by menu wrappers, so
-  that only menus use the host and other buttons keep an anchored local dialog.
+- Local by default, hosted for menus. SwiftUI has no public way to ask whether
+  a view is inside a menu, so the call site or an enclosing view says so. A menu
+  without `.commandConfirmation(.hosted)` fails silently: its button's dialog is
+  discarded with the menu.
+- The "no confirmation" case is `.never`, not `.none`. The call-site parameter
+  is optional, and `.none` there is `Optional.none`, "not specified", which
+  would quietly mean "use the environment".
 - Multiple windows: each host publishes its presenter as a focused scene
   value, so the menu bar reaches the key window's host.
 - The host is a view, not a modifier, because it should appear once per
   presentation scope.
 
+## Found on the way
+
+`confirmation.default.message` had no English value in the string catalog, so
+the old stock confirmation would have shown the raw key as its message. Fixed;
+`defaultConfirmation` looks its strings up in the module bundle, and a test
+checks that they resolve.
+
 ## Validation
 
-- `swift test` passes, including `CommandPresenterTests`: confirming does not
-  perform, accepting performs once, cancelling does not perform, and a new
-  request replaces a pending one.
+- `swift test` passes, including `CommandPresenterTests` (confirming does not
+  perform, accepting performs once, cancelling does not perform, a new request
+  replaces a pending one) and `CommandConfirmationModeTests` (the outcome table
+  for call-site and environment modes, and `defaultConfirmation`).
 - Checked from Bookish on the iPhone simulator: Rebuild Record Store in a
   toolbar menu shows its confirmation, and Cancel runs nothing.
 - Checked on the iPad simulator without a host: the fallback dialog is a
