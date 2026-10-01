@@ -85,13 +85,34 @@ struct CommandConfirmationModeTests {
   }
 
   @Test
-  func defaultConfirmationUsesLocalizedStrings() {
+  func defaultConfirmationHasText() {
     let confirmation = StockConfirmationCommand().defaultConfirmation(centre: ConfirmationTestCentre())
 
-    #expect(confirmation.cancel != "confirmation.default.cancel")
-    #expect(confirmation.confirm != "confirmation.default.confirm")
-    #expect(confirmation.message != "confirmation.default.message")
-    #expect(!confirmation.cancel.isEmpty && !confirmation.confirm.isEmpty)
+    #expect(!confirmation.cancel.isEmpty)
+    #expect(!confirmation.confirm.isEmpty)
+    #expect(!confirmation.message.isEmpty)
+  }
+
+  /// The stock strings must exist in the catalog, or a build that compiles catalogs shows the raw
+  /// key. Whether a lookup resolves in a test depends on the build system (SwiftPM's own does not
+  /// compile catalogs), so this reads the catalog source instead.
+  @Test
+  func defaultConfirmationStringsHaveEnglishValues() throws {
+    let root = URL(fileURLWithPath: #filePath)
+      .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+    let catalog = root.appending(path: "Sources/CommandsUI/Resources/Localizable.xcstrings")
+    let json = try JSONSerialization.jsonObject(with: Data(contentsOf: catalog)) as? [String: Any]
+    let strings = try #require(json?["strings"] as? [String: [String: Any]])
+
+    for key in [
+      "confirmation.default.cancel", "confirmation.default.confirm",
+      "confirmation.default.message",
+    ] {
+      let localizations = strings[key]?["localizations"] as? [String: [String: Any]]
+      let unit = localizations?["en"]?["stringUnit"] as? [String: Any]
+      let value = unit?["value"] as? String
+      #expect(value?.isEmpty == false, "\(key) has no English value")
+    }
   }
 
   @Test

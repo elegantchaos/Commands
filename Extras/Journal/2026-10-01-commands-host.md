@@ -53,8 +53,11 @@ they use `confirmableButton` in toolbars and forms, where a local alert works.
 
 `confirmation.default.message` had no English value in the string catalog, so
 the old stock confirmation would have shown the raw key as its message. Fixed;
-`defaultConfirmation` looks its strings up in the module bundle, and a test
-checks that they resolve.
+`defaultConfirmation` looks its strings up in the module bundle. A test reads
+the catalog source to check the keys have English values: a lookup test cannot
+do it, because SwiftPM's own build system does not compile catalogs, so lookups
+return the raw key there (CI failed on exactly that before the test was
+changed).
 
 ## Validation
 
