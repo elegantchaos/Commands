@@ -74,6 +74,24 @@ extension CommandWithUI {
   /// By default, no confirmation is required.
   public func confirmation(centre: Centre) -> CommandConfirmation? { nil }
 
+  /// A stock confirmation, titled with the command's name, for commands that want a simple one.
+  ///
+  /// A command opts into confirmation by returning a value from `confirmation(centre:)`:
+  ///
+  /// ```swift
+  /// func confirmation(centre: Centre) -> CommandConfirmation? {
+  ///   defaultConfirmation(centre: centre)
+  /// }
+  /// ```
+  public func defaultConfirmation(centre: Centre) -> CommandConfirmation {
+    CommandConfirmation(
+      title: name(centre: centre),
+      cancel: String(localized: "confirmation.default.cancel", bundle: .module),
+      message: String(localized: "confirmation.default.message", bundle: .module),
+      confirm: String(localized: "confirmation.default.confirm", bundle: .module)
+    )
+  }
+
   /// By default, the help string is looked up using the command ID.
   public func help(centre: Centre) -> String? {
     String(localized: String.LocalizationValue(id + ".help"), bundle: bundle)
