@@ -1,5 +1,6 @@
 # Development Journal
 
+- [2026-10-15 — PR #9 review and dependency lockfile cleanup](2026-10-15-pr-9-review.md)
 - [2026-10-01 — Require Swift 6.4](2026-10-01-require-swift-6-4.md)
 - [2026-10-01 — Commands host](2026-10-01-commands-host.md)
 - [2026-10-01 — Failed command hook naming](2026-10-01-failed-command-hook.md)
