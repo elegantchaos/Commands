@@ -1,4 +1,4 @@
-## Project Specific Rules
+# Project Specific Rules
 
 - This repository is a Swift package for defining reusable command models and SwiftUI command UI.
 - Keep commands decoupled from concrete app types by depending on the smallest command-centre protocol that provides what they need.
@@ -6,38 +6,24 @@
 - Localize user-facing strings when adding UI-facing command metadata.
 - Keep a development journal in `Extras/Journal/`.
 
-## Standard Rules
+# Standard Rules
 
-- Always write good, modern, idiomatic code.
-- Prefer fixing root causes over layered workarounds.
-- Keep interfaces explicit and intentionally small.
-- Avoid hidden coupling and surprising side effects.
-- Write documentation to reflect the current state.
-- Apply DRY, single-source-of-truth, KISS, YAGNI, make-illegal-states-unrepresentable, dependency injection, composition over inheritance, command-query separation, Law of Demeter, structured concurrency, design by contract, and idempotency.
-- Understand request boundaries, inspect relevant code and docs before editing.
-- Match change scope to the request: keep focused fixes small and coherent; use codebase-wide cleanup when the task is cleanup, review, modernisation, or consistency work.
-- Use red/green TDD for non-UI code.
-- Add or update tests for behavior changes.
-- Create SwiftUI previews for UI code.
-- Run the narrowest validation that proves the change first, then broaden to relevant project checks.
-- Report skipped validation with the reason, validation gaps, and residual risks.
-- Use trusted primary sources for technical decisions.
-- Use portable path references in docs and guidance. Prefer repository-relative paths for files in this repository and `~/...` paths for shared resources outside it. Avoid machine-specific absolute paths.
-- Never expose or commit credentials or secrets.
-- Do not perform irreversible destructive actions without explicit approval. Reversible tracked-file deletions do not require extra approval beyond the user's request.
-- Avoid unrelated refactors during focused tasks, but note them as follow-up work when needed.
-- If unexpected workspace changes appear, pause and confirm direction.
-- Do not repeatedly advertise that the agent is verifying instead of guessing; that should be treated as default competence and only called out when there is real uncertainty or risk.
+1. Locate the shared agents content before starting work. Use `~/.local/share/agents/` when available; otherwise obtain it from https://github.com/elegantchaos/Agents.
+2. You must read @~/.local/share/agents/COMMON.md before starting work, and follow the instructions in it at all times (use `COMMON.md` from the GitHub copy when the local one is unavailable).
+3. Resolve the skill names below from that same content, including skills provided by plugins.
+4. For each skill required by the task, read its `SKILL.md` and every reference it marks as required before starting the work, and follow them. Required references are part of the skill's rules, not optional background.
+5. Follow the guidelines in all code you write or change, even where the surrounding code does not.
+6. Before reporting work complete, check each changed file against the required skills' checklists, and report the result and any exceptions.
+7. Report any required guidance you cannot access.
 
-## Skills
+- Follow the `baseline:standards` skill for all coding.
+- Use the `baseline:review` skill for reviewing pull requests and completed work.
+- Use the `baseline:records` skill for the development journal.
+- Use the `codex-git` skill for git and GitHub operations.
+- Use the `swift:language` skill for all Swift code.
+- Also use the `swift:swiftui` skill for SwiftUI code.
+- Also use the `swift:testing` skill for Swift Testing work.
+- Also use the `swift:concurrency` skill for actor isolation and shared mutable state.
+- Use the `swift:validation` skill after Swift code changes.
 
-- Follow the `coding-standards` skill for all coding.
-- Use the `swift` skill when working on Swift code.
-- Use the `swiftui` skill when working on SwiftUI code.
-- Use the `swift-concurrency-pro` skill when working on concurrent Swift code.
-- Use the `swift-testing-pro` skill when working on Swift tests.
-- Use the `swift-validation` skill when validating code changes.
-- Use the `codex-git` skill for git operations.
-- Use the `codex-github` skill for GitHub operations.
-
-To refresh this file, use the `refresh` skill.
+To refresh this file, use the `baseline:refresh` skill.
