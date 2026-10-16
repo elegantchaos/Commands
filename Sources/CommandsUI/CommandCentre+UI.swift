@@ -85,39 +85,44 @@ extension CommandCentre {
     button(command, role: role)
   }
 
-  /// Returns a toolbar item for the given command, or nothing when it is hidden.
-  @ToolbarContentBuilder public func toolbarItem<C: CommandWithUI>(
+  /// Returns a toolbar item holding the button for the given command.
+  ///
+  /// The item is always present, and its button leaves itself out while the command is hidden,
+  /// so a hidden command leaves an empty item. The caller's toolbar never reads the command's
+  /// availability and never branches on it: either would make it re-evaluate whenever the
+  /// availability changed, and on macOS a toolbar whose content changes structure, or whose
+  /// item content's outermost view is conditional, rebuilds every item and flickers.
+  public func toolbarItem<C: CommandWithUI>(
     _ command: C, placement: ToolbarItemPlacement = .automatic,
     confirmation: CommandConfirmationMode? = nil
   ) -> some ToolbarContent where C.Centre == Self {
-    if availability(command) != .hidden {
-      ToolbarItem(placement: placement) {
-        button(command, confirmation: confirmation)
-      }
+    ToolbarItem(placement: placement) {
+      button(command, confirmation: confirmation)
     }
   }
 
-  /// Returns a toolbar item that confirms before executing the command, or nothing when it is hidden.
+  /// Returns a toolbar item that confirms before executing the command.
   @available(
     *, deprecated,
     message:
       "Use toolbarItem(_:placement:). A command opts into confirmation by returning one from confirmation(centre:), for example defaultConfirmation(centre:)."
   )
-  @ToolbarContentBuilder public func confirmableToolbarItem<C: CommandWithUI>(
+  public func confirmableToolbarItem<C: CommandWithUI>(
     _ command: C, placement: ToolbarItemPlacement = .automatic
   ) -> some ToolbarContent where C.Centre == Self {
     toolbarItem(command, placement: placement)
   }
 
-  /// Returns a toolbar item group for the given command, or nothing when it is hidden.
-  @ToolbarContentBuilder public func toolbarItemGroup<C: CommandWithUI>(
+  /// Returns a toolbar item group holding the button for the given command.
+  ///
+  /// The group is always present and never reads the command's availability, as
+  /// `toolbarItem(_:placement:confirmation:)` describes; a hidden command leaves it empty.
+  public func toolbarItemGroup<C: CommandWithUI>(
     _ command: C, placement: ToolbarItemPlacement = .automatic,
     confirmation: CommandConfirmationMode? = nil
   ) -> some ToolbarContent where C.Centre == Self {
-    if availability(command) != .hidden {
-      ToolbarItemGroup(placement: placement) {
-        button(command, confirmation: confirmation)
-      }
+    ToolbarItemGroup(placement: placement) {
+      button(command, confirmation: confirmation)
     }
   }
 

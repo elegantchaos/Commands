@@ -39,5 +39,14 @@ The modifier form then held too: making the year invalid no longer flickers the 
 Cancel's discard confirmation and the launch flicker were not separately rechecked. The view structure has no automated test, and iOS was
 not checked.
 
-The `toolbarItem` and `toolbarItemGroup` helpers still choose between toolbar content and
-none with an `if` in their caller's toolbar body.
+## Toolbar Helpers
+
+`toolbarItem` and `toolbarItemGroup` chose between an item and none with
+`if availability(command) != .hidden`, evaluated in the caller's toolbar body. Every command
+placed with them made the caller's whole toolbar depend on its availability and gave it
+conditional structure, the shape behind the flicker. They now always return their item or
+group, holding the command's button, and never read availability; the button leaves itself out
+while the command is hidden, so a hidden command leaves an empty item. `ToolbarContent.hidden(_:)`
+would avoid the empty item on macOS 15 and later but not on iOS, and reading availability to
+drive it would bring back the caller's dependency. No known caller hides a command placed in a
+toolbar: Bookish and Stack were searched.
