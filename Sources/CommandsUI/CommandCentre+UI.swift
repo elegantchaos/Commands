@@ -85,40 +85,61 @@ extension CommandCentre {
     button(command, role: role)
   }
 
-  /// Returns a toolbar item for the given command, or nothing when it is hidden.
-  @ToolbarContentBuilder public func toolbarItem<C: CommandWithUI>(
+  /// Returns a toolbar item holding the button for the given command.
+  ///
+  /// Use this, not a `ToolbarItem` around `button(_:)`, to place a command in a toolbar: the
+  /// item keeps the toolbar steady as the command's availability changes, and the caller's
+  /// toolbar never reads that availability, as `CommandToolbarItem` describes.
+  public func toolbarItem<C: CommandWithUI>(
     _ command: C, placement: ToolbarItemPlacement = .automatic,
     confirmation: CommandConfirmationMode? = nil
-  ) -> some ToolbarContent where C.Centre == Self {
-    if availability(command) != .hidden {
-      ToolbarItem(placement: placement) {
-        button(command, confirmation: confirmation)
-      }
-    }
+  ) -> CommandToolbarItem<C, Self, EmptyView> where C.Centre == Self {
+    CommandToolbarItem(
+      command: command, centre: self, placement: placement, confirmation: confirmation)
   }
 
-  /// Returns a toolbar item that confirms before executing the command, or nothing when it is hidden.
+  /// Returns a toolbar item holding a button for the given command with custom content, as
+  /// `toolbarItem(_:placement:confirmation:)` describes.
+  public func toolbarItem<C: CommandWithUI, Content: View>(
+    _ command: C, placement: ToolbarItemPlacement = .automatic,
+    confirmation: CommandConfirmationMode? = nil, @ViewBuilder content: @escaping () -> Content
+  ) -> CommandToolbarItem<C, Self, Content> where C.Centre == Self {
+    CommandToolbarItem(
+      command: command, centre: self, placement: placement, confirmation: confirmation
+    ) { _ in content() }
+  }
+
+  /// Returns a toolbar item that confirms before executing the command.
   @available(
     *, deprecated,
     message:
       "Use toolbarItem(_:placement:). A command opts into confirmation by returning one from confirmation(centre:), for example defaultConfirmation(centre:)."
   )
-  @ToolbarContentBuilder public func confirmableToolbarItem<C: CommandWithUI>(
+  public func confirmableToolbarItem<C: CommandWithUI>(
     _ command: C, placement: ToolbarItemPlacement = .automatic
-  ) -> some ToolbarContent where C.Centre == Self {
+  ) -> CommandToolbarItem<C, Self, EmptyView> where C.Centre == Self {
     toolbarItem(command, placement: placement)
   }
 
-  /// Returns a toolbar item group for the given command, or nothing when it is hidden.
-  @ToolbarContentBuilder public func toolbarItemGroup<C: CommandWithUI>(
+  /// Returns a toolbar item group holding the button for the given command, steady as the
+  /// command's availability changes, as `CommandToolbarItem` describes.
+  public func toolbarItemGroup<C: CommandWithUI>(
     _ command: C, placement: ToolbarItemPlacement = .automatic,
     confirmation: CommandConfirmationMode? = nil
-  ) -> some ToolbarContent where C.Centre == Self {
-    if availability(command) != .hidden {
-      ToolbarItemGroup(placement: placement) {
-        button(command, confirmation: confirmation)
-      }
-    }
+  ) -> CommandToolbarItemGroup<C, Self, EmptyView> where C.Centre == Self {
+    CommandToolbarItemGroup(
+      command: command, centre: self, placement: placement, confirmation: confirmation)
+  }
+
+  /// Returns a toolbar item group holding a button for the given command with custom content, as
+  /// `toolbarItemGroup(_:placement:confirmation:)` describes.
+  public func toolbarItemGroup<C: CommandWithUI, Content: View>(
+    _ command: C, placement: ToolbarItemPlacement = .automatic,
+    confirmation: CommandConfirmationMode? = nil, @ViewBuilder content: @escaping () -> Content
+  ) -> CommandToolbarItemGroup<C, Self, Content> where C.Centre == Self {
+    CommandToolbarItemGroup(
+      command: command, centre: self, placement: placement, confirmation: confirmation
+    ) { _ in content() }
   }
 
   /// Returns a labelled button for the given command, or nothing when it is hidden.

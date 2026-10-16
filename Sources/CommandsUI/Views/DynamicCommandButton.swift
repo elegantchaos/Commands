@@ -38,21 +38,19 @@ where Wrapped.Centre == Centre {
     let primaryCommand = command(.primary)
     let availability = commander.availability(primaryCommand)
 
-    if availability != .hidden {
-      baseButton
-        // TODO: Track the current dynamic trigger in view state so macOS can use
-        // modifier changes to update availability, help, and shortcut ahead of the
-        // click. That likely means monitoring key and mouse modifier events and
-        // refreshing a stored CommandTrigger as the pointer focus changes. iOS still
-        // cannot predict tap vs long-press up front, so its disabled state will
-        // remain primary-trigger based unless the UI is split into distinct controls.
-        .commandPresentation(
-          availability: availability,
-          help: primaryCommand.help(centre: commander),
-          shortcut: primaryCommand.shortcut
-        )
-        .commandLocalConfirmation(confirmationState)
-    }
+    baseButton
+      // TODO: Track the current dynamic trigger in view state so macOS can use
+      // modifier changes to update availability, help, and shortcut ahead of the
+      // click. That likely means monitoring key and mouse modifier events and
+      // refreshing a stored CommandTrigger as the pointer focus changes. iOS still
+      // cannot predict tap vs long-press up front, so its disabled state will
+      // remain primary-trigger based unless the UI is split into distinct controls.
+      .commandLocalConfirmation(confirmationState)
+      .commandPresentation(
+        availability: availability,
+        help: primaryCommand.help(centre: commander),
+        shortcut: primaryCommand.shortcut
+      )
   }
 
   /// Performs the wrapped command for the supplied trigger.

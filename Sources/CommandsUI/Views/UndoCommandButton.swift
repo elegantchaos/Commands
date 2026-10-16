@@ -39,16 +39,14 @@ public struct UndoCommandButton: View {
     let availability = reversal?.availability() ?? .disabled
     let presentation = showsCommandPresentation ? reversal as? any CommandReversalWithUI : nil
 
-    if availability != .hidden {
-      Button(role: role, action: performUndo) {
-        label(presentation: presentation)
-      }
-      .commandPresentation(
-        availability: availability,
-        help: presentation?.help(),
-        isPerforming: undoService.isUndoing
-      )
+    Button(role: role, action: performUndo) {
+      label(presentation: presentation)
     }
+    .commandPresentation(
+      availability: availability,
+      help: presentation?.help(),
+      isPerforming: undoService.isUndoing
+    )
   }
 
   /// Button label for the pending reversal or the standard Undo action.

@@ -42,5 +42,7 @@ async execution, undo/redo, and cancellation design.
 
 ## Example
 
-The [example application](Extras/Example) demonstrates commands, localized UI
-metadata, and undo/redo controls working together.
+The [example application](Extras/Example) is a bench for the SwiftUI controls: command buttons
+in a toolbar, a list, a menu and the menu bar, with availability that changes on a timer, and
+undo and redo. Its UI tests check that hidden commands are left out and that controls follow
+changing availability.

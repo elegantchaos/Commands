@@ -36,27 +36,23 @@ where C.Centre == CC {
     confirmation: CommandConfirmationMode? = nil,
     @ViewBuilder content: @escaping (C) -> Content
   ) {
-    self.command = command
-    self.commander = commander
-    self.role = role
-    self.confirmation = confirmation
-    self.content = content
+    self.init(
+      command: command, commander: commander, role: role, confirmation: confirmation,
+      optionalContent: content)
   }
 
   /// Renders the command button, or no view when the command is hidden.
   public var body: some View {
     let availability = commander.availability(command)
-    if availability != .hidden {
-      Button(role: role, action: handleAction) {
-        label
-      }
-      .commandLocalConfirmation(confirmationState)
-      .commandPresentation(
-        availability: availability,
-        help: command.help(centre: commander),
-        shortcut: command.shortcut
-      )
+    Button(role: role, action: handleAction) {
+      label
     }
+    .commandLocalConfirmation(confirmationState)
+    .commandPresentation(
+      availability: availability,
+      help: command.help(centre: commander),
+      shortcut: command.shortcut
+    )
   }
 
   /// Performs the command, confirming first when the command declares a confirmation.
@@ -78,16 +74,29 @@ where C.Centre == CC {
   }
 }
 
+extension CommandButton {
+  /// Creates a command button with custom label content when some is given, else the command's
+  /// standard label, for controls that pass a caller's optional label through.
+  init(
+    command: C, commander: CC, role: ButtonRole? = nil,
+    confirmation: CommandConfirmationMode? = nil, optionalContent: ((C) -> Content)?
+  ) {
+    self.command = command
+    self.commander = commander
+    self.role = role
+    self.confirmation = confirmation
+    content = optionalContent
+  }
+}
+
 extension CommandButton where Content == EmptyView {
   /// Creates a command button with the default command label.
   public init(
     command: C, commander: CC, role: ButtonRole? = nil,
     confirmation: CommandConfirmationMode? = nil
   ) {
-    self.command = command
-    self.commander = commander
-    self.role = role
-    self.confirmation = confirmation
-    content = nil
+    self.init(
+      command: command, commander: commander, role: role, confirmation: confirmation,
+      optionalContent: nil)
   }
 }

@@ -8,9 +8,11 @@ import CommandsUI
 import SwiftUI
 
 /// Demonstrates command execution and undo in a SwiftUI view.
-struct ContentView: View {
-  @State var commander = ExampleCommander()
+struct UndoBenchView: View {
+  /// The command centre.
+  let commander: ExampleCommander
 
+  /// The counter, the command, and the undo and redo buttons with the undo stack.
   var body: some View {
     VStack {
       Image(systemName: "globe")
@@ -23,10 +25,10 @@ struct ContentView: View {
       Text("Stack: \(commander.undoService.debugDescription)")
     }
     .padding()
+    .navigationTitle("Undo and Redo")
   }
-
 }
 
 #Preview {
-  ContentView()
+  UndoBenchView(commander: ExampleCommander())
 }

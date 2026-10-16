@@ -22,6 +22,13 @@ commander.toolbarItem(command)
 commander.dynamicButton(command: command(for:))
 ```
 
+A control leaves itself out while its command is hidden, so a hidden command adds no row to a
+list and no item to a menu. Place commands in a toolbar with `toolbarItem(_:)` or
+`toolbarItemGroup(_:)`, not a `ToolbarItem` around `button(_:)`: they keep the toolbar steady
+as availability changes, and on macOS a hidden command leaves no slot. Each has a `content:` form
+for a custom label, like `button(_:content:)`. On iOS a hidden command
+leaves an empty toolbar item.
+
 `importer(_:)` and `importerButton(_:isShowingImportSheet:)` support file-import
 commands. `undoButton()` and `redoButton()` remain visible but disabled when no
 operation is available. Set `showsCommandPresentation: true` to use a pending
