@@ -8,12 +8,11 @@ import SwiftUI
 
 /// Applies shared availability, help, and shortcut presentation to a command control.
 ///
-/// Leaves the control out while its command is hidden, and otherwise disables it unless the
-/// command is enabled and nothing is already performing it. The control sits inside a stack
-/// that adds no spacing, whether or not it is hidden, so it keeps one outer view: on macOS, a
-/// toolbar item whose content's outermost view is conditional makes SwiftUI rebuild every item
-/// in the window's toolbar each time that content re-evaluates, even when the condition has not
-/// changed, so the whole toolbar flickers whenever a command's availability changes.
+/// Leaves the control out while its command is hidden, so a hidden command adds no row to a
+/// list and no item to a menu, and otherwise disables it unless the command is enabled and
+/// nothing is already performing it. Because the result is conditional, a control placed
+/// directly in a toolbar item can make a macOS toolbar rebuild and flicker; place command
+/// buttons in toolbars with `CommandToolbarItem`, which gives them a fixed outer view.
 private struct CommandPresentationModifier: ViewModifier {
   /// Availability resolved during the enclosing view's current body evaluation.
   let availability: CommandAvailability
@@ -29,15 +28,13 @@ private struct CommandPresentationModifier: ViewModifier {
 
   /// Applies the command presentation without re-evaluating command state.
   func body(content: Content) -> some View {
-    VStack(spacing: 0) {
-      if availability != .hidden {
-        content
-          .disabled(availability != .enabled || isPerforming)
-          #if !os(watchOS) && !os(tvOS)
-            .keyboardShortcut(shortcut)
-          #endif
-          .help(help ?? "")
-      }
+    if availability != .hidden {
+      content
+        .disabled(availability != .enabled || isPerforming)
+        #if !os(watchOS) && !os(tvOS)
+          .keyboardShortcut(shortcut)
+        #endif
+        .help(help ?? "")
     }
   }
 }

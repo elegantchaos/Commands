@@ -87,18 +87,15 @@ extension CommandCentre {
 
   /// Returns a toolbar item holding the button for the given command.
   ///
-  /// The item is always present, and its button leaves itself out while the command is hidden,
-  /// so a hidden command leaves an empty item. The caller's toolbar never reads the command's
-  /// availability and never branches on it: either would make it re-evaluate whenever the
-  /// availability changed, and on macOS a toolbar whose content changes structure, or whose
-  /// item content's outermost view is conditional, rebuilds every item and flickers.
+  /// Use this, not a `ToolbarItem` around `button(_:)`, to place a command in a toolbar: the
+  /// item keeps the toolbar steady as the command's availability changes, and the caller's
+  /// toolbar never reads that availability, as `CommandToolbarItem` describes.
   public func toolbarItem<C: CommandWithUI>(
     _ command: C, placement: ToolbarItemPlacement = .automatic,
     confirmation: CommandConfirmationMode? = nil
-  ) -> some ToolbarContent where C.Centre == Self {
-    ToolbarItem(placement: placement) {
-      button(command, confirmation: confirmation)
-    }
+  ) -> CommandToolbarItem<C, Self> where C.Centre == Self {
+    CommandToolbarItem(
+      command: command, centre: self, placement: placement, confirmation: confirmation)
   }
 
   /// Returns a toolbar item that confirms before executing the command.
@@ -109,21 +106,18 @@ extension CommandCentre {
   )
   public func confirmableToolbarItem<C: CommandWithUI>(
     _ command: C, placement: ToolbarItemPlacement = .automatic
-  ) -> some ToolbarContent where C.Centre == Self {
+  ) -> CommandToolbarItem<C, Self> where C.Centre == Self {
     toolbarItem(command, placement: placement)
   }
 
-  /// Returns a toolbar item group holding the button for the given command.
-  ///
-  /// The group is always present and never reads the command's availability, as
-  /// `toolbarItem(_:placement:confirmation:)` describes; a hidden command leaves it empty.
+  /// Returns a toolbar item group holding the button for the given command, steady as the
+  /// command's availability changes, as `CommandToolbarItem` describes.
   public func toolbarItemGroup<C: CommandWithUI>(
     _ command: C, placement: ToolbarItemPlacement = .automatic,
     confirmation: CommandConfirmationMode? = nil
-  ) -> some ToolbarContent where C.Centre == Self {
-    ToolbarItemGroup(placement: placement) {
-      button(command, confirmation: confirmation)
-    }
+  ) -> CommandToolbarItemGroup<C, Self> where C.Centre == Self {
+    CommandToolbarItemGroup(
+      command: command, centre: self, placement: placement, confirmation: confirmation)
   }
 
   /// Returns a labelled button for the given command, or nothing when it is hidden.
