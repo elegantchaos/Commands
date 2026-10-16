@@ -30,15 +30,13 @@ where C.Centre == CC {
   /// Renders the button that triggers importer-sheet presentation.
   public var body: some View {
     let availability = centre.availability(command)
-    if availability != .hidden {
-      Button(action: { isShowingImportSheet = true }) {
-        CommandLabel(command: command, centre: centre)
-      }
-      .commandPresentation(
-        availability: availability,
-        help: nil,
-        shortcut: nil
-      )
+    Button(action: { isShowingImportSheet = true }) {
+      CommandLabel(command: command, centre: centre)
     }
+    .commandPresentation(
+      availability: availability,
+      help: nil,
+      shortcut: nil
+    )
   }
 }

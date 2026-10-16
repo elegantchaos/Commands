@@ -47,17 +47,16 @@ struct ImporterCommandButton<C: ImporterCommand, CC: CommandCentre>: View where 
 
   var body: some View {
     let availability = centre.availability(command)
-    if availability != .hidden {
-      Button(role: role, action: { isShowingSheet = true }) {
-        CommandLabel(command: command, centre: centre)
-      }
-      .commandPresentation(
-        availability: availability,
-        help: command.help(centre: centre),
-        shortcut: command.shortcut
-      )
-      .modifier(
-        ImporterCommandModifier(isShowing: $isShowingSheet, command: $command, centre: centre))
+    Button(role: role, action: { isShowingSheet = true }) {
+      CommandLabel(command: command, centre: centre)
     }
+    .modifier(
+      ImporterCommandModifier(isShowing: $isShowingSheet, command: $command, centre: centre)
+    )
+    .commandPresentation(
+      availability: availability,
+      help: command.help(centre: centre),
+      shortcut: command.shortcut
+    )
   }
 }

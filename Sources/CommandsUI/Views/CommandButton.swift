@@ -46,17 +46,15 @@ where C.Centre == CC {
   /// Renders the command button, or no view when the command is hidden.
   public var body: some View {
     let availability = commander.availability(command)
-    if availability != .hidden {
-      Button(role: role, action: handleAction) {
-        label
-      }
-      .commandLocalConfirmation(confirmationState)
-      .commandPresentation(
-        availability: availability,
-        help: command.help(centre: commander),
-        shortcut: command.shortcut
-      )
+    Button(role: role, action: handleAction) {
+      label
     }
+    .commandLocalConfirmation(confirmationState)
+    .commandPresentation(
+      availability: availability,
+      help: command.help(centre: commander),
+      shortcut: command.shortcut
+    )
   }
 
   /// Performs the command, confirming first when the command declares a confirmation.

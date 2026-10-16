@@ -39,16 +39,14 @@ public struct RedoCommandButton: View {
     let availability = reversal?.availability() ?? .disabled
     let presentation = showsCommandPresentation ? reversal as? any CommandReversalWithUI : nil
 
-    if availability != .hidden {
-      Button(role: role, action: performRedo) {
-        label(presentation: presentation)
-      }
-      .commandPresentation(
-        availability: availability,
-        help: presentation?.help(),
-        isPerforming: undoService.isRedoing
-      )
+    Button(role: role, action: performRedo) {
+      label(presentation: presentation)
     }
+    .commandPresentation(
+      availability: availability,
+      help: presentation?.help(),
+      isPerforming: undoService.isRedoing
+    )
   }
 
   /// Button label for the pending action or the standard Redo action.
