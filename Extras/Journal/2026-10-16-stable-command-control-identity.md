@@ -50,3 +50,40 @@ while the command is hidden, so a hidden command leaves an empty item. `ToolbarC
 would avoid the empty item on macOS 15 and later but not on iOS, and reading availability to
 drive it would bring back the caller's dependency. No known caller hides a command placed in a
 toolbar: Bookish and Stack were searched.
+
+## Omission and Toolbar Items
+
+A review of the companion guidance change pointed out that a fixed container is not equivalent
+to a conditional: it is still present when its content is absent. A sample with real command
+buttons confirmed it: with the `VStack` in `commandPresentation`, a hidden command left a blank
+list row and an empty toolbar slot, though menus and the menu bar showed no gap.
+
+- `commandPresentation` leaves the control out again while its command is hidden, with no
+  container, so lists and menus get no entry for a hidden command.
+- `CommandToolbarItem` and `CommandToolbarItemGroup` are toolbar content that holds a command's
+  button inside a `VStack` that adds no spacing, reads the command's availability in its own
+  body, and on macOS hides itself with `hidden(_:)` while the command is hidden, so it leaves no
+  slot. iOS has no way to hide toolbar content, so a hidden command there leaves an empty item.
+  `toolbarItem` and `toolbarItemGroup` return them.
+- In Bookish, the editing toolbar moved from `ToolbarItem { button(_:) }` to `toolbarItem(_:)`.
+  Making a year invalid no longer flickers the toolbar there. Toolbars still redraw when editing
+  starts or ends and when Cancel's confirmation appears; keeping the items present and hiding
+  them did not help, so those transitions are a separate investigation in Bookish.
+
+## Example Bench
+
+The example app is now a bench with Toolbar, Lists and Menus, and Undo and Redo pages, Edit menu
+commands, and bench commands whose availability is fixed or toggled on a timer, with separate
+switches for enabled state and visibility. Its README lists the pages and the manual checks.
+`ExampleUITests` replaces the template tests: on macOS they check that a hidden command adds no
+list row, menu item, Edit menu item or toolbar button, and that toolbar buttons follow changing
+availability. The test plan had no targets, so the Example scheme could not test; it now runs
+the UI tests. With the `VStack` restored to `commandPresentation`, the list test failed, three
+rows against two.
+
+The bench did not reproduce the original flicker, even with a copy of the old conditional-root
+button, so it does not show the toolbar fix working; Bookish did. The bench is for exercising
+the controls' behaviour, not for reproducing bugs.
+
+The project still has an `ExampleTests` target whose sources were removed, which can make
+incremental builds fail to sign the app.

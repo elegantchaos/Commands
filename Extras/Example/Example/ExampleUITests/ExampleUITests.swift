@@ -5,38 +5,104 @@
 
 import XCTest
 
-/// UI tests for launching the example application.
+/// UI tests that check the bench's command controls: hidden commands are left out of lists,
+/// menus, the menu bar and the toolbar, and availability changes reach the controls.
+///
+/// Flicker cannot be detected here; the bench's README lists the checks to make by eye.
 final class ExampleUITests: XCTestCase {
+  /// The launched bench.
+  private var app: XCUIApplication!
 
+  /// Launches the bench, stopping each test at its first failure.
   override func setUpWithError() throws {
-    // Put setup code here. This method is called before the invocation of each test method in the class.
-
-    // In UI tests it is usually best to stop immediately when a failure occurs.
     continueAfterFailure = false
-
-    // In UI tests it’s important to set the initial state - such as interface orientation - required for your tests before they run. The setUp method is a good place to do this.
-  }
-
-  override func tearDownWithError() throws {
-    // Put teardown code here. This method is called after the invocation of each test method in the class.
-  }
-
-  @MainActor
-  func testExample() throws {
-    // UI tests must launch the application that they test.
-    let app = XCUIApplication()
+    app = XCUIApplication()
     app.launch()
-
-    // Use XCTAssert and related functions to verify your tests produce the correct results.
-    // XCUIAutomation Documentation
-    // https://developer.apple.com/documentation/xcuiautomation
   }
 
+  /// A hidden command adds no row to a list: the list with one has as many rows as the list
+  /// without.
   @MainActor
-  func testLaunchPerformance() throws {
-    // This measures how long it takes to launch your application.
-    measure(metrics: [XCTApplicationLaunchMetric()]) {
-      XCUIApplication().launch()
-    }
+  func testHiddenCommandAddsNoListRow() throws {
+    showPage("containers")
+    let withHidden = element("bench.list.withHidden")
+    let without = element("bench.list.without")
+    XCTAssertTrue(withHidden.waitForExistence(timeout: 5))
+
+    XCTAssertFalse(app.buttons["List Hidden"].exists)
+    XCTAssertEqual(withHidden.cells.count, without.cells.count)
+  }
+
+  /// A hidden command adds no item to a menu.
+  @MainActor
+  func testHiddenCommandAddsNoMenuItem() throws {
+    showPage("containers")
+    let menu = element("bench.menu.withHidden")
+    XCTAssertTrue(menu.waitForExistence(timeout: 5))
+    menu.click()
+
+    XCTAssertTrue(app.menuItems["Menu One"].waitForExistence(timeout: 5))
+    XCTAssertFalse(app.menuItems["Menu Hidden"].exists)
+    app.typeKey(.escape, modifierFlags: [])
+  }
+
+  /// A hidden command adds no item to the Edit menu.
+  @MainActor
+  func testHiddenCommandAddsNoMenuBarItem() throws {
+    app.menuBars.menuBarItems["Edit"].click()
+
+    XCTAssertTrue(app.menuItems["Menu Bar One"].waitForExistence(timeout: 5))
+    XCTAssertFalse(app.menuItems["Menu Bar Hidden"].exists)
+    app.typeKey(.escape, modifierFlags: [])
+  }
+
+  /// A hidden command adds no button to the toolbar.
+  @MainActor
+  func testHiddenCommandAddsNoToolbarButton() throws {
+    showPage("toolbar")
+
+    XCTAssertTrue(app.toolbars.buttons["Tool Enabled"].waitForExistence(timeout: 5))
+    XCTAssertFalse(app.toolbars.buttons["Tool Hidden"].exists)
+  }
+
+  /// A toolbar button follows its command as it switches between enabled and disabled.
+  @MainActor
+  func testToolbarButtonFollowsAvailability() throws {
+    showPage("toolbar")
+    let button = app.toolbars.buttons["Tool Toggling"]
+    XCTAssertTrue(button.waitForExistence(timeout: 5))
+    XCTAssertTrue(button.isEnabled)
+
+    element("bench.togglingEnabled").click()
+
+    wait(
+      for: [expectation(for: NSPredicate(format: "isEnabled == false"), evaluatedWith: button)],
+      timeout: 5)
+  }
+
+  /// A toolbar button for a command that switches between enabled and hidden comes and goes.
+  @MainActor
+  func testToolbarButtonAppearsAndDisappears() throws {
+    showPage("toolbar")
+    let button = app.toolbars.buttons["Tool Appearing"]
+    XCTAssertTrue(button.waitForExistence(timeout: 5))
+
+    element("bench.togglingVisible").click()
+
+    wait(
+      for: [expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: button)],
+      timeout: 5)
+  }
+
+  /// Shows a bench page by selecting its sidebar row, identified by the page's raw value.
+  private func showPage(_ page: String) {
+    let row = element("bench.page.\(page)")
+    XCTAssertTrue(row.waitForExistence(timeout: 5))
+    row.click()
+  }
+
+  /// The element with an accessibility identifier, whatever its type.
+  private func element(_ identifier: String) -> XCUIElement {
+    app.descendants(matching: .any).matching(identifier: identifier).firstMatch
   }
 }
