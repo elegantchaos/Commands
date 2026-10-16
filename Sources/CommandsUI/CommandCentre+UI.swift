@@ -93,9 +93,20 @@ extension CommandCentre {
   public func toolbarItem<C: CommandWithUI>(
     _ command: C, placement: ToolbarItemPlacement = .automatic,
     confirmation: CommandConfirmationMode? = nil
-  ) -> CommandToolbarItem<C, Self> where C.Centre == Self {
+  ) -> CommandToolbarItem<C, Self, EmptyView> where C.Centre == Self {
     CommandToolbarItem(
       command: command, centre: self, placement: placement, confirmation: confirmation)
+  }
+
+  /// Returns a toolbar item holding a button for the given command with custom content, as
+  /// `toolbarItem(_:placement:confirmation:)` describes.
+  public func toolbarItem<C: CommandWithUI, Content: View>(
+    _ command: C, placement: ToolbarItemPlacement = .automatic,
+    confirmation: CommandConfirmationMode? = nil, @ViewBuilder content: @escaping () -> Content
+  ) -> CommandToolbarItem<C, Self, Content> where C.Centre == Self {
+    CommandToolbarItem(
+      command: command, centre: self, placement: placement, confirmation: confirmation
+    ) { _ in content() }
   }
 
   /// Returns a toolbar item that confirms before executing the command.
@@ -106,7 +117,7 @@ extension CommandCentre {
   )
   public func confirmableToolbarItem<C: CommandWithUI>(
     _ command: C, placement: ToolbarItemPlacement = .automatic
-  ) -> CommandToolbarItem<C, Self> where C.Centre == Self {
+  ) -> CommandToolbarItem<C, Self, EmptyView> where C.Centre == Self {
     toolbarItem(command, placement: placement)
   }
 
@@ -115,9 +126,20 @@ extension CommandCentre {
   public func toolbarItemGroup<C: CommandWithUI>(
     _ command: C, placement: ToolbarItemPlacement = .automatic,
     confirmation: CommandConfirmationMode? = nil
-  ) -> CommandToolbarItemGroup<C, Self> where C.Centre == Self {
+  ) -> CommandToolbarItemGroup<C, Self, EmptyView> where C.Centre == Self {
     CommandToolbarItemGroup(
       command: command, centre: self, placement: placement, confirmation: confirmation)
+  }
+
+  /// Returns a toolbar item group holding a button for the given command with custom content, as
+  /// `toolbarItemGroup(_:placement:confirmation:)` describes.
+  public func toolbarItemGroup<C: CommandWithUI, Content: View>(
+    _ command: C, placement: ToolbarItemPlacement = .automatic,
+    confirmation: CommandConfirmationMode? = nil, @ViewBuilder content: @escaping () -> Content
+  ) -> CommandToolbarItemGroup<C, Self, Content> where C.Centre == Self {
+    CommandToolbarItemGroup(
+      command: command, centre: self, placement: placement, confirmation: confirmation
+    ) { _ in content() }
   }
 
   /// Returns a labelled button for the given command, or nothing when it is hidden.

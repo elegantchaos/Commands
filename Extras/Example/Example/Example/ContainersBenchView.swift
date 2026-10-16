@@ -63,3 +63,7 @@ private struct ContainerColumn: View {
     BenchCommand(title: title, behaviour: behaviour)
   }
 }
+
+#Preview {
+  ContainersBenchView(commander: ExampleCommander())
+}

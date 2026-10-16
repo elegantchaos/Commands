@@ -23,3 +23,10 @@ struct BenchMenuItems: View {
     Divider()
   }
 }
+
+#Preview {
+  Menu("Edit") {
+    BenchMenuItems(commander: ExampleCommander())
+  }
+  .padding()
+}

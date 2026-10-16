@@ -87,3 +87,21 @@ the controls' behaviour, not for reproducing bugs.
 
 The project still has an `ExampleTests` target whose sources were removed, which can make
 incremental builds fail to sign the app.
+
+## Review Fixes
+
+A diff review of the PR found four things to fix, all addressed:
+
+- Toolbar items had no form with a custom label, so a toolbar command with its own label had to
+  stay in a direct `ToolbarItem`, as Bookish's New button did. `toolbarItem` and
+  `toolbarItemGroup`, and the two item types, now have `content:` forms.
+- `CommandToolbarItem` and `CommandToolbarItemGroup` repeated each other. They now share
+  `CommandToolbarButton`, which holds the button in its fixed stack, and a `commandHidden(_:)`
+  toolbar-content extension for the macOS hiding, and each has its own file. `CommandButton`'s
+  initialisers delegate to one that takes an optional label.
+- The new bench views have previews.
+- The UI tests hold the application in a constant instead of an implicitly unwrapped optional.
+
+The bench toolbar has a command with a custom label, and a UI test checks it shows. The review's
+suggestions, about modifier order under `.disabled`, a doc comment's certainty, the bench's
+duplicated helper and its unlocalized names, are left open.

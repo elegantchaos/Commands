@@ -75,3 +75,7 @@ enum BenchPage: String, CaseIterable, Identifiable {
     }
   }
 }
+
+#Preview {
+  BenchView(commander: ExampleCommander())
+}

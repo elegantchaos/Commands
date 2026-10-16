@@ -37,17 +37,20 @@ struct ToolbarBenchView: View {
 }
 
 /// The bench toolbar: an enabled, a hidden, an enabled-or-disabled and an enabled-or-hidden
-/// command.
+/// command, and an enabled one with a custom label.
 private struct BenchToolbar: ToolbarContent {
   /// The command centre.
   let commander: ExampleCommander
 
-  /// The four commands' items.
+  /// The five commands' items.
   var body: some ToolbarContent {
     commander.toolbarItem(command("Tool Enabled", .enabled))
     commander.toolbarItem(command("Tool Hidden", .hidden))
     commander.toolbarItem(command("Tool Toggling", .togglingEnabled))
     commander.toolbarItem(command("Tool Appearing", .togglingVisible))
+    commander.toolbarItem(command("Tool Custom", .enabled)) {
+      Label("Tool Custom Label", systemImage: "paintbrush")
+    }
   }
 
   /// A bench command.
@@ -55,5 +58,11 @@ private struct BenchToolbar: ToolbarContent {
     -> BenchCommand<ExampleCommander>
   {
     BenchCommand(title: title, behaviour: behaviour)
+  }
+}
+
+#Preview {
+  NavigationStack {
+    ToolbarBenchView(commander: ExampleCommander())
   }
 }

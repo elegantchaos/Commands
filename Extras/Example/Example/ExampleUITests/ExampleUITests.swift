@@ -10,13 +10,12 @@ import XCTest
 ///
 /// Flicker cannot be detected here; the bench's README lists the checks to make by eye.
 final class ExampleUITests: XCTestCase {
-  /// The launched bench.
-  private var app: XCUIApplication!
+  /// The bench application under test.
+  private let app = XCUIApplication()
 
   /// Launches the bench, stopping each test at its first failure.
   override func setUpWithError() throws {
     continueAfterFailure = false
-    app = XCUIApplication()
     app.launch()
   }
 
@@ -63,6 +62,14 @@ final class ExampleUITests: XCTestCase {
 
     XCTAssertTrue(app.toolbars.buttons["Tool Enabled"].waitForExistence(timeout: 5))
     XCTAssertFalse(app.toolbars.buttons["Tool Hidden"].exists)
+  }
+
+  /// A toolbar item given a custom label shows that label.
+  @MainActor
+  func testToolbarItemShowsCustomLabel() throws {
+    showPage("toolbar")
+
+    XCTAssertTrue(app.toolbars.buttons["Tool Custom Label"].waitForExistence(timeout: 5))
   }
 
   /// A toolbar button follows its command as it switches between enabled and disabled.
