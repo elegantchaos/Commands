@@ -7,3 +7,7 @@ No source changed. `commandChannel` is still `Channel("Commands")`, which keeps 
 ## Verification
 
 `agt validate` passed: the package builds and its tests pass on macOS.
+
+## CI Triggers
+
+The generated `Tests.yml` ran on `[push, pull_request]`, so every push to a branch with an open PR ran the whole matrix twice. It now runs on `pull_request`, and on `push` only to `main`. This is a hand edit to a file ActionBuilderTool generates; the generator needs the same change, or the next regeneration will put the duplicate back.
