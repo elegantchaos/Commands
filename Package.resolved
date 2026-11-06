@@ -1,5 +1,5 @@
 {
-  "originHash" : "23a042770f097fd76b7a0b2da74522c750da30b60bb32cf508af1279de1f8af4",
+  "originHash" : "88f6296f6d550d093c369bbb09a1883a40a825e48263b1c95383e381c4d57c96",
   "pins" : [
     {
       "identity" : "icons",
@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/elegantchaos/Logger",
       "state" : {
-        "revision" : "b3589396fe2884d20dad93b3fdb4c4b12c896e72",
-        "version" : "2.1.0"
+        "revision" : "150da42d122b8403ad4d89189a291cb4a0c79dc1",
+        "version" : "3.0.0"
       }
     }
   ],
