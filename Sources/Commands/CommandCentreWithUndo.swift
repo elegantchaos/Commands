@@ -52,6 +52,22 @@ extension CommandCentreWithUndo {
     commandChannel.debug(
       "registered undo \(undo.nameForUndo(centre: self)) for command \(command.nameForUndo(centre: self))"
     )
+
+    // Commands are usually performed asynchronously, after the event that triggered them. An
+    // event-grouping undo manager would leave the group for this registration open until the
+    // next event ends, merging the command with whatever that event does, such as typing. So
+    // when no group is open, the command gets a group of its own that closes when it finishes.
+    // Event grouping is paused meanwhile, because beginning a group at the top level would
+    // otherwise first open the manager's automatic event group around it.
+    let ownedGroup = undoManager.flatMap { $0.groupingLevel == 0 ? $0 : nil }
+    let groupedByEvent = ownedGroup?.groupsByEvent ?? false
+    ownedGroup?.groupsByEvent = false
+    ownedGroup?.beginUndoGrouping()
+    defer {
+      ownedGroup?.endUndoGrouping()
+      ownedGroup?.groupsByEvent = groupedByEvent
+    }
+
     undoManager?.registerUndo(withTarget: undoTarget) { _ in
       guard availability(undo) == .enabled else {
         recordFailedCommand(undo, error: CommandError.commandUnavailable)

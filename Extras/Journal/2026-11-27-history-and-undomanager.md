@@ -37,6 +37,19 @@ The test plan had no test targets, so the UI tests never ran from the command li
 
 With `showsCommandPresentation`, the History undo button named the pending reversal, so after Increment it read "Undo Decrement" while the UndoManager tab read "Undo Increment". Each `HistoryEntry` now holds an `action`: the forward command that names its step, kept as the step moves between undo and redo. `recordUndo` takes it explicitly (`recordUndo(_:of:centre:)`), and the buttons present it, so both tabs read "Undo Increment" and "Redo Increment". Both undo APIs now explain why they take the step's name separately from the command they perform. The example UI tests check the exact titles on both tabs.
 
+## Undo ordering with text editing
+
+On macOS, typing and commands sometimes undid in the wrong order. There were two causes.
+
+- Command buttons perform commands asynchronously, after the click has been handled. The window's event-grouping `UndoManager` left the group for the command's registration open until the next event ended, so the next keystroke joined the command's undo step. `performAndRegisterUndo` now gives a command its own group when no group is open, pausing event grouping meanwhile, because beginning a group at the top level otherwise opens the automatic event group around it first. A unit test with an event-grouping `UndoManager` covers it.
+- SwiftUI's `TextField` on macOS edits through `_SystemTextFieldFieldEditor`, whose undo manager is not the window's. Its typing undoes before anything on the window's stack. `TextEditor` uses the window's undo manager. A temporary on-screen probe of the environment, window and first-responder undo managers showed this.
+
+The UndoManager tab now has both a text field and a text editor. Its macOS UI tests type, run Increment, type again and undo three times: the editor undoes in order, and the field's test records the difference with `XCTExpectFailure`, so it will report if the field starts sharing the window's stack. UI automation is now enabled on the development Mac, and all four example UI tests pass on macOS and the iOS 27.2 simulator.
+
+The example app no longer has a string catalog: it is not localized, and its commands return their names directly and have no help text. `AGENTS.md` records this as an override of the localization guidance for the example app only, and drops the project rule about localizing command metadata, which the `swift:language` skill covers.
+
+Incremental macOS test builds fail code signing on an empty `ExampleTests` bundle embedded in the app; deleting the built app before each run works around it. The `ExampleTests` target has no sources and could be removed.
+
 Associated-type inference cannot resolve a command that names itself, or a partner that names it back, as its undo command. Such commands must declare `Centre` and `ResultType` explicitly, as the tests do.
 
 ## Validation

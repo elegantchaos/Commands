@@ -16,11 +16,21 @@ struct DecrementCountCommand: CommandWithUndo, CommandWithUI {
   /// Result type, declared for the same reason as `Centre`.
   typealias ResultType = Void
 
-  /// Stable identifier, also used to look up the command's localized name.
+  /// Stable identifier for the command.
   let id = "com.elegantchaos.commands.decrement"
 
   /// Undo manager from the view that invoked the command.
   let undoManager: UndoManager?
+
+  /// Returns the name shown on the command's button and in undo titles.
+  func name(centre: UndoManagerExampleCommander) -> String {
+    "Decrement"
+  }
+
+  /// The example commands have no help text.
+  func help(centre: UndoManagerExampleCommander) -> String? {
+    nil
+  }
 
   /// Returns the icon shown on the command's button.
   func icon(centre: UndoManagerExampleCommander) -> Icon {

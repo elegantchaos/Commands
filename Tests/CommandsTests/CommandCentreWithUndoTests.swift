@@ -182,4 +182,23 @@ struct CommandCentreWithUndoTests {
     #expect(centre.startedCommandIDs == ["test.undo.increment"])
     #expect(centre.undoRedoResults.isEmpty)
   }
+
+  /// Verifies that a command performed outside an event leaves its undo action in a closed group of its own.
+  ///
+  /// Command buttons perform commands asynchronously, outside the event that triggered them. An
+  /// event-grouping undo manager would otherwise keep the registration's group open until the next
+  /// event ends, merging the command with whatever that event does, such as typing.
+  @Test func registrationOutsideAnEventClosesItsGroup() async throws {
+    let eventUndoManager = UndoManager()
+    #expect(eventUndoManager.groupsByEvent)
+
+    _ = try await centre.perform(IncrementCommand(undoManager: eventUndoManager))
+
+    #expect(eventUndoManager.groupingLevel == 0)
+    #expect(eventUndoManager.canUndo)
+    #expect(eventUndoManager.undoActionName == "test.undo.increment")
+
+    eventUndoManager.undo()
+    #expect(centre.value == 0)
+  }
 }

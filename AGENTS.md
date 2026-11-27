@@ -3,7 +3,7 @@
 - This repository is a Swift package for defining reusable command models and SwiftUI command UI.
 - Keep commands decoupled from concrete app types by depending on the smallest command-centre protocol that provides what they need.
 - Keep command execution, availability, confirmation, and UI metadata aligned so programmatic and UI callers share the same safety rules.
-- Localize user-facing strings when adding UI-facing command metadata.
+- The example app in `Extras/Example/` is not localized: it embeds its user-facing strings directly and has no string catalog. This overrides the localization guidance for the example app only; the package targets remain localized.
 - Keep a development journal in `Extras/Journal/`.
 
 # Standard Rules
@@ -19,11 +19,11 @@
 - Follow the `baseline:standards` skill for all coding.
 - Use the `baseline:review` skill for reviewing pull requests and completed work.
 - Use the `baseline:records` skill for the development journal.
-- Use the `codex-git` skill for git and GitHub operations.
+- Use the `baseline:git` skill for git and GitHub operations.
 - Use the `swift:language` skill for all Swift code.
 - Also use the `swift:swiftui` skill for SwiftUI code.
 - Also use the `swift:testing` skill for Swift Testing work.
 - Also use the `swift:concurrency` skill for actor isolation and shared mutable state.
-- Use the `swift:validation` skill after Swift code changes.
+- Also use the `swift:validation` skill for running tests and validating Swift code changes.
 
 To refresh this file, use the `baseline:refresh` skill.

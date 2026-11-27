@@ -29,6 +29,66 @@ final class ExampleUITests: XCTestCase {
     XCTAssertTrue(app.staticTexts["Done: 1"].waitForExistence(timeout: 2))
   }
 
+  #if os(macOS)
+    /// Verifies that typing in the text editor and commands undo in the reverse of the order they happened.
+    @MainActor
+    func testEditorTypingAndCommandsUndoInReverseOrder() throws {
+      let app = XCUIApplication()
+      app.launch()
+      selectTab("UndoManager", in: app)
+
+      let editor = app.textViews.firstMatch
+      let observed = undoStates(typingInto: editor, in: app)
+
+      XCTAssertEqual(observed, ["ab | 1", "a | 1", "a | 0", " | 0"])
+    }
+
+    /// Checks whether typing in the text field undoes in the same order as the text editor.
+    ///
+    /// On macOS, SwiftUI's text field edits through a field editor with its own undo manager, so
+    /// all of its typing is undone before any command. The expected failure records that
+    /// difference, and the test reports it if the text field starts behaving like the editor.
+    @MainActor
+    func testFieldTypingAndCommandsUndoInReverseOrder() throws {
+      let app = XCUIApplication()
+      app.launch()
+      selectTab("UndoManager", in: app)
+
+      let field = app.textFields["Text field"]
+      let observed = undoStates(typingInto: field, in: app)
+
+      XCTExpectFailure("A macOS text field keeps its own undo stack while it is being edited.")
+      XCTAssertEqual(observed, ["ab | 1", "a | 1", "a | 0", " | 0"])
+    }
+
+    /// Types "a", increments, types "b", then presses Command-Z three times, returning the state after each step.
+    @MainActor
+    private func undoStates(typingInto input: XCUIElement, in app: XCUIApplication) -> [String] {
+      input.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
+      app.typeText("a")
+      press(app.buttons["Increment"])
+      XCTAssertTrue(app.staticTexts["Done: 1"].waitForExistence(timeout: 2))
+      app.typeText("b")
+
+      var observed = [state(of: app, input: input)]
+      for _ in 1...3 {
+        app.typeKey("z", modifierFlags: .command)
+        observed.append(state(of: app, input: input))
+      }
+      return observed
+    }
+
+    /// Returns the input's text and the count, for comparing undo states.
+    @MainActor
+    private func state(of app: XCUIApplication, input: XCUIElement) -> String {
+      let countText = app.staticTexts.matching(NSPredicate(format: "value BEGINSWITH 'Done: '"))
+        .firstMatch
+      let count = ((countText.value as? String) ?? "?").replacing("Done: ", with: "")
+      let text = (input.value as? String) ?? "?"
+      return "\(text) | \(count)"
+    }
+  #endif
+
   /// Verifies that the History tab's command undoes and redoes through its history service.
   @MainActor
   func testHistoryTabUndoesAndRedoesCommands() throws {

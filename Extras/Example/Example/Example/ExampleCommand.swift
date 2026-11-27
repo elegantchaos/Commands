@@ -9,8 +9,18 @@ import Icons
 
 /// Increments the example service count.
 struct ExampleCommand<Centre: ExampleServiceProvider>: CommandWithUI {
-  /// Stable identifier, also used to look up the command's localized name.
+  /// Stable identifier for the command.
   let id = "com.elegantchaos.commands.example"
+
+  /// Returns the name shown on the command's button and in undo titles.
+  func name(centre: Centre) -> String {
+    "Increment"
+  }
+
+  /// The example commands have no help text.
+  func help(centre: Centre) -> String? {
+    nil
+  }
 
   /// Returns the icon shown on the command's button.
   func icon(centre: Centre) -> Icons.Icon {
@@ -25,8 +35,18 @@ struct ExampleCommand<Centre: ExampleServiceProvider>: CommandWithUI {
 
 /// Decrements the example service count.
 struct ExampleUndoCommand<Centre: ExampleServiceProvider>: CommandWithUI {
-  /// Stable identifier, also used to look up the command's localized name.
+  /// Stable identifier for the command.
   let id = "com.elegantchaos.commands.undo"
+
+  /// Returns the name shown on the command's button and in undo titles.
+  func name(centre: Centre) -> String {
+    "Decrement"
+  }
+
+  /// The example commands have no help text.
+  func help(centre: Centre) -> String? {
+    nil
+  }
 
   /// Returns the icon shown on the command's button.
   func icon(centre: Centre) -> Icons.Icon {
