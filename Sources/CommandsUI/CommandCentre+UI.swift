@@ -19,7 +19,7 @@ extension CommandCentre {
   @ViewBuilder public func button<C: CommandWithUI>(
     _ command: C, role: ButtonRole? = nil, confirmation: CommandConfirmationMode? = nil
   ) -> some View where C.Centre == Self {
-    CommandButton(command: command, commander: self, role: role, confirmation: confirmation)
+    CommandButton(command: command, centre: self, role: role, confirmation: confirmation)
   }
 
   /// Returns a button for the given command with custom content, or nothing when it is hidden.
@@ -27,7 +27,7 @@ extension CommandCentre {
     _ command: C, role: ButtonRole? = nil, confirmation: CommandConfirmationMode? = nil,
     content: @escaping () -> Content
   ) -> some View where C.Centre == Self {
-    CommandButton(command: command, commander: self, role: role, confirmation: confirmation) { _ in
+    CommandButton(command: command, centre: self, role: role, confirmation: confirmation) { _ in
       content()
     }
   }
@@ -38,7 +38,7 @@ extension CommandCentre {
     content: @escaping (C) -> Content
   ) -> some View where C.Centre == Self {
     CommandButton(
-      command: command, commander: self, role: role, confirmation: confirmation,
+      command: command, centre: self, role: role, confirmation: confirmation,
       content: content)
   }
 
@@ -52,7 +52,7 @@ extension CommandCentre {
     @ViewBuilder content: () -> Content
   ) -> some View where C.Centre == Self {
     DynamicCommandButton(
-      commander: self,
+      centre: self,
       role: role,
       command: command,
       content: content(),
@@ -70,19 +70,6 @@ extension CommandCentre {
     dynamicButton(role: role, confirmation: confirmation, command: command) {
       CommandLabel(command: primaryCommand, centre: self)
     }
-  }
-
-  /// Returns a button that confirms before executing the command, or nothing when it is hidden.
-  @available(
-    *, deprecated,
-    message:
-      "Use button(_:role:). A command opts into confirmation by returning one from confirmation(centre:), for example defaultConfirmation(centre:)."
-  )
-  @ViewBuilder public func confirmableButton<C: CommandWithUI>(
-    _ command: C, role: ButtonRole? = nil
-  ) -> some View
-  where C.Centre == Self {
-    button(command, role: role)
   }
 
   /// Returns a toolbar item holding the button for the given command.
@@ -107,18 +94,6 @@ extension CommandCentre {
     CommandToolbarItem(
       command: command, centre: self, placement: placement, confirmation: confirmation
     ) { _ in content() }
-  }
-
-  /// Returns a toolbar item that confirms before executing the command.
-  @available(
-    *, deprecated,
-    message:
-      "Use toolbarItem(_:placement:). A command opts into confirmation by returning one from confirmation(centre:), for example defaultConfirmation(centre:)."
-  )
-  public func confirmableToolbarItem<C: CommandWithUI>(
-    _ command: C, placement: ToolbarItemPlacement = .automatic
-  ) -> CommandToolbarItem<C, Self, EmptyView> where C.Centre == Self {
-    toolbarItem(command, placement: placement)
   }
 
   /// Returns a toolbar item group holding the button for the given command, steady as the
@@ -166,26 +141,26 @@ extension CommandCentre {
 }
 
 @MainActor
-extension UndoableCommandCentre {
+extension CommandCentreWithHistory {
   /// Returns a button that performs the next undo operation.
-  @ViewBuilder public func undoButton(
+  @ViewBuilder public func historyUndoButton(
     role: ButtonRole? = nil,
     showsCommandPresentation: Bool = false
   ) -> some View {
-    UndoCommandButton(
-      undoService: undoService,
+    HistoryUndoButton(
+      historyService: historyService,
       role: role,
       showsCommandPresentation: showsCommandPresentation
     )
   }
 
   /// Returns a button that performs the next redo operation.
-  @ViewBuilder public func redoButton(
+  @ViewBuilder public func historyRedoButton(
     role: ButtonRole? = nil,
     showsCommandPresentation: Bool = false
   ) -> some View {
-    RedoCommandButton(
-      undoService: undoService,
+    HistoryRedoButton(
+      historyService: historyService,
       role: role,
       showsCommandPresentation: showsCommandPresentation
     )

@@ -1,0 +1,27 @@
+{
+  "configurations" : [
+    {
+      "id" : "5D0B4E2A-6C1F-4B8E-9A3D-2F7C1E0B8A41",
+      "name" : "Configuration 1",
+      "options" : {}
+    }
+  ],
+  "defaultOptions" : {},
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:..\/..\/..",
+        "identifier" : "CommandsTests",
+        "name" : "CommandsTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:..\/..\/..",
+        "identifier" : "CommandsUITests",
+        "name" : "CommandsUITests"
+      }
+    }
+  ],
+  "version" : 1
+}

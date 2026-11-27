@@ -23,20 +23,20 @@ them to UIKit and Mac Catalyst menus.
 See the detailed [Commands](Sources/Commands/README.md) and
 [CommandsUI](Sources/CommandsUI/README.md) guides for each target. See
 [Concurrency](Extras/Documentation/Concurrency.md) for the package's actor,
-async execution, undo/redo, and cancellation design.
+async execution, undo/redo, and cancellation design, and
+[Migrating to 3.0](Extras/Documentation/Migrating%20to%203.0.md) when upgrading from 2.x.
 
 ## Capabilities
 
 - Centre-aware command availability and lifecycle tracking
-- Optional command reversals with a lightweight undo/redo service
+- Optional undo and redo, through Foundation's `UndoManager` or a lightweight history service
 - UI metadata: localized name and help, icons, shortcuts, and confirmation
 - SwiftUI buttons, toolbar items, dynamic-trigger buttons, and file importers
 - UIKit and Mac Catalyst `UICommand` and `UIMenu` adaptation
 
 ## Targets
 
-- [Commands](Sources/Commands/README.md): core command execution, availability,
-  reversals, undo, and redo.
+- [Commands](Sources/Commands/README.md): core command execution, availability, undo, and redo.
 - [CommandsUI](Sources/CommandsUI/README.md): UI metadata, SwiftUI controls,
   file importers, and UIKit/Mac Catalyst menus.
 

@@ -13,13 +13,13 @@ import SwiftUI
 /// condition has not changed, so the whole toolbar flickers. A command button is conditional,
 /// since it leaves itself out while its command is hidden, so `CommandToolbarItem` and
 /// `CommandToolbarItemGroup` hold it inside this stack, which adds no spacing.
-struct CommandToolbarButton<C: CommandWithUI, CC: CommandCentre, Content: View>: View
-where C.Centre == CC {
+struct CommandToolbarButton<C: CommandWithUI, Centre: CommandCentre, Content: View>: View
+where C.Centre == Centre {
   /// The command the button performs.
   let command: C
 
   /// The centre that evaluates and performs the command.
-  let centre: CC
+  let centre: Centre
 
   /// Where the button presents the command's confirmation, or nil to use the environment's.
   let confirmation: CommandConfirmationMode?
@@ -34,7 +34,7 @@ where C.Centre == CC {
   var body: some View {
     VStack(spacing: 0) {
       CommandButton(
-        command: command, commander: centre, confirmation: confirmation, optionalContent: content)
+        command: command, centre: centre, confirmation: confirmation, optionalContent: content)
     }
   }
 }

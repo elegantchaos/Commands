@@ -19,7 +19,7 @@ public protocol Command<Centre> {
   associatedtype Centre: CommandCentre
 
   /// The type of result returned when the command is performed.
-  associatedtype ResultType
+  associatedtype Output
 
   /// A unique identifier for the command.
   var id: String { get }
@@ -28,11 +28,7 @@ public protocol Command<Centre> {
   func availability(centre: Centre) -> CommandAvailability
 
   /// Performs the command using the given command centre.
-  func perform(centre: Centre) async throws -> ResultType
-
-  /// Returns the operation that reverses this command.
-  func reversal(centre: Centre) -> (any CommandReversal)?
-
+  func perform(centre: Centre) async throws -> Output
 }
 
 /// Default implementations for `Command`.
@@ -40,7 +36,4 @@ public protocol Command<Centre> {
 extension Command {
   /// By default, commands are always enabled.
   public func availability(centre: Centre) -> CommandAvailability { .enabled }
-
-  /// By default, a command does not provide a reversal.
-  public func reversal(centre: Centre) -> (any CommandReversal)? { nil }
 }

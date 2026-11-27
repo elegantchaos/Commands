@@ -103,3 +103,9 @@ extension CommandWithUI {
   /// By default, no shortcut is provided.
   public var shortcut: CommandShortcut? { nil }
 }
+
+@MainActor
+extension CommandWithUndo where Self: CommandWithUI {
+  /// UI commands name their undo action with their localized display name.
+  public func undoActionName(centre: Centre) -> String { name(centre: centre) }
+}

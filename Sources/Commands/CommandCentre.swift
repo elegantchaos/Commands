@@ -9,7 +9,7 @@ import Foundation
 ///
 /// This base protocol deliberately remains independent of undo and redo.
 /// Services that coordinate a command sequence use `CommandExecutionContext`;
-/// `UndoableCommandCentre` defines the undo/redo policy.
+/// `CommandCentreWithHistory` defines the undo/redo policy.
 @MainActor
 public protocol CommandCentre {
   /// Records that a command has started executing.
@@ -49,21 +49,23 @@ extension CommandCentre {
     return availability
   }
 
-  /// Performs a command after checking its availability and execution context.
+  /// Performs a command after checking its availability, running state and execution context.
   ///
   /// Ordinary callers omit `context`. A coordinating service supplies it only
   /// while performing work that belongs to its active operation.
   public func perform<C: Command>(
     _ command: C, during context: CommandExecutionContext? = nil
   )
-    async throws -> C.ResultType where C.Centre == Self
+    async throws -> C.Output where C.Centre == Self
   {
     commandChannel.debug("performing command «\(command.id)»")
 
     // UI callers should normally gate execution through `availability`, but the
     // command centre still guards execution because availability can change
-    // between rendering a control and the action firing.
+    // between rendering a control and the action firing. A command that is
+    // already running is refused, as `availability(_:)` reports it.
     guard command.availability(centre: self) == .enabled,
+      !isRunning(command),
       isAllowed(during: context)
     else {
       throw CommandError.commandUnavailable

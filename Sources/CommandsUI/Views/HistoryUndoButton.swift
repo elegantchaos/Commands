@@ -7,57 +7,57 @@ import Commands
 import Icons
 import SwiftUI
 
-/// A button that performs the next reversal held by an undo service.
+/// A button that performs the next reversal held by a history service.
 ///
 /// The button remains visible but disabled when there is no reversal. It is
 /// hidden only when the pending reversal reports `.hidden` availability.
 @MainActor
-public struct UndoCommandButton: View {
-  /// Undo service that owns the pending reversal.
-  private let undoService: UndoService
+public struct HistoryUndoButton: View {
+  /// History service that owns the pending reversal.
+  private let historyService: HistoryService
 
   /// Optional semantic role for the button.
   private let role: ButtonRole?
 
-  /// Whether the pending reversal's UI metadata should replace the standard Undo label.
+  /// Whether the name and icon of the pending step's action should replace the standard Undo label.
   private let showsCommandPresentation: Bool
 
-  /// Creates an undo button for the supplied service.
+  /// Creates an undo button for the supplied history service.
   public init(
-    undoService: UndoService,
+    historyService: HistoryService,
     role: ButtonRole? = nil,
     showsCommandPresentation: Bool = false
   ) {
-    self.undoService = undoService
+    self.historyService = historyService
     self.role = role
     self.showsCommandPresentation = showsCommandPresentation
   }
 
   /// Renders the pending reversal unless it is hidden.
   public var body: some View {
-    let reversal = undoService.nextUndo
-    let availability = reversal?.availability() ?? .disabled
-    let presentation = showsCommandPresentation ? reversal as? any CommandReversalWithUI : nil
+    let entry = historyService.nextUndo
+    let availability = entry?.availability() ?? .disabled
+    let presentation = showsCommandPresentation ? entry?.presentation : nil
 
     Button(role: role, action: performUndo) {
       label(presentation: presentation)
     }
     .commandPresentation(
       availability: availability,
-      help: presentation?.help(),
-      isPerforming: undoService.isUndoing
+      help: presentation?.help,
+      isPerforming: historyService.isUndoing
     )
   }
 
   /// Button label for the pending reversal or the standard Undo action.
-  @ViewBuilder private func label(presentation: (any CommandReversalWithUI)?) -> some View {
+  @ViewBuilder private func label(presentation: HistoryEntryPresentation?) -> some View {
     if let presentation {
       Label(
         String.localizedStringWithFormat(
           String(localized: "action.undo", bundle: #bundle),
-          presentation.name()
+          presentation.name
         ),
-        icon: presentation.icon()
+        icon: presentation.icon
       )
     } else {
       Text("action.undo.simple", bundle: #bundle)
@@ -68,7 +68,7 @@ public struct UndoCommandButton: View {
   private func performUndo() {
     Task {
       do {
-        try await undoService.performUndo()
+        try await historyService.performUndo()
       } catch {
         commandChannel.log("Error performing undo: \(error)")
       }

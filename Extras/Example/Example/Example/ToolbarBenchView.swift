@@ -15,11 +15,11 @@ import SwiftUI
 /// A hidden command should leave no gap on macOS.
 struct ToolbarBenchView: View {
   /// The command centre.
-  let commander: ExampleCommander
+  let centre: ExampleCentre
 
   /// The controls for the bench state, and what they currently give.
   var body: some View {
-    @Bindable var bench = commander.bench
+    @Bindable var bench = centre.bench
     Form {
       Toggle("Toggle enabled every 1.5 seconds", isOn: $bench.isTogglingEnabled)
         .accessibilityIdentifier("bench.togglingEnabled")
@@ -31,7 +31,7 @@ struct ToolbarBenchView: View {
     .formStyle(.grouped)
     .navigationTitle("Toolbar")
     .toolbar {
-      BenchToolbar(commander: commander)
+      BenchToolbar(centre: centre)
     }
   }
 }
@@ -40,22 +40,22 @@ struct ToolbarBenchView: View {
 /// command, and an enabled one with a custom label.
 private struct BenchToolbar: ToolbarContent {
   /// The command centre.
-  let commander: ExampleCommander
+  let centre: ExampleCentre
 
   /// The five commands' items.
   var body: some ToolbarContent {
-    commander.toolbarItem(command("Tool Enabled", .enabled))
-    commander.toolbarItem(command("Tool Hidden", .hidden))
-    commander.toolbarItem(command("Tool Toggling", .togglingEnabled))
-    commander.toolbarItem(command("Tool Appearing", .togglingVisible))
-    commander.toolbarItem(command("Tool Custom", .enabled)) {
+    centre.toolbarItem(command("Tool Enabled", .enabled))
+    centre.toolbarItem(command("Tool Hidden", .hidden))
+    centre.toolbarItem(command("Tool Toggling", .togglingEnabled))
+    centre.toolbarItem(command("Tool Appearing", .togglingVisible))
+    centre.toolbarItem(command("Tool Custom", .enabled)) {
       Label("Tool Custom Label", systemImage: "paintbrush")
     }
   }
 
   /// A bench command.
-  private func command(_ title: String, _ behaviour: BenchCommand<ExampleCommander>.Behaviour)
-    -> BenchCommand<ExampleCommander>
+  private func command(_ title: String, _ behaviour: BenchCommand<ExampleCentre>.Behaviour)
+    -> BenchCommand<ExampleCentre>
   {
     BenchCommand(title: title, behaviour: behaviour)
   }
@@ -63,6 +63,6 @@ private struct BenchToolbar: ToolbarContent {
 
 #Preview {
   NavigationStack {
-    ToolbarBenchView(commander: ExampleCommander())
+    ToolbarBenchView(centre: ExampleCentre())
   }
 }

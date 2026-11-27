@@ -8,13 +8,13 @@ import SwiftUI
 
 /// Button that renders and performs a command for a concrete command centre.
 @MainActor
-public struct CommandButton<C: CommandWithUI, CC: CommandCentre, Content: View>: View
-where C.Centre == CC {
+public struct CommandButton<C: CommandWithUI, Centre: CommandCentre, Content: View>: View
+where C.Centre == Centre {
   /// Command to render and perform.
   public let command: C
 
   /// Centre used to evaluate and perform the command.
-  public let commander: CC
+  public let centre: Centre
 
   /// Optional SwiftUI button role.
   public let role: ButtonRole?
@@ -31,26 +31,26 @@ where C.Centre == CC {
   /// Creates a command button with custom label content.
   public init(
     command: C,
-    commander: CC,
+    centre: Centre,
     role: ButtonRole? = nil,
     confirmation: CommandConfirmationMode? = nil,
     @ViewBuilder content: @escaping (C) -> Content
   ) {
     self.init(
-      command: command, commander: commander, role: role, confirmation: confirmation,
+      command: command, centre: centre, role: role, confirmation: confirmation,
       optionalContent: content)
   }
 
   /// Renders the command button, or no view when the command is hidden.
   public var body: some View {
-    let availability = commander.availability(command)
+    let availability = centre.availability(command)
     Button(role: role, action: handleAction) {
       label
     }
     .commandLocalConfirmation(confirmationState)
     .commandPresentation(
       availability: availability,
-      help: command.help(centre: commander),
+      help: command.help(centre: centre),
       shortcut: command.shortcut
     )
   }
@@ -58,9 +58,9 @@ where C.Centre == CC {
   /// Performs the command, confirming first when the command declares a confirmation.
   private func handleAction() {
     confirmationState.request(
-      command.confirmation(centre: commander), mode: confirmation
-    ) { [command, commander] in
-      commander.performWithoutWaiting(command)
+      command.confirmation(centre: centre), mode: confirmation
+    ) { [command, centre] in
+      centre.performWithoutWaiting(command)
     }
   }
 
@@ -69,7 +69,7 @@ where C.Centre == CC {
     if let content {
       content(command)
     } else {
-      CommandLabel(command: command, centre: commander)
+      CommandLabel(command: command, centre: centre)
     }
   }
 }
@@ -78,11 +78,11 @@ extension CommandButton {
   /// Creates a command button with custom label content when some is given, else the command's
   /// standard label, for controls that pass a caller's optional label through.
   init(
-    command: C, commander: CC, role: ButtonRole? = nil,
+    command: C, centre: Centre, role: ButtonRole? = nil,
     confirmation: CommandConfirmationMode? = nil, optionalContent: ((C) -> Content)?
   ) {
     self.command = command
-    self.commander = commander
+    self.centre = centre
     self.role = role
     self.confirmation = confirmation
     content = optionalContent
@@ -92,11 +92,11 @@ extension CommandButton {
 extension CommandButton where Content == EmptyView {
   /// Creates a command button with the default command label.
   public init(
-    command: C, commander: CC, role: ButtonRole? = nil,
+    command: C, centre: Centre, role: ButtonRole? = nil,
     confirmation: CommandConfirmationMode? = nil
   ) {
     self.init(
-      command: command, commander: commander, role: role, confirmation: confirmation,
+      command: command, centre: centre, role: role, confirmation: confirmation,
       optionalContent: nil)
   }
 }

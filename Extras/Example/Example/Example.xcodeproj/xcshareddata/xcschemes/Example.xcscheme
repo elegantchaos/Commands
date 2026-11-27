@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "2700"
+   LastUpgradeVersion = "2730"
    version = "1.7">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -32,18 +32,11 @@
             reference = "container:Example.xctestplan"
             default = "YES">
          </TestPlanReference>
+         <TestPlanReference
+            reference = "container:Full Validation.xctestplan">
+         </TestPlanReference>
       </TestPlans>
       <Testables>
-         <TestableReference
-            skipped = "NO"
-            parallelizable = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "2281C4CE30238FD100E4D148"
-               BuildableName = "ExampleTests.xctest"
-               ReferencedContainer = "container:Example.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
          <TestableReference
             skipped = "NO"
             parallelizable = "YES">

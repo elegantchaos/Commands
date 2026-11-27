@@ -10,13 +10,13 @@ import SwiftUI
 /// by a hidden command can be seen; the Edit menu has the same arrangement.
 struct ContainersBenchView: View {
   /// The command centre.
-  let commander: ExampleCommander
+  let centre: ExampleCentre
 
   /// The list and menu, with and without a hidden command.
   var body: some View {
     HStack(alignment: .top) {
-      ContainerColumn(title: "With a hidden command", commander: commander, includesHidden: true)
-      ContainerColumn(title: "Without", commander: commander, includesHidden: false)
+      ContainerColumn(title: "With a hidden command", centre: centre, includesHidden: true)
+      ContainerColumn(title: "Without", centre: centre, includesHidden: false)
     }
     .padding()
     .navigationTitle("Lists and Menus")
@@ -29,7 +29,7 @@ private struct ContainerColumn: View {
   let title: String
 
   /// The command centre.
-  let commander: ExampleCommander
+  let centre: ExampleCentre
 
   /// Whether a hidden command sits between the enabled ones.
   let includesHidden: Bool
@@ -42,28 +42,28 @@ private struct ContainerColumn: View {
     VStack(alignment: .leading) {
       Text(title).font(.headline)
       List {
-        commander.button(command("List One", .enabled))
-        if includesHidden { commander.button(command("List Hidden", .hidden)) }
-        commander.button(command("List Two", .enabled))
+        centre.button(command("List One", .enabled))
+        if includesHidden { centre.button(command("List Hidden", .hidden)) }
+        centre.button(command("List Two", .enabled))
       }
       .accessibilityIdentifier("bench.list.\(identifier)")
       Menu("Menu") {
-        commander.button(command("Menu One", .enabled))
-        if includesHidden { commander.button(command("Menu Hidden", .hidden)) }
-        commander.button(command("Menu Two", .enabled))
+        centre.button(command("Menu One", .enabled))
+        if includesHidden { centre.button(command("Menu Hidden", .hidden)) }
+        centre.button(command("Menu Two", .enabled))
       }
       .accessibilityIdentifier("bench.menu.\(identifier)")
     }
   }
 
   /// A bench command.
-  private func command(_ title: String, _ behaviour: BenchCommand<ExampleCommander>.Behaviour)
-    -> BenchCommand<ExampleCommander>
+  private func command(_ title: String, _ behaviour: BenchCommand<ExampleCentre>.Behaviour)
+    -> BenchCommand<ExampleCentre>
   {
     BenchCommand(title: title, behaviour: behaviour)
   }
 }
 
 #Preview {
-  ContainersBenchView(commander: ExampleCommander())
+  ContainersBenchView(centre: ExampleCentre())
 }

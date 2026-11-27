@@ -10,23 +10,23 @@ import SwiftUI
 /// hidden command leaves a gap, and a toggling one shows a menu item changing availability.
 struct BenchMenuItems: View {
   /// The command centre.
-  let commander: ExampleCommander
+  let centre: ExampleCentre
 
   /// The bench's menu items, between dividers.
   var body: some View {
     Divider()
-    commander.button(BenchCommand<ExampleCommander>(title: "Menu Bar One", behaviour: .enabled))
-    commander.button(BenchCommand<ExampleCommander>(title: "Menu Bar Hidden", behaviour: .hidden))
-    commander.button(BenchCommand<ExampleCommander>(title: "Menu Bar Two", behaviour: .enabled))
-    commander.button(
-      BenchCommand<ExampleCommander>(title: "Menu Bar Toggling", behaviour: .togglingVisible))
+    centre.button(BenchCommand<ExampleCentre>(title: "Menu Bar One", behaviour: .enabled))
+    centre.button(BenchCommand<ExampleCentre>(title: "Menu Bar Hidden", behaviour: .hidden))
+    centre.button(BenchCommand<ExampleCentre>(title: "Menu Bar Two", behaviour: .enabled))
+    centre.button(
+      BenchCommand<ExampleCentre>(title: "Menu Bar Toggling", behaviour: .togglingVisible))
     Divider()
   }
 }
 
 #Preview {
   Menu("Edit") {
-    BenchMenuItems(commander: ExampleCommander())
+    BenchMenuItems(centre: ExampleCentre())
   }
   .padding()
 }

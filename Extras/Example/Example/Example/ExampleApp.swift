@@ -11,16 +11,16 @@ import SwiftUI
 @main
 struct ExampleApp: App {
   /// The command centre shared by every page and the menu bar.
-  @State private var commander = ExampleCommander()
+  @State private var centre = ExampleCentre()
 
   /// The bench window, with bench commands added to the Edit menu.
   var body: some Scene {
     WindowGroup {
-      BenchView(commander: commander)
+      BenchView(centre: centre)
     }
     .commands {
       CommandGroup(after: .pasteboard) {
-        BenchMenuItems(commander: commander)
+        BenchMenuItems(centre: centre)
       }
     }
   }

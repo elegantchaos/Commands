@@ -9,18 +9,18 @@ import SwiftUI
 /// A toolbar item group holding a command's button, steady as the command's availability
 /// changes, as `CommandToolbarItem` describes. Create one with
 /// `toolbarItemGroup(_:placement:confirmation:)`, or its `content:` form for a custom label.
-public struct CommandToolbarItemGroup<C: CommandWithUI, CC: CommandCentre, Content: View>:
+public struct CommandToolbarItemGroup<C: CommandWithUI, Centre: CommandCentre, Content: View>:
   ToolbarContent
-where C.Centre == CC {
+where C.Centre == Centre {
   /// Where the group goes in the toolbar.
   let placement: ToolbarItemPlacement
 
   /// The command's button.
-  let button: CommandToolbarButton<C, CC, Content>
+  let button: CommandToolbarButton<C, Centre, Content>
 
   /// Creates a group for a command, with a custom label.
   public init(
-    command: C, centre: CC, placement: ToolbarItemPlacement = .automatic,
+    command: C, centre: Centre, placement: ToolbarItemPlacement = .automatic,
     confirmation: CommandConfirmationMode? = nil, @ViewBuilder content: @escaping (C) -> Content
   ) {
     self.placement = placement
@@ -38,7 +38,7 @@ where C.Centre == CC {
 extension CommandToolbarItemGroup where Content == EmptyView {
   /// Creates a group for a command, with the command's standard label.
   public init(
-    command: C, centre: CC, placement: ToolbarItemPlacement = .automatic,
+    command: C, centre: Centre, placement: ToolbarItemPlacement = .automatic,
     confirmation: CommandConfirmationMode? = nil
   ) {
     self.placement = placement

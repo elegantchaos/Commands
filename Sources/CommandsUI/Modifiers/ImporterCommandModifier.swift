@@ -8,17 +8,17 @@ import SwiftUI
 
 /// Modifier which applies a fileImporter to the view that shows
 /// import sheet for the associated `ImporterCommand`.
-/// If you use `commander.importer(myImporterCommand)` to make a button
+/// If you use `centre.importer(myImporterCommand)` to make a button
 /// in a view, then it does the work of attaching one of these to the button for you,
 /// and you don't need to use this modifier directly.
 ///
-/// However, using `commander.importer` won't work in a contextual menu, since
+/// However, using `centre.importer` won't work in a contextual menu, since
 /// attaching a fileImporter to the menu doesn't work. In that situation you'll
 /// need to make a button to set the isShowing binding to true, place that in
 /// the context menu, and use this modifier to attach the sheet to the view
 /// that owns the context menu.
-public struct ImporterCommandModifier<C: ImporterCommand, CC: CommandCentre>: ViewModifier
-where C.Centre == CC {
+public struct ImporterCommandModifier<C: ImporterCommand, Centre: CommandCentre>: ViewModifier
+where C.Centre == Centre {
   /// Controls presentation of the file importer.
   @Binding var isShowing: Bool
 
@@ -26,10 +26,10 @@ where C.Centre == CC {
   @Binding var command: C
 
   /// Command centre used to execute the importer-backed command.
-  let centre: CC
+  let centre: Centre
 
   /// Creates a modifier that binds importer presentation to a command instance.
-  public init(isShowing: Binding<Bool>, command: Binding<C>, centre: CC) {
+  public init(isShowing: Binding<Bool>, command: Binding<C>, centre: Centre) {
     self._isShowing = isShowing
     self._command = command
     self.centre = centre

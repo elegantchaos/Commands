@@ -13,17 +13,18 @@ import SwiftUI
 /// command's availability in its own body, never in the caller's toolbar. On macOS the item hides
 /// itself while the command is hidden; elsewhere a hidden command leaves an empty item. Create one
 /// with `toolbarItem(_:placement:confirmation:)`, or its `content:` form for a custom label.
-public struct CommandToolbarItem<C: CommandWithUI, CC: CommandCentre, Content: View>: ToolbarContent
-where C.Centre == CC {
+public struct CommandToolbarItem<C: CommandWithUI, Centre: CommandCentre, Content: View>:
+  ToolbarContent
+where C.Centre == Centre {
   /// Where the item goes in the toolbar.
   let placement: ToolbarItemPlacement
 
   /// The command's button.
-  let button: CommandToolbarButton<C, CC, Content>
+  let button: CommandToolbarButton<C, Centre, Content>
 
   /// Creates an item for a command, with a custom label.
   public init(
-    command: C, centre: CC, placement: ToolbarItemPlacement = .automatic,
+    command: C, centre: Centre, placement: ToolbarItemPlacement = .automatic,
     confirmation: CommandConfirmationMode? = nil, @ViewBuilder content: @escaping (C) -> Content
   ) {
     self.placement = placement
@@ -41,7 +42,7 @@ where C.Centre == CC {
 extension CommandToolbarItem where Content == EmptyView {
   /// Creates an item for a command, with the command's standard label.
   public init(
-    command: C, centre: CC, placement: ToolbarItemPlacement = .automatic,
+    command: C, centre: Centre, placement: ToolbarItemPlacement = .automatic,
     confirmation: CommandConfirmationMode? = nil
   ) {
     self.placement = placement

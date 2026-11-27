@@ -193,7 +193,6 @@ struct TestCentreTests {
 
     #expect(command.availability(centre: centre) == .enabled)
     #expect(centre.availability(command) == .enabled)
-    #expect(command.reversal(centre: centre) == nil)
   }
 
   /// Verifies that non-hidden running commands are surfaced as `.running`.
@@ -214,6 +213,18 @@ struct TestCentreTests {
     centre.runningCommandIDs.insert(command.id)
 
     #expect(centre.availability(command) == .runningSilently)
+  }
+
+  /// Verifies that a command the centre reports as running cannot be started again.
+  @Test func testRunningCommandIsNotPerformedAgain() async throws {
+    let centre = TestCentre()
+    let command = TestCommand(id: "test.already-running")
+    centre.runningCommandIDs.insert(command.id)
+
+    await #expect(throws: CommandError.commandUnavailable) {
+      try await centre.perform(command)
+    }
+    #expect(centre.testRan == false)
   }
 
   /// Verifies that fire-and-forget execution still runs the command and lifecycle hooks.

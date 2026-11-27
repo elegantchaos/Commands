@@ -1,5 +1,7 @@
 # Development Journal
 
+- [2026-11-27 — Full Review of Commands](2026-11-27-full-review-commands.md) — Rechecked the release blockers and validation after merging main.
+- [2026-11-27 — History rename and UndoManager undo](2026-11-27-history-and-undomanager.md)
 - [2026-11-06 — Adopt Logger 3.0.0](2026-11-06-adopt-logger-3.md)
 - [2026-10-16 — Stable command control identity](2026-10-16-stable-command-control-identity.md)
 - [2026-10-15 — PR #9 review and dependency lockfile cleanup](2026-10-15-pr-9-review.md)

@@ -17,9 +17,9 @@ the localization key; override them when presentation depends on the centre.
 Extend a command centre to create controls from the same command model:
 
 ```swift
-commander.button(command)
-commander.toolbarItem(command)
-commander.dynamicButton(command: command(for:))
+centre.button(command)
+centre.toolbarItem(command)
+centre.dynamicButton(command: command(for:))
 ```
 
 A control leaves itself out while its command is hidden, so a hidden command adds no row to a
@@ -30,9 +30,12 @@ for a custom label, like `button(_:content:)`. On iOS a hidden command
 leaves an empty toolbar item.
 
 `importer(_:)` and `importerButton(_:isShowingImportSheet:)` support file-import
-commands. `undoButton()` and `redoButton()` remain visible but disabled when no
-operation is available. Set `showsCommandPresentation: true` to use a pending
-`CommandReversalWithUI`'s localized name and icon.
+commands. `historyUndoButton()` and `historyRedoButton()` remain visible but disabled when no
+operation is available. Set `showsCommandPresentation: true` to label them with
+the localized name and icon of the command that made the pending step, such as "Undo
+Increment", when it adopts `CommandWithUI`.
+A `CommandWithUI` that also adopts `CommandWithUndo` names its `UndoManager`
+action with its localized name.
 
 ## Confirmation
 
@@ -59,13 +62,10 @@ environment:
 
 ```swift
 Menu("Debug") {
-  commander.button(ResetCommand())
+  centre.button(ResetCommand())
 }
 .commandConfirmation(.hosted)
 ```
-
-`confirmableButton(_:)` and `confirmableToolbarItem(_:)` are deprecated and forward to `button(_:)`
-and `toolbarItem(_:)`. They no longer confirm a command that declares no confirmation.
 
 ## The commands host
 
@@ -74,13 +74,13 @@ buttons:
 
 ```swift
 WindowGroup {
-  CommandsHost(commander: engine.commander) {
+  CommandsHost(centre: engine.centre) {
     RootView()
   }
 }
 ```
 
-The host injects the commander into the environment, and presents the alerts that `.hosted`
+The host injects the command centre into the environment, and presents the alerts that `.hosted`
 buttons request. A button inside a menu is discarded when the menu closes, and a macOS
 `CommandMenu` has no view hierarchy, so neither can present a dialog of their own. They ask the
 host's `CommandPresenter` instead, which a button finds in the environment, or through the focused

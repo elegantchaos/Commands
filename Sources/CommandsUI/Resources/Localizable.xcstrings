@@ -1,28 +1,6 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "about.stack" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "About %1$(name)@"
-          }
-        }
-      }
-    },
-    "action.help" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$(name)@ Help"
-          }
-        }
-      }
-    },
     "action.redo" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -101,17 +79,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Are you sure you want to continue?"
-          }
-        }
-      }
-    },
-    "tag.delete.message" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete tag %1$@ from all notes?\n\nThe notes will stay, but the tag will be removed from them."
           }
         }
       }

@@ -32,7 +32,8 @@ public protocol ImporterCommand: CommandWithUI {
 }
 
 /// Button wrapper that presents an importer sheet before invoking a command.
-struct ImporterCommandButton<C: ImporterCommand, CC: CommandCentre>: View where C.Centre == CC {
+struct ImporterCommandButton<C: ImporterCommand, Centre: CommandCentre>: View
+where C.Centre == Centre {
   /// Tracks presentation of the file importer sheet.
   @State var isShowingSheet = false
 
@@ -40,7 +41,7 @@ struct ImporterCommandButton<C: ImporterCommand, CC: CommandCentre>: View where 
   @State var command: C
 
   /// Command centre that resolves metadata and performs the command.
-  let centre: CC
+  let centre: Centre
 
   /// Optional semantic role applied to the visible button.
   let role: ButtonRole?

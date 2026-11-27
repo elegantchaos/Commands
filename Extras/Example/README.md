@@ -4,17 +4,18 @@ The example app is a bench for Commands' SwiftUI controls. Each page shows comma
 
 ## Pages
 
-- **Toolbar:** four commands placed with `toolbarItem(_:)`: always enabled, always hidden, switching between enabled and disabled, and switching between enabled and hidden. Two switches toggle the changing ones every 1.5 seconds, independently.
+- **Toolbar:** five commands placed with `toolbarItem(_:)`: always enabled, always hidden, switching between enabled and disabled, switching between enabled and hidden, and one with a custom label. Two switches toggle the changing ones every 1.5 seconds, independently.
 - **Lists and Menus:** a list and a menu with a hidden command between two enabled ones, beside the same containers without it.
-- **Undo and Redo:** a command that changes a counter, with Undo and Redo buttons and the undo stack.
+- **UndoManager:** commands that register their undo actions with the window's `UndoManager`, beside a text field and a text editor. Typing in the editor and the commands undo in the order they happened; on macOS, the text field keeps its own undo stack while it is being edited, so its typing undoes first.
+- **History:** a command that undoes through the centre's own `HistoryService`, with Undo and Redo buttons named after the command, and the history stack.
 
 The Edit menu also has two enabled commands with a hidden one between them, and one that switches between enabled and hidden.
 
 ## Automated Checks
 
-`ExampleUITests` checks, on macOS, that a hidden command adds no list row, menu item, Edit menu item or toolbar button, that a toolbar button follows its command between enabled and disabled, and that a toolbar button for a command that switches to hidden disappears. Run them with the Example scheme's test action.
+`ExampleUITests` checks, on macOS, that a hidden command adds no list row, menu item, Edit menu item or toolbar button, that a toolbar button follows its command between enabled and disabled, that a toolbar button for a command that switches to hidden disappears, and that a custom toolbar label is shown. It also checks the order in which typing and commands undo on the UndoManager page; the text field's check is an expected failure. On every platform, it performs, undoes and redoes a command on the UndoManager and History pages. Run them with the Example scheme's default test plan.
 
-If an incremental build fails to sign the app, delete the derived data and build again: the project still has an `ExampleTests` unit-test target whose sources were removed.
+On macOS the UI tests take over the screen, so run them on a machine or VM that nobody is using. The scheme's "Full Validation" test plan runs only the package's unit tests, and is the one `agt validate --full` uses; it does not run these UI tests.
 
 ## Manual Checks
 
