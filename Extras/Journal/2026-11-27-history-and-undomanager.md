@@ -65,3 +65,7 @@ Since this is a breaking release, some names changed to read more consistently:
 - `CommandWithUndo.nameForUndo(centre:)` is now `undoActionName(centre:)`, matching `UndoManager.undoActionName`, and `performAndRegisterUndo(command:undo:undoManager:name:)` takes `inverse:` and `actionName:`.
 
 `ImporterCommand`, `CommandExecutionContext` and the separate `UndoCommand`/`ReversalCommand` names were left as they are.
+
+## Unused strings
+
+Removed three keys from the CommandsUI string catalog that nothing referenced, by literal or generated symbol: `about.stack` and `tag.delete.message`, left over from the app this code came from, and `action.help`.
