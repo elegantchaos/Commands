@@ -1,30 +1,23 @@
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-//  Created by Sam Deane on 05/08/2026.
+//  Created by Sam Deane on 27/11/2026.
 //  Copyright © 2026 Elegant Chaos Limited. All rights reserved.
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-import Commands
-import CommandsUI
 import SwiftUI
 
-/// Demonstrates command execution and undo in a SwiftUI view.
+/// Shows one tab for each of the package's undo paths, each with its own commands and count.
 struct ContentView: View {
-  @State var commander = ExampleCommander()
-
+  /// The two demonstrations, side by side as tabs.
   var body: some View {
-    VStack {
-      Image(systemName: "globe")
-        .imageScale(.large)
-        .foregroundStyle(.tint)
-      Text("Done: \(commander.service.count)")
-      commander.button(ExampleCommand())
-      commander.historyUndoButton(showsCommandPresentation: true)
-      commander.historyRedoButton(showsCommandPresentation: true)
-      Text("Stack: \(commander.historyService.debugDescription)")
+    TabView {
+      Tab("UndoManager", systemImage: "arrow.uturn.backward.circle") {
+        UndoManagerExampleView()
+      }
+      Tab("History", systemImage: "clock.arrow.circlepath") {
+        HistoryExampleView()
+      }
     }
-    .padding()
   }
-
 }
 
 #Preview {

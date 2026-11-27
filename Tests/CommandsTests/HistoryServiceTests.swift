@@ -220,6 +220,14 @@ private struct SuspendedForwardCommand: Command {
   }
 }
 
+@MainActor
+extension HistoryService {
+  /// Records a command as a step named after itself, for tests that do not check step names.
+  fileprivate func recordUndo<C: CommandWithHistory>(_ command: C, centre: C.Centre) {
+    recordUndo(command, of: command, centre: centre)
+  }
+}
+
 /// Tests undo and redo registration, execution, and history recording.
 @MainActor
 struct HistoryServiceTests {

@@ -7,11 +7,11 @@ import Commands
 
 @MainActor
 extension HistoryEntry {
-  /// UI metadata for the entry's command, or `nil` when the command does not adopt `CommandWithUI`.
+  /// UI metadata for the action that names the entry's step, or `nil` when the action does not adopt `CommandWithUI`.
   var presentation: HistoryEntryPresentation? {
-    guard let command = command as? any CommandWithUI else {
+    guard let action = action as? any CommandWithUI else {
       return nil
     }
-    return HistoryEntryPresentation(command: command, centre: centre)
+    return HistoryEntryPresentation(command: action, centre: centre)
   }
 }

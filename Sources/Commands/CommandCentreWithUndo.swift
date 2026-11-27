@@ -13,6 +13,11 @@ public protocol CommandCentreWithUndo: CommandCentre {
   var undoTarget: AnyObject { get }
 
   /// Perform the supplied command, and register a different supplied command as the undo action.
+  ///
+  /// `name` is passed in, not read from `undo`, because it names the user's action, not the
+  /// command that reverses it. Undoing "Increment" performs a decrement, but the menu should
+  /// still say "Undo Increment" and then "Redo Increment". The commands swap roles at each
+  /// undo and redo, so the original name is carried through every registration.
   func performAndRegisterUndo<C, U>(command: C, undo: U, undoManager: UndoManager?, name: String)
     -> C.ResultType
   where
@@ -27,6 +32,11 @@ public protocol CommandCentreWithUndo: CommandCentre {
 @MainActor
 extension CommandCentreWithUndo {
   /// Perform the supplied command, and register a different supplied command as the undo action.
+  ///
+  /// `name` is passed in, not read from `undo`, because it names the user's action, not the
+  /// command that reverses it. Undoing "Increment" performs a decrement, but the menu should
+  /// still say "Undo Increment" and then "Redo Increment". The commands swap roles at each
+  /// undo and redo, so the original name is carried through every registration.
   ///
   /// When the undo manager later runs the registered action, the undo command gets the same
   /// availability check and lifecycle hooks as a forward command performed through the centre.

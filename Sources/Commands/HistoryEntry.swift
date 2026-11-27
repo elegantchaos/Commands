@@ -9,12 +9,19 @@ import Foundation
 ///
 /// The entry captures its command and centre when it is created, and performs the command
 /// through the centre's `perform(_:during:)`. Performing an entry returns the entry for the command's own
-/// reversal, which the service stores in its place. UI layers read `command` and `centre`
-/// to present the pending step.
+/// reversal, which the service stores in its place.
+///
+/// Each entry also holds the action that names its step: the forward command whose effect the
+/// step undoes and redoes. The action stays the same as the step moves between undo and redo,
+/// so UI layers read `action` and `centre` to label the pending step, such as "Undo Increment"
+/// and then "Redo Increment".
 @MainActor
 public struct HistoryEntry {
   /// The command this entry performs.
   public let command: any Command
+
+  /// The command that names this step, whichever direction it is performed in.
+  public let action: any Command
 
   /// The centre that evaluates and performs `command`.
   public let centre: any CommandCentre
@@ -25,14 +32,18 @@ public struct HistoryEntry {
   /// Performs the command in a history context and returns the entry for its reversal.
   private let performer: (CommandExecutionContext) async throws -> HistoryEntry?
 
-  /// Creates an entry that performs the supplied command through its centre.
-  init<C: CommandWithHistory>(command: C, centre: C.Centre) {
+  /// Creates an entry that performs the supplied command through its centre, as a step named by `action`.
+  init<C: CommandWithHistory, A: Command>(command: C, action: A, centre: C.Centre)
+  where A.Centre == C.Centre {
     self.command = command
+    self.action = action
     self.centre = centre
     currentAvailability = { centre.availability(command) }
     performer = { context in
       _ = try await centre.perform(command, during: context)
-      return command.reversal(centre: centre).map { HistoryEntry(command: $0, centre: centre) }
+      return command.reversal(centre: centre).map {
+        HistoryEntry(command: $0, action: action, centre: centre)
+      }
     }
   }
 

@@ -1,0 +1,33 @@
+// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//  Created by Sam Deane on 27/11/2026.
+//  Copyright © 2026 Elegant Chaos Limited. All rights reserved.
+// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+import Commands
+import CommandsUI
+import Foundation
+import Icons
+
+/// Increments the count, registering a decrement with the undo manager it was invoked with.
+struct IncrementCountCommand: CommandWithUndo, CommandWithUI {
+  /// Stable identifier, also used to look up the command's localized name.
+  let id = "com.elegantchaos.commands.increment"
+
+  /// Undo manager from the view that invoked the command.
+  let undoManager: UndoManager?
+
+  /// Returns the icon shown on the command's button.
+  func icon(centre: UndoManagerExampleCommander) -> Icon {
+    Icon("plus.circle")
+  }
+
+  /// Increments the count.
+  func performSynchronously(centre: UndoManagerExampleCommander) {
+    centre.service.incrementDone()
+  }
+
+  /// Returns the command that decrements the count again.
+  func undoCommand(centre: UndoManagerExampleCommander) -> DecrementCountCommand {
+    DecrementCountCommand(undoManager: undoManager)
+  }
+}

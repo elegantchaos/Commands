@@ -6,10 +6,10 @@
 import Commands
 import Icons
 
-/// Current UI metadata for the command held by a history entry.
+/// Current UI metadata for the action that names a history entry's step.
 ///
-/// History buttons use it to label a pending undo or redo with the command's own name,
-/// icon and help. The values are read when the presentation is created, so they reflect
+/// History buttons use it to label a pending undo or redo with the action's name, icon and
+/// help, such as "Undo Increment". The values are read when the presentation is created, so they reflect
 /// the centre's current state.
 @MainActor
 struct HistoryEntryPresentation {

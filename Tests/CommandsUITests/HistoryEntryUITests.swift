@@ -85,10 +85,12 @@ private struct HistoryPlainCommand: CommandWithHistory {
 /// Tests the UI view of history entries and history recording through wrapped commands.
 @MainActor
 struct HistoryEntryUITests {
-  /// Verifies that an entry presents its UI command's current metadata.
-  @Test func entryPresentsCurrentCommandMetadata() throws {
+  /// Verifies that an entry presents the current metadata of the action that names its step.
+  @Test func entryPresentsCurrentActionMetadata() throws {
     let centre = HistoryUITestCentre()
-    centre.historyService.recordUndo(HistoryUICommand(id: "a", reversalID: nil), centre: centre)
+    centre.historyService.recordUndo(
+      HistoryUICommand(id: "back", reversalID: nil),
+      of: HistoryUICommand(id: "a", reversalID: nil), centre: centre)
     let entry = try #require(centre.historyService.nextUndo)
 
     let presentation = try #require(entry.presentation)
@@ -100,13 +102,28 @@ struct HistoryEntryUITests {
     #expect(entry.presentation?.name == "History Command a (changed)")
   }
 
-  /// Verifies that an entry for a command without UI metadata has no presentation.
-  @Test func entryWithoutUICommandHasNoPresentation() throws {
+  /// Verifies that an entry whose action has no UI metadata has no presentation.
+  @Test func entryWithoutUIActionHasNoPresentation() throws {
     let centre = HistoryUITestCentre()
-    centre.historyService.recordUndo(HistoryPlainCommand(), centre: centre)
+    centre.historyService.recordUndo(
+      HistoryPlainCommand(), of: HistoryPlainCommand(), centre: centre)
 
     let entry = try #require(centre.historyService.nextUndo)
     #expect(entry.presentation == nil)
+  }
+
+  /// Verifies that a step is named after the forward command for both undo and redo.
+  @Test func stepKeepsForwardCommandNameThroughUndoAndRedo() async throws {
+    let centre = HistoryUITestCentre()
+    try await centre.perform(HistoryUICommand(id: "forward", reversalID: "back"))
+
+    #expect(centre.historyService.nextUndo?.presentation?.name == "History Command forward")
+
+    try await centre.historyService.performUndo()
+    #expect(centre.historyService.nextRedo?.presentation?.name == "History Command forward")
+
+    try await centre.historyService.performRedo()
+    #expect(centre.historyService.nextUndo?.presentation?.name == "History Command forward")
   }
 
   /// Verifies that a wrapped history command records the wrapped command's reversal.

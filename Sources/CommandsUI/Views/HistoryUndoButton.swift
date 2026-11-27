@@ -19,7 +19,7 @@ public struct HistoryUndoButton: View {
   /// Optional semantic role for the button.
   private let role: ButtonRole?
 
-  /// Whether the pending reversal's UI metadata should replace the standard Undo label.
+  /// Whether the name and icon of the pending step's action should replace the standard Undo label.
   private let showsCommandPresentation: Bool
 
   /// Creates an undo button for the supplied history service.

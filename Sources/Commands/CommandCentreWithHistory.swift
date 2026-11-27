@@ -61,6 +61,6 @@ extension CommandCentreWithHistory {
     guard let centre = self as? H.Centre, let reversal = command.reversal(centre: centre) else {
       return
     }
-    historyService.recordUndo(reversal, centre: centre)
+    historyService.recordUndo(reversal, of: command, centre: centre)
   }
 }

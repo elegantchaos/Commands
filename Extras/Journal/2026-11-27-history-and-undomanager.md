@@ -29,6 +29,14 @@ The two mechanisms still differ in when the inverse is created: History asks for
 
 The concurrency design document's wording changed from reversals to history entries; its invariants are unchanged.
 
+## Tabbed example
+
+The example app now has two tabs, each with its own centre and count. The UndoManager tab performs `IncrementCountCommand` and `DecrementCountCommand` through `CommandCentreWithUndo`, beside a text field that shares the window's undo manager; `UndoManagerButtons` drives that manager and redraws on its change notifications, since `UndoManager` is not observable. The History tab is the earlier demo. The command names in the string catalog are now Increment and Decrement.
+
+The test plan had no test targets, so the UI tests never ran from the command line; it now includes `ExampleUITests`. New UI tests perform, undo and redo a command on each tab, and pass on the iOS 27.2 simulator. On macOS, `xcodebuild` could not run them: enabling UI automation timed out, as it needs approval on the machine. The text field's shared undo stack is not covered by a test.
+
+With `showsCommandPresentation`, the History undo button named the pending reversal, so after Increment it read "Undo Decrement" while the UndoManager tab read "Undo Increment". Each `HistoryEntry` now holds an `action`: the forward command that names its step, kept as the step moves between undo and redo. `recordUndo` takes it explicitly (`recordUndo(_:of:centre:)`), and the buttons present it, so both tabs read "Undo Increment" and "Redo Increment". Both undo APIs now explain why they take the step's name separately from the command they perform. The example UI tests check the exact titles on both tabs.
+
 Associated-type inference cannot resolve a command that names itself, or a partner that names it back, as its undo command. Such commands must declare `Centre` and `ResultType` explicitly, as the tests do.
 
 ## Validation

@@ -116,13 +116,20 @@ open class HistoryService {
     return undoStack[undoCursor]
   }
 
-  /// Records a command that undoes the latest step, and discards any entries that could be redone.
+  /// Records the reversal of an action as the latest step, and discards any entries that could be redone.
   ///
-  /// `CommandCentreWithHistory` calls this with each successful command's reversal; call it
-  /// directly only to add history that did not come from a forward command.
-  open func recordUndo<C: CommandWithHistory>(_ command: C, centre: C.Centre) {
+  /// `action` names the step in undo and redo controls. It is passed in, not taken from `reversal`,
+  /// because the step is named after what the user did, not the command that reverses it:
+  /// undoing "Increment" performs a decrement, but the control should still say "Undo Increment"
+  /// and then "Redo Increment". The entry keeps the action as it swaps between the reversal and
+  /// the original command. `CommandCentreWithHistory` calls this with
+  /// each successful command's reversal; call it directly only to add history that did not come
+  /// from a forward command.
+  open func recordUndo<C: CommandWithHistory, A: Command>(
+    _ reversal: C, of action: A, centre: C.Centre
+  ) where A.Centre == C.Centre {
     undoStack.removeSubrange(undoCursor...)
-    undoStack.append(HistoryEntry(command: command, centre: centre))
+    undoStack.append(HistoryEntry(command: reversal, action: action, centre: centre))
     undoCursor = undoStack.count
   }
 

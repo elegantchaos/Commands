@@ -25,7 +25,8 @@ commander.dynamicButton(command: command(for:))
 `importer(_:)` and `importerButton(_:isShowingImportSheet:)` support file-import
 commands. `historyUndoButton()` and `historyRedoButton()` remain visible but disabled when no
 operation is available. Set `showsCommandPresentation: true` to label them with
-the pending command's localized name and icon, when it adopts `CommandWithUI`.
+the localized name and icon of the command that made the pending step, such as "Undo
+Increment", when it adopts `CommandWithUI`.
 A `CommandWithUI` that also adopts `CommandWithUndo` names its `UndoManager`
 action with its localized name.
 
