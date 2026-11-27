@@ -79,3 +79,13 @@ Main had moved on with stable command-control identity (controls keep their oute
 - The bench's macOS-only UI tests sit beside this branch's undo tests. The undo-page tests also run on iOS, where `showPage` goes back to the page list first, because the compact split view opens on the selected page.
 
 The undo-page UI tests pass on the iOS 27.2 simulator. On macOS, the UndoManager page's text editor sequence and the History page's undo and redo were checked by hand in a VM; the bench's own macOS UI tests were not run.
+
+## Validating the example
+
+Full validation now covers the example app as well as the package. A root `Commands.xcworkspace` holds the package and the example project, and `.agt/config.json` names `Example` as the product scheme on macOS and iOS. The example scheme's "Full Validation" test plan runs the package's `CommandsTests` and `CommandsUITests`, so validation tests the package through the example and never runs the example's UI tests, which drive the screen on macOS.
+
+watchOS is no longer validated, although the package still supports it: `agt validate` builds every product scheme on every listed platform, and the example does not support watchOS. Filtering platforms per scheme in AgentTools would restore it.
+
+The example project referred to the package as `../../../../Commands`, which only resolved in a checkout whose folder is named `Commands`; validation's own checkout is not. It now uses `../../..`.
+
+Full validation passed on `2987bd2`: the example builds for macOS and iOS, and the package's tests pass on both.
