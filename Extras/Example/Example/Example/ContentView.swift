@@ -18,9 +18,9 @@ struct ContentView: View {
         .foregroundStyle(.tint)
       Text("Done: \(commander.service.count)")
       commander.button(ExampleCommand())
-      commander.undoButton(showsCommandPresentation: true)
-      commander.redoButton(showsCommandPresentation: true)
-      Text("Stack: \(commander.undoService.debugDescription)")
+      commander.historyUndoButton(showsCommandPresentation: true)
+      commander.historyRedoButton(showsCommandPresentation: true)
+      Text("Stack: \(commander.historyService.debugDescription)")
     }
     .padding()
   }

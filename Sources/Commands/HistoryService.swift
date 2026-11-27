@@ -62,7 +62,7 @@ open class HistoryService {
 
   /// Whether an undo or redo operation is currently being performed.
   ///
-  /// This module-internal query lets `UndoableCommandCentre` protect history
+  /// This module-internal query lets `CommandCentreWithHistory` protect history
   /// without exposing additional public state.
   var isPerformingHistoryOperation: Bool {
     activeOperation != nil
@@ -139,9 +139,9 @@ open class HistoryService {
   /// Performs the next reversal that reverses a completed history entry.
   ///
   /// The reversal remains available when it throws. Calls made while undo or
-  /// redo is in progress throw `UndoServiceError.historyOperationInProgress`.
+  /// redo is in progress throw `HistoryServiceError.historyOperationInProgress`.
   /// Calls made while forward commands are active throw
-  /// `UndoServiceError.forwardCommandInProgress`.
+  /// `HistoryServiceError.forwardCommandInProgress`.
   open func performUndo() async throws {
     guard isPerformingHistoryOperation == false else {
       throw HistoryServiceError.historyOperationInProgress
@@ -171,9 +171,9 @@ open class HistoryService {
   /// Performs the next reversal that reapplies an undone history entry.
   ///
   /// The reversal remains available when it throws. Calls made while undo or
-  /// redo is in progress throw `UndoServiceError.historyOperationInProgress`.
+  /// redo is in progress throw `HistoryServiceError.historyOperationInProgress`.
   /// Calls made while forward commands are active throw
-  /// `UndoServiceError.forwardCommandInProgress`.
+  /// `HistoryServiceError.forwardCommandInProgress`.
   open func performRedo() async throws {
     guard isPerformingHistoryOperation == false else {
       throw HistoryServiceError.historyOperationInProgress

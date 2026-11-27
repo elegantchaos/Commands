@@ -11,7 +11,7 @@ import Foundation
 /// It should also implement `undoCommand`, which should return the inverse
 /// command to run when it is undone. Both commands should have the same result type.
 @MainActor
-public protocol CommandWithUndo: Command where Centre: CommandCentreWithHistory {
+public protocol CommandWithUndo: Command where Centre: CommandCentreWithUndo {
   /// The inverse command for this one.
   associatedtype UndoCommand: CommandWithUndo where UndoCommand.ResultType == ResultType, UndoCommand.Centre == Centre
 

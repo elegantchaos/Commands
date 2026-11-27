@@ -308,9 +308,9 @@ struct CommandsUITests {
     #expect(reversal.icon().systemImage == "network")
     #expect(reversal.help() == "Helpful metadata")
 
-    let undoService = UndoService()
-    undoService.recordUndo(reversal)
-    try await undoService.performUndo()
+    let historyService = HistoryService()
+    historyService.recordUndo(reversal)
+    try await historyService.performUndo()
     #expect(centre.performedCommandIDs == [command.id])
   }
 }

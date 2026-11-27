@@ -11,7 +11,7 @@ other asynchronous services. Suspending for I/O does not block the main actor.
 Keep synchronous work in a command short; move CPU-intensive work into an
 injected `Sendable` service with an explicitly `@concurrent` operation.
 
-Commands, command centres, command reversals, and `UndoService` are intentionally
+Commands, command centres, command reversals, and `HistoryService` are intentionally
 main-actor isolated. They may hold UI state and should not be transferred across
 actor boundaries. Small immutable values that cross those boundaries, such as
 `CommandAvailability`, `CommandError`, and `CommandConfirmation`, conform to
@@ -32,17 +32,17 @@ best fits that operation's domain.
 
 ## Undo and redo
 
-`UndoService` is main-actor isolated and serializes history operations. An
-`UndoableCommandCentre` tracks active forward commands and does not start undo
+`HistoryService` is main-actor isolated and serializes history operations. A
+`CommandCentreWithHistory` tracks active forward commands and does not start undo
 or redo until they finish. While undo or redo awaits a reversal, it
 disables and rejects new forward commands. This prevents main-actor reentrancy
 from changing the history cursor during a suspended history operation. The
 matching undo or redo command runs with the `CommandExecutionContext` supplied
-by its `UndoService` and replaces the history entry with its returned reversal.
+by its `HistoryService` and replaces the history entry with its returned reversal.
 
 `CommandExecutionContext` is generic: `CommandCentre` has no undo or redo
-knowledge. `UndoableCommandCentre` owns the undo/redo rule:
-while its undo service has an active operation, it allows only the context owned
+knowledge. `CommandCentreWithHistory` owns the undo/redo rule:
+while its history service has an active operation, it allows only the context owned
 by that service.
 
 The service owns the context and all active-operation state. Do not use global,
@@ -51,7 +51,7 @@ and its context are represented by one private value, so neither can exist
 without the other. Reversal implementations must use the supplied context only
 for their invocation and must not retain it.
 
-Forward commands can overlap, so an undo service tracks them with a count rather
+Forward commands can overlap, so a history service tracks them with a count rather
 than treating them as another history-operation mode. Undo and redo wait until
 that count reaches zero; while either history operation is suspended, new
 forward commands are disabled and rejected. This protects the history cursor
@@ -59,7 +59,7 @@ from main-actor reentrancy.
 
 If an undoable centre replaces the default `recordStartedCommand` or
 `recordFinishedCommand` implementations, it must call
-`undoService.beginForwardCommand()` and `undoService.finishForwardCommand()`
+`historyService.beginForwardCommand()` and `historyService.finishForwardCommand()`
 for every forward command.
 
 ## Future option

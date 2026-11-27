@@ -23,7 +23,7 @@ commander.dynamicButton(command: command(for:))
 ```
 
 `importer(_:)` and `importerButton(_:isShowingImportSheet:)` support file-import
-commands. `undoButton()` and `redoButton()` remain visible but disabled when no
+commands. `historyUndoButton()` and `historyRedoButton()` remain visible but disabled when no
 operation is available. Set `showsCommandPresentation: true` to use a pending
 `CommandReversalWithUI`'s localized name and icon.
 

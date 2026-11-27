@@ -12,5 +12,5 @@ import SwiftUI
 /// Coordinates command execution, example state, and undo history.
 class ExampleCommander: CommandCentreWithHistory, ExampleServiceProvider {
   var service = ExampleService()
-  var undoService: HistoryService = HistoryService()
+  var historyService: HistoryService = HistoryService()
 }

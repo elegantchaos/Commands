@@ -9,7 +9,7 @@ import Foundation
 ///
 /// This base protocol deliberately remains independent of undo and redo.
 /// Services that coordinate a command sequence use `CommandExecutionContext`;
-/// `UndoableCommandCentre` defines the undo/redo policy.
+/// `CommandCentreWithHistory` defines the undo/redo policy.
 @MainActor
 public protocol CommandCentre {
   /// Records that a command has started executing.

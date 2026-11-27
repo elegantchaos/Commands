@@ -8,7 +8,7 @@ import Foundation
 /// Describes an operation that reverses a command.
 ///
 /// Performing a reversal returns the opposing reversal, allowing an
-/// `UndoService` to move between undo and redo without losing its state.
+/// `HistoryService` to move between undo and redo without losing its state.
 @MainActor
 public protocol CommandReversal {
   /// Stable identifier for the reversal.

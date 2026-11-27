@@ -147,24 +147,24 @@ extension CommandCentre {
 @MainActor
 extension CommandCentreWithHistory {
   /// Returns a button that performs the next undo operation.
-  @ViewBuilder public func undoButton(
+  @ViewBuilder public func historyUndoButton(
     role: ButtonRole? = nil,
     showsCommandPresentation: Bool = false
   ) -> some View {
-    UndoCommandButton(
-      undoService: undoService,
+    HistoryUndoButton(
+      historyService: historyService,
       role: role,
       showsCommandPresentation: showsCommandPresentation
     )
   }
 
   /// Returns a button that performs the next redo operation.
-  @ViewBuilder public func redoButton(
+  @ViewBuilder public func historyRedoButton(
     role: ButtonRole? = nil,
     showsCommandPresentation: Bool = false
   ) -> some View {
-    RedoCommandButton(
-      undoService: undoService,
+    HistoryRedoButton(
+      historyService: historyService,
       role: role,
       showsCommandPresentation: showsCommandPresentation
     )

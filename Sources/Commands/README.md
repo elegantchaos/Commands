@@ -15,10 +15,10 @@ metadata and controls, see [CommandsUI](../CommandsUI/README.md).
   lifecycle hooks for centres that track running commands.
 - `CommandAvailability` lets callers distinguish enabled, disabled, hidden, and
   running states.
-- `CommandReversal` is the type-erased operation used by `UndoService` to move
+- `CommandReversal` is the type-erased operation used by `HistoryService` to move
   between undo and redo. `CommandReversalAdapter` adapts a concrete command and
   its centre into a reversal.
-- `UndoableCommandCentre` integrates `UndoService` with normal command
+- `CommandCentreWithHistory` integrates `HistoryService` with normal command
   execution.
 
 ## Define a command
@@ -58,16 +58,16 @@ func reversal(centre: C) -> (any CommandReversal)? {
 }
 ```
 
-An undoable centre records successful reversals automatically:
+A centre with history records successful reversals automatically:
 
 ```swift
 @MainActor
-final class EditorCommands: UndoableCommandCentre {
-  let undoService = UndoService()
+final class EditorCommands: CommandCentreWithHistory {
+  let historyService = HistoryService()
 }
 ```
 
-`UndoService` uses cursor-based semantics: undo creates the operation for redo,
+`HistoryService` uses cursor-based semantics: undo creates the operation for redo,
 redo restores the operation for undo, and a new forward command discards the
 redo branch. See the [concurrency design](../../Extras/Documentation/Concurrency.md)
 for the execution and re-entrancy invariants.
