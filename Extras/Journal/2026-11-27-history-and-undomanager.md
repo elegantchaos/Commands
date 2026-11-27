@@ -13,11 +13,15 @@ SwiftUI uses the environment's `UndoManager` for text-field undo, so commands th
 - The bulk rename had also changed `CommandWithUndo`'s centre constraint to `CommandCentreWithHistory`. It now requires `CommandCentreWithUndo`.
 - The test target had not been updated and did not compile; it now uses the new names, and the suite is `HistoryServiceTests`.
 
-## Known issues
+## UndoManager fixes
 
-- `CommandWithUI`'s `nameForUndo` override is internal, so conformances outside `CommandsUI` fall back to `id` for the undo action name.
-- Undo and redo registered with `UndoManager` call `performSynchronously` directly, bypassing the centre's availability check and lifecycle hooks.
-- The UndoManager mechanism has no tests yet.
+- `CommandWithUI`'s `nameForUndo` override is now public, so UI commands in apps name their undo action with their display name instead of their `id`. A scratch client package outside the test target confirmed this; the test target's `@testable` imports may hide a regression.
+- Registered undo and redo actions now check the undo command's availability and call `recordStartedCommand` and `recordFinishedCommand`, as a forward command performed through the centre does. `UndoManager` cannot receive an error, so an unavailable undo command is reported through `recordFailedCommand` and dropped from the stack.
+- `recordUndoRedoResult` now requires `C.Centre == Self`. Without it, the default implementation did not satisfy the requirement, so no centre could conform.
+- `CommandWithUndo`'s default `perform` lost a `where` clause that repeated the protocol's own constraints.
+- Added `CommandCentreWithUndoTests` and `CommandWithUndoUITests`.
+
+Associated-type inference cannot resolve a command that names itself, or a partner that names it back, as its undo command. Such commands must declare `Centre` and `ResultType` explicitly, as the tests do.
 
 ## Validation
 

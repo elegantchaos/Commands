@@ -13,31 +13,35 @@ import Foundation
 @MainActor
 public protocol CommandWithUndo: Command where Centre: CommandCentreWithUndo {
   /// The inverse command for this one.
-  associatedtype UndoCommand: CommandWithUndo where UndoCommand.ResultType == ResultType, UndoCommand.Centre == Centre
+  associatedtype UndoCommand: CommandWithUndo
+  where UndoCommand.ResultType == ResultType, UndoCommand.Centre == Centre
 
   /// The undo manager associated with this command.
   /// This should be captured when the command is invoked.
   var undoManager: UndoManager? { get }
-  
+
   /// Name to use for the UndoManager to use for the command.
   func nameForUndo(centre: Centre) -> String
-  
+
   /// Perform the command's work.
   func performSynchronously(centre: Centre) -> ResultType
-  
+
   /// Return the command to perform if the user chooses "Undo" after performing this one.
   func undoCommand(centre: Centre) -> UndoCommand
 }
 
 @MainActor
-public extension CommandWithUndo {
-  func nameForUndo(centre: Centre) -> String { id }
+extension CommandWithUndo {
+  /// By default, the undo action is named after the command's identifier.
+  public func nameForUndo(centre: Centre) -> String { id }
 }
 
 @MainActor
-public extension CommandWithUndo {
-  func perform(centre: Centre) async throws -> ResultType where ResultType == UndoCommand.ResultType, Centre: CommandCentreWithUndo, UndoCommand.Centre: CommandCentreWithUndo {
-    return centre.performAndRegisterUndo(command: self, undo: undoCommand(centre: centre), undoManager: undoManager, name: nameForUndo(centre: centre))
+extension CommandWithUndo {
+  /// Performs the command and registers its inverse with the command's undo manager.
+  public func perform(centre: Centre) async throws -> ResultType {
+    centre.performAndRegisterUndo(
+      command: self, undo: undoCommand(centre: centre), undoManager: undoManager,
+      name: nameForUndo(centre: centre))
   }
-  
 }

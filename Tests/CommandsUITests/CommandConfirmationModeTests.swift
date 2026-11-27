@@ -79,7 +79,8 @@ struct CommandConfirmationModeTests {
 
   @Test
   func defaultConfirmationIsTitledWithTheCommandName() {
-    let confirmation = StockConfirmationCommand().defaultConfirmation(centre: ConfirmationTestCentre())
+    let confirmation = StockConfirmationCommand().defaultConfirmation(
+      centre: ConfirmationTestCentre())
 
     #expect(confirmation.title == "Delete Everything")
   }
@@ -87,7 +88,8 @@ struct CommandConfirmationModeTests {
   /// Swift 6.4's build system compiles string catalogs, so the stock strings resolve in a test.
   @Test
   func defaultConfirmationStringsResolve() {
-    let confirmation = StockConfirmationCommand().defaultConfirmation(centre: ConfirmationTestCentre())
+    let confirmation = StockConfirmationCommand().defaultConfirmation(
+      centre: ConfirmationTestCentre())
 
     #expect(confirmation.cancel == "Cancel")
     #expect(confirmation.confirm == "Confirm")

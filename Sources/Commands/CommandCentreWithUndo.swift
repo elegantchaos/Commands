@@ -11,28 +11,57 @@ import Foundation
 public protocol CommandCentreWithUndo: CommandCentre {
   /// The target to use for UndoManager when registering undo handlers.
   var undoTarget: AnyObject { get }
-  
+
   /// Perform the supplied command, and register a different supplied command as the undo action.
-  func performAndRegisterUndo<C, U>(command: C, undo: U, undoManager: UndoManager?, name: String) -> C.ResultType   where C: CommandWithUndo, C.Centre == Self, U: CommandWithUndo, U.Centre == Self, C.ResultType == U.ResultType
-  
+  func performAndRegisterUndo<C, U>(command: C, undo: U, undoManager: UndoManager?, name: String)
+    -> C.ResultType
+  where
+    C: CommandWithUndo, C.Centre == Self, U: CommandWithUndo, U.Centre == Self,
+    C.ResultType == U.ResultType
+
   /// Hook to do something with the result of a command that was undone/redone, which would otherwise be discarded.
   func recordUndoRedoResult<C: CommandWithUndo>(_ command: C, result: C.ResultType)
+  where C.Centre == Self
 }
 
 @MainActor
-public extension CommandCentreWithUndo {
+extension CommandCentreWithUndo {
   /// Perform the supplied command, and register a different supplied command as the undo action.
-  func performAndRegisterUndo<C, U>(command: C, undo: U, undoManager: UndoManager?, name: String) -> C.ResultType where C: CommandWithUndo, C.Centre == Self, U: CommandWithUndo, U.Centre == Self, C.ResultType == U.ResultType {
-    commandChannel.debug("registered undo \(undo.nameForUndo(centre: self)) for command \(command.nameForUndo(centre: self))")
+  ///
+  /// When the undo manager later runs the registered action, the undo command gets the same
+  /// availability check and lifecycle hooks as a forward command performed through the centre.
+  /// `UndoManager` cannot receive an error, so an unavailable undo command is reported through
+  /// `recordFailedCommand` and is not performed; the action is then gone from the undo stack.
+  public func performAndRegisterUndo<C, U>(
+    command: C, undo: U, undoManager: UndoManager?, name: String
+  ) -> C.ResultType
+  where
+    C: CommandWithUndo, C.Centre == Self, U: CommandWithUndo, U.Centre == Self,
+    C.ResultType == U.ResultType
+  {
+    commandChannel.debug(
+      "registered undo \(undo.nameForUndo(centre: self)) for command \(command.nameForUndo(centre: self))"
+    )
     undoManager?.registerUndo(withTarget: undoTarget) { _ in
-      let result = performAndRegisterUndo(command: undo, undo: command, undoManager: undoManager, name: name)
+      guard availability(undo) == .enabled else {
+        recordFailedCommand(undo, error: CommandError.commandUnavailable)
+        return
+      }
+
+      recordStartedCommand(undo)
+      let result = performAndRegisterUndo(
+        command: undo, undo: command, undoManager: undoManager, name: name)
+      recordFinishedCommand(undo, outcome: .succeeded)
       recordUndoRedoResult(undo, result: result)
     }
     undoManager?.setActionName(name)
     return command.performSynchronously(centre: self)
   }
-  
-  func recordUndoRedoResult<C>(_ command: C, result: C.ResultType) where C: CommandWithUndo, C.Centre == Self {
-    commandChannel.debug("discarded result \(result) for command \(command.nameForUndo(centre: self))")
+
+  /// By default, logs and discards the result of an undone or redone command.
+  public func recordUndoRedoResult<C>(_ command: C, result: C.ResultType)
+  where C: CommandWithUndo, C.Centre == Self {
+    commandChannel.debug(
+      "discarded result \(result) for command \(command.nameForUndo(centre: self))")
   }
 }

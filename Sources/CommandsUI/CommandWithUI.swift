@@ -106,5 +106,6 @@ extension CommandWithUI {
 
 @MainActor
 extension CommandWithUndo where Self: CommandWithUI {
-  func nameForUndo(centre: Centre) -> String { name(centre: centre) }
+  /// UI commands name their undo action with their localized display name.
+  public func nameForUndo(centre: Centre) -> String { name(centre: centre) }
 }
