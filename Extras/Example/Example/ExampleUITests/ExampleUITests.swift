@@ -65,6 +65,10 @@ final class ExampleUITests: XCTestCase {
     @MainActor
     private func undoStates(typingInto input: XCUIElement, in app: XCUIApplication) -> [String] {
       input.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
+      let focused = NSPredicate(format: "hasKeyboardFocus == true")
+      XCTAssertEqual(
+        XCTWaiter.wait(for: [expectation(for: focused, evaluatedWith: input)], timeout: 2),
+        .completed)
       app.typeText("a")
       press(app.buttons["Increment"])
       XCTAssertTrue(app.staticTexts["Done: 1"].waitForExistence(timeout: 2))

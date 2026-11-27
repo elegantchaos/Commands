@@ -48,7 +48,7 @@ The UndoManager tab now has both a text field and a text editor. Its macOS UI te
 
 The example app no longer has a string catalog: it is not localized, and its commands return their names directly and have no help text. `AGENTS.md` records this as an override of the localization guidance for the example app only, and drops the project rule about localizing command metadata, which the `swift:language` skill covers.
 
-Incremental macOS test builds fail code signing on an empty `ExampleTests` bundle embedded in the app; deleting the built app before each run works around it. The `ExampleTests` target has no sources and could be removed.
+Incremental macOS test builds failed code signing on the empty `ExampleTests` bundle embedded in the app. The target had no sources, so it is removed from the project and the scheme; incremental test builds now sign cleanly. The text-input UI tests also wait for the input to take keyboard focus before typing, after one run typed before the text editor had focus.
 
 Associated-type inference cannot resolve a command that names itself, or a partner that names it back, as its undo command. Such commands must declare `Centre` and `ResultType` explicitly, as the tests do.
 
