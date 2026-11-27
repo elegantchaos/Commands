@@ -8,7 +8,7 @@ import CommandsUI
 import SwiftUI
 
 /// Performs the History tab's commands and records their reversals in its own history.
-final class HistoryExampleCommander: CommandCentreWithHistory, ExampleServiceProvider {
+final class HistoryExampleCentre: CommandCentreWithHistory, ExampleServiceProvider {
   /// Count changed by the commands.
   let service = ExampleService()
 

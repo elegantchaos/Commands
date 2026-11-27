@@ -56,7 +56,7 @@ extension CommandCentre {
   public func perform<C: Command>(
     _ command: C, during context: CommandExecutionContext? = nil
   )
-    async throws -> C.ResultType where C.Centre == Self
+    async throws -> C.Output where C.Centre == Self
   {
     commandChannel.debug("performing command «\(command.id)»")
 

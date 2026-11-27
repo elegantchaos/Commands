@@ -10,18 +10,18 @@ import SwiftUI
 /// Demonstrates undo and redo through a command centre's own `HistoryService`.
 struct HistoryExampleView: View {
   /// Centre that performs the commands and owns their history.
-  @State private var commander = HistoryExampleCommander()
+  @State private var centre = HistoryExampleCentre()
 
   /// Shows the count, a command that changes it, and the history's undo and redo buttons.
   var body: some View {
     VStack(spacing: 12) {
-      Text("Done: \(commander.service.count)")
-      commander.button(ExampleCommand())
+      Text("Done: \(centre.service.count)")
+      centre.button(ExampleCommand())
       HStack {
-        commander.historyUndoButton(showsCommandPresentation: true)
-        commander.historyRedoButton(showsCommandPresentation: true)
+        centre.historyUndoButton(showsCommandPresentation: true)
+        centre.historyRedoButton(showsCommandPresentation: true)
       }
-      Text("Stack: \(commander.historyService.debugDescription)")
+      Text("Stack: \(centre.historyService.debugDescription)")
         .foregroundStyle(.secondary)
     }
     .padding()

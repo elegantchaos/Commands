@@ -13,7 +13,7 @@ import Foundation
 /// reversal for its own reversal in turn, which lets undo and redo traverse the same entry.
 ///
 /// When a command and its reversal name each other, Swift cannot infer their associated
-/// types; declare `Centre` and `ResultType` explicitly on one of them.
+/// types; declare `Centre` and `Output` explicitly on one of them.
 @MainActor
 public protocol CommandWithHistory: Command where Centre: CommandCentreWithHistory {
   /// The command that reverses this one.

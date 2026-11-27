@@ -17,27 +17,27 @@ struct IncrementCountCommand: CommandWithUndo, CommandWithUI {
   let undoManager: UndoManager?
 
   /// Returns the name shown on the command's button and in undo titles.
-  func name(centre: UndoManagerExampleCommander) -> String {
+  func name(centre: UndoManagerExampleCentre) -> String {
     "Increment"
   }
 
   /// The example commands have no help text.
-  func help(centre: UndoManagerExampleCommander) -> String? {
+  func help(centre: UndoManagerExampleCentre) -> String? {
     nil
   }
 
   /// Returns the icon shown on the command's button.
-  func icon(centre: UndoManagerExampleCommander) -> Icon {
+  func icon(centre: UndoManagerExampleCentre) -> Icon {
     Icon("plus.circle")
   }
 
   /// Increments the count.
-  func performSynchronously(centre: UndoManagerExampleCommander) {
+  func performSynchronously(centre: UndoManagerExampleCentre) {
     centre.service.incrementDone()
   }
 
   /// Returns the command that decrements the count again.
-  func undoCommand(centre: UndoManagerExampleCommander) -> DecrementCountCommand {
+  func undoCommand(centre: UndoManagerExampleCentre) -> DecrementCountCommand {
     DecrementCountCommand(undoManager: undoManager)
   }
 }

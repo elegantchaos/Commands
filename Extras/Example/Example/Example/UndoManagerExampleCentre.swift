@@ -6,7 +6,7 @@
 import Commands
 
 /// Performs the UndoManager tab's commands and registers their inverses with the window's undo manager.
-final class UndoManagerExampleCommander: CommandCentreWithUndo, ExampleServiceProvider {
+final class UndoManagerExampleCentre: CommandCentreWithUndo, ExampleServiceProvider {
   /// Count changed by the commands.
   let service = ExampleService()
 

@@ -55,3 +55,13 @@ Associated-type inference cannot resolve a command that names itself, or a partn
 ## Validation
 
 `swift build --build-tests` and `swift test` pass (both test runs, 21 and 19 tests). The example app builds for macOS with `xcodebuild`. Builds ran outside the agent sandbox because SwiftPM could not write to its dependency checkouts inside it.
+
+## Breaking renames
+
+Since this is a breaking release, some names changed to read more consistently:
+
+- `Command.ResultType` is now `Command.Output`. `CommandResult` was considered, but it repeats the protocol's name at use sites (`C.CommandResult`) and sits awkwardly beside `CommandOutcome`; `Output` follows `Publisher.Output`.
+- CommandsUI called a command centre a "commander": `CommandButton(commander:)`, `CommandsHost(commander:)` with its `Commander` parameter, and `InheritedCommander`. These are now `centre:`, `Centre` and `InheritedCentre`, and generic parameters named `CC` are now `Centre`. The example's centres are `HistoryExampleCentre` and `UndoManagerExampleCentre`.
+- `CommandWithUndo.nameForUndo(centre:)` is now `undoActionName(centre:)`, matching `UndoManager.undoActionName`, and `performAndRegisterUndo(command:undo:undoManager:name:)` takes `inverse:` and `actionName:`.
+
+`ImporterCommand`, `CommandExecutionContext` and the separate `UndoCommand`/`ReversalCommand` names were left as they are.

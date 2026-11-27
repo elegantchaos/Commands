@@ -11,21 +11,21 @@ import SwiftUI
 /// Place one host at the root of each window, and another inside any sheet that contains command
 /// buttons, since an alert cannot present from a view that a sheet covers. The host:
 ///
-/// - injects the app's commander into the environment, so views can build command controls;
+/// - injects the app's command centre into the environment, so views can build command controls;
 /// - presents the alerts that command buttons request, wherever those buttons are, including in
 ///   menus and the macOS menu bar;
 /// - publishes its presenter to the focused scene, so menu-bar commands reach the key window.
 ///
 /// ```swift
 /// WindowGroup {
-///   CommandsHost(commander: engine.commander) {
+///   CommandsHost(centre: engine.centre) {
 ///     RootView()
 ///   }
 /// }
 /// ```
-public struct CommandsHost<Commander: AnyObject & Observable, Content: View>: View {
-  /// The commander injected into the environment, or nil to inherit the enclosing one.
-  private let commander: Commander?
+public struct CommandsHost<Centre: AnyObject & Observable, Content: View>: View {
+  /// The command centre injected into the environment, or nil to inherit the enclosing one.
+  private let centre: Centre?
 
   /// The window or sheet content.
   private let content: Content
@@ -33,16 +33,16 @@ public struct CommandsHost<Commander: AnyObject & Observable, Content: View>: Vi
   /// The requests made of this host.
   @State private var presenter = CommandPresenter()
 
-  /// Creates a host that injects `commander` into its content.
-  public init(commander: Commander, @ViewBuilder content: () -> Content) {
-    self.commander = commander
+  /// Creates a host that injects `centre` into its content.
+  public init(centre: Centre, @ViewBuilder content: () -> Content) {
+    self.centre = centre
     self.content = content()
   }
 
   /// The host's content, with its presentation surface attached.
   public var body: some View {
     content
-      .environment(commander)
+      .environment(centre)
       .environment(\.commandPresenter, presenter)
       .focusedSceneValue(\.commandPresenter, presenter)
       .alert(
@@ -67,17 +67,17 @@ public struct CommandsHost<Commander: AnyObject & Observable, Content: View>: Vi
   }
 }
 
-/// A commander type for hosts that inherit the enclosing host's commander.
+/// A placeholder centre type for hosts that inherit the enclosing host's command centre.
 @MainActor
 @Observable
-public final class InheritedCommander {
+public final class InheritedCentre {
   private init() {}
 }
 
-extension CommandsHost where Commander == InheritedCommander {
-  /// Creates a host that keeps the enclosing commander, for use inside sheets.
+extension CommandsHost where Centre == InheritedCentre {
+  /// Creates a host that keeps the enclosing command centre, for use inside sheets.
   public init(@ViewBuilder content: () -> Content) {
-    self.commander = nil
+    self.centre = nil
     self.content = content()
   }
 }

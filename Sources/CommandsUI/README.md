@@ -17,9 +17,9 @@ the localization key; override them when presentation depends on the centre.
 Extend a command centre to create controls from the same command model:
 
 ```swift
-commander.button(command)
-commander.toolbarItem(command)
-commander.dynamicButton(command: command(for:))
+centre.button(command)
+centre.toolbarItem(command)
+centre.dynamicButton(command: command(for:))
 ```
 
 `importer(_:)` and `importerButton(_:isShowingImportSheet:)` support file-import
@@ -55,7 +55,7 @@ environment:
 
 ```swift
 Menu("Debug") {
-  commander.button(ResetCommand())
+  centre.button(ResetCommand())
 }
 .commandConfirmation(.hosted)
 ```
@@ -70,13 +70,13 @@ buttons:
 
 ```swift
 WindowGroup {
-  CommandsHost(commander: engine.commander) {
+  CommandsHost(centre: engine.centre) {
     RootView()
   }
 }
 ```
 
-The host injects the commander into the environment, and presents the alerts that `.hosted`
+The host injects the command centre into the environment, and presents the alerts that `.hosted`
 buttons request. A button inside a menu is discarded when the menu closes, and a macOS
 `CommandMenu` has no view hierarchy, so neither can present a dialog of their own. They ask the
 host's `CommandPresenter` instead, which a button finds in the environment, or through the focused

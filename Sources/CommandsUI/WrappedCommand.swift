@@ -54,7 +54,7 @@ open class WrappedCommand<C: CommandWithUI>: CommandWithUI {
   }
 
   /// Executes the wrapped command unless overridden.
-  open func perform(centre: C.Centre) async throws -> C.ResultType {
+  open func perform(centre: C.Centre) async throws -> C.Output {
     try await command.perform(centre: centre)
   }
 }

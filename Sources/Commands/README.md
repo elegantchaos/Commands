@@ -77,7 +77,7 @@ struct IncrementCommand: CommandWithUndo {
 }
 ```
 
-Performing the command through the centre registers its inverse, named with `nameForUndo(centre:)`, which is the command's localized name for a `CommandWithUI` and its `id` otherwise. The undo command is created before the command performs, so it can capture the state it restores. When the `UndoManager` runs an undo or redo, the centre checks the command's availability and calls its lifecycle hooks, as it does for any command. `UndoManager` cannot receive an error, so an unavailable undo command is reported through `recordFailedCommand(_:error:)` and skipped, and the action leaves the undo stack. Results of undone and redone commands go to `recordUndoRedoResult(_:result:)`.
+Performing the command through the centre registers its inverse, named with `undoActionName(centre:)`, which is the command's localized name for a `CommandWithUI` and its `id` otherwise. The undo command is created before the command performs, so it can capture the state it restores. When the `UndoManager` runs an undo or redo, the centre checks the command's availability and calls its lifecycle hooks, as it does for any command. `UndoManager` cannot receive an error, so an unavailable undo command is reported through `recordFailedCommand(_:error:)` and skipped, and the action leaves the undo stack. Results of undone and redone commands go to `recordUndoRedoResult(_:result:)`.
 
 Each command is a single undo step. When no undo group is open, as when a command button performs a command after its click has been handled, the command's registration and its work go in a group of their own, so nothing that happens in the next event joins the same step.
 
@@ -109,12 +109,12 @@ The centre asks for the reversal after the command succeeds, so the reversal can
 
 ### Commands that reverse each other
 
-When a command and its inverse name each other, or a command is its own inverse, Swift cannot infer their associated types. Declare `Centre` and `ResultType` explicitly on one of them:
+When a command and its inverse name each other, or a command is its own inverse, Swift cannot infer their associated types. Declare `Centre` and `Output` explicitly on one of them:
 
 ```swift
 struct DecrementCommand: CommandWithUndo {
   typealias Centre = EditorCommands
-  typealias ResultType = Void
+  typealias Output = Void
   // ...
 }
 ```

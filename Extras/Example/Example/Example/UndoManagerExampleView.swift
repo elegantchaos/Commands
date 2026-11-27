@@ -15,7 +15,7 @@ import SwiftUI
 /// own undo stack while it is being edited, so its typing is undone before any command.
 struct UndoManagerExampleView: View {
   /// Centre that performs the commands and registers their inverses.
-  @State private var commander = UndoManagerExampleCommander()
+  @State private var centre = UndoManagerExampleCentre()
 
   /// Text edited in the text field.
   @State private var fieldText = ""
@@ -29,10 +29,10 @@ struct UndoManagerExampleView: View {
   /// Shows the count, the commands, both kinds of text input, and undo and redo buttons.
   var body: some View {
     VStack(spacing: 12) {
-      Text("Done: \(commander.service.count)")
+      Text("Done: \(centre.service.count)")
       HStack {
-        commander.button(IncrementCountCommand(undoManager: undoManager))
-        commander.button(DecrementCountCommand(undoManager: undoManager))
+        centre.button(IncrementCountCommand(undoManager: undoManager))
+        centre.button(DecrementCountCommand(undoManager: undoManager))
       }
       TextField("Text field", text: $fieldText)
         .textFieldStyle(.roundedBorder)

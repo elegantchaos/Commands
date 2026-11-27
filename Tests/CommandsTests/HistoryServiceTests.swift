@@ -22,8 +22,8 @@ private struct UndoCommand: CommandWithHistory {
   /// Centre type, declared because inference cannot resolve a command that is its own reversal.
   typealias Centre = HistoryTestCentre
 
-  /// Result type, declared for the same reason as `Centre`.
-  typealias ResultType = Void
+  /// Output type, declared for the same reason as `Centre`.
+  typealias Output = Void
 
   /// Identifier used to verify history execution order.
   let id: String

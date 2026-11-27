@@ -51,7 +51,7 @@ private final class UndoTestCentre: CommandCentreWithUndo {
   }
 
   /// Records the result of a command performed through undo or redo.
-  func recordUndoRedoResult<C: CommandWithUndo>(_ command: C, result: C.ResultType)
+  func recordUndoRedoResult<C: CommandWithUndo>(_ command: C, result: C.Output)
   where C.Centre == UndoTestCentre {
     if let result = result as? Int {
       undoRedoResults.append(result)
@@ -86,8 +86,8 @@ private struct DecrementCommand: CommandWithUndo {
   /// Centre type, declared because inference cannot resolve a pair of mutually inverse commands.
   typealias Centre = UndoTestCentre
 
-  /// Result type, declared for the same reason as `Centre`.
-  typealias ResultType = Int
+  /// Output type, declared for the same reason as `Centre`.
+  typealias Output = Int
 
   /// Stable identifier for lifecycle assertions.
   let id = "test.undo.decrement"

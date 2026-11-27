@@ -19,7 +19,7 @@ extension CommandCentre {
   @ViewBuilder public func button<C: CommandWithUI>(
     _ command: C, role: ButtonRole? = nil, confirmation: CommandConfirmationMode? = nil
   ) -> some View where C.Centre == Self {
-    CommandButton(command: command, commander: self, role: role, confirmation: confirmation)
+    CommandButton(command: command, centre: self, role: role, confirmation: confirmation)
   }
 
   /// Returns a button for the given command with custom content, or nothing when it is hidden.
@@ -27,7 +27,7 @@ extension CommandCentre {
     _ command: C, role: ButtonRole? = nil, confirmation: CommandConfirmationMode? = nil,
     content: @escaping () -> Content
   ) -> some View where C.Centre == Self {
-    CommandButton(command: command, commander: self, role: role, confirmation: confirmation) { _ in
+    CommandButton(command: command, centre: self, role: role, confirmation: confirmation) { _ in
       content()
     }
   }
@@ -38,7 +38,7 @@ extension CommandCentre {
     content: @escaping (C) -> Content
   ) -> some View where C.Centre == Self {
     CommandButton(
-      command: command, commander: self, role: role, confirmation: confirmation,
+      command: command, centre: self, role: role, confirmation: confirmation,
       content: content)
   }
 
@@ -52,7 +52,7 @@ extension CommandCentre {
     @ViewBuilder content: () -> Content
   ) -> some View where C.Centre == Self {
     DynamicCommandButton(
-      commander: self,
+      centre: self,
       role: role,
       command: command,
       content: content(),

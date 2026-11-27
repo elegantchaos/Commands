@@ -9,22 +9,22 @@ import Foundation
 /// A command of this type should be able to perform synchronously, and should
 /// implement `performSynchronously` instead of `perform`.
 /// It should also implement `undoCommand`, which should return the inverse
-/// command to run when it is undone. Both commands should have the same result type.
+/// command to run when it is undone. Both commands should have the same output type.
 @MainActor
 public protocol CommandWithUndo: Command where Centre: CommandCentreWithUndo {
   /// The inverse command for this one.
   associatedtype UndoCommand: CommandWithUndo
-  where UndoCommand.ResultType == ResultType, UndoCommand.Centre == Centre
+  where UndoCommand.Output == Output, UndoCommand.Centre == Centre
 
   /// The undo manager associated with this command.
   /// This should be captured when the command is invoked.
   var undoManager: UndoManager? { get }
 
-  /// Name to use for the UndoManager to use for the command.
-  func nameForUndo(centre: Centre) -> String
+  /// The name of the undo action for this command, as shown in titles such as "Undo Increment".
+  func undoActionName(centre: Centre) -> String
 
   /// Perform the command's work.
-  func performSynchronously(centre: Centre) -> ResultType
+  func performSynchronously(centre: Centre) -> Output
 
   /// Return the command to perform if the user chooses "Undo" after performing this one.
   func undoCommand(centre: Centre) -> UndoCommand
@@ -33,15 +33,15 @@ public protocol CommandWithUndo: Command where Centre: CommandCentreWithUndo {
 @MainActor
 extension CommandWithUndo {
   /// By default, the undo action is named after the command's identifier.
-  public func nameForUndo(centre: Centre) -> String { id }
+  public func undoActionName(centre: Centre) -> String { id }
 }
 
 @MainActor
 extension CommandWithUndo {
   /// Performs the command and registers its inverse with the command's undo manager.
-  public func perform(centre: Centre) async throws -> ResultType {
+  public func perform(centre: Centre) async throws -> Output {
     centre.performAndRegisterUndo(
-      command: self, undo: undoCommand(centre: centre), undoManager: undoManager,
-      name: nameForUndo(centre: centre))
+      command: self, inverse: undoCommand(centre: centre), undoManager: undoManager,
+      actionName: undoActionName(centre: centre))
   }
 }

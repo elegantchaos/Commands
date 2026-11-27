@@ -22,8 +22,8 @@ private struct NamedUndoCommand: CommandWithUndo, CommandWithUI {
   /// Centre type, declared because inference cannot resolve a command that is its own inverse.
   typealias Centre = UndoUITestCentre
 
-  /// Result type, declared for the same reason as `Centre`.
-  typealias ResultType = Void
+  /// Output type, declared for the same reason as `Centre`.
+  typealias Output = Void
 
   /// Stable identifier, which must not be used as the undo action name.
   let id = "test.ui.named-undo"

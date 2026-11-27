@@ -9,19 +9,19 @@ import SwiftUI
 /// Button wrapper that sets a binding to true when pressed.
 /// Intended for use with `ImporterCommandModifier` for situations where
 /// you need to place an ImporterCommand inside a contextual menu.
-public struct ImporterCommandShowButton<C: ImporterCommand, CC: CommandCentre>: View
-where C.Centre == CC {
+public struct ImporterCommandShowButton<C: ImporterCommand, Centre: CommandCentre>: View
+where C.Centre == Centre {
   /// Command whose importer sheet should be shown.
   let command: C
 
   /// Command centre used to resolve command metadata.
-  let centre: CC
+  let centre: Centre
 
   /// Presentation state for the importer sheet.
   @Binding var isShowingImportSheet: Bool
 
   /// Creates a button that flips the importer presentation state.
-  public init(command: C, centre: CC, isShowingImportSheet: Binding<Bool>) {
+  public init(command: C, centre: Centre, isShowingImportSheet: Binding<Bool>) {
     self.command = command
     self.centre = centre
     self._isShowingImportSheet = isShowingImportSheet

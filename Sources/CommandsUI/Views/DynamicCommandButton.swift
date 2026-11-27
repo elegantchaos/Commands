@@ -15,7 +15,7 @@ import SwiftUI
 struct DynamicCommandButton<Centre: CommandCentre, Wrapped: CommandWithUI, Content: View>: View
 where Wrapped.Centre == Centre {
   /// Command centre that executes the resolved command.
-  let commander: Centre
+  let centre: Centre
 
   /// Optional role for the button.
   let role: ButtonRole?
@@ -36,7 +36,7 @@ where Wrapped.Centre == Centre {
 
   var body: some View {
     let primaryCommand = command(.primary)
-    let availability = commander.availability(primaryCommand)
+    let availability = centre.availability(primaryCommand)
 
     if availability != .hidden {
       baseButton
@@ -48,7 +48,7 @@ where Wrapped.Centre == Centre {
         // remain primary-trigger based unless the UI is split into distinct controls.
         .commandPresentation(
           availability: availability,
-          help: primaryCommand.help(centre: commander),
+          help: primaryCommand.help(centre: centre),
           shortcut: primaryCommand.shortcut
         )
         .commandLocalConfirmation(confirmationState)
@@ -59,9 +59,9 @@ where Wrapped.Centre == Centre {
   private func performWrappedCommand(_ trigger: CommandTrigger) {
     let resolved = command(trigger)
     confirmationState.request(
-      resolved.confirmation(centre: commander), mode: confirmation
-    ) { [commander] in
-      commander.performWithoutWaiting(resolved)
+      resolved.confirmation(centre: centre), mode: confirmation
+    ) { [centre] in
+      centre.performWithoutWaiting(resolved)
     }
   }
 

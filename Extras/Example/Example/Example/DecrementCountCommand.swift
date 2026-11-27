@@ -11,10 +11,10 @@ import Icons
 /// Decrements the count, registering an increment with the undo manager it was invoked with.
 struct DecrementCountCommand: CommandWithUndo, CommandWithUI {
   /// Centre type, declared because inference cannot resolve two commands that undo each other.
-  typealias Centre = UndoManagerExampleCommander
+  typealias Centre = UndoManagerExampleCentre
 
-  /// Result type, declared for the same reason as `Centre`.
-  typealias ResultType = Void
+  /// Output type, declared for the same reason as `Centre`.
+  typealias Output = Void
 
   /// Stable identifier for the command.
   let id = "com.elegantchaos.commands.decrement"
@@ -23,27 +23,27 @@ struct DecrementCountCommand: CommandWithUndo, CommandWithUI {
   let undoManager: UndoManager?
 
   /// Returns the name shown on the command's button and in undo titles.
-  func name(centre: UndoManagerExampleCommander) -> String {
+  func name(centre: UndoManagerExampleCentre) -> String {
     "Decrement"
   }
 
   /// The example commands have no help text.
-  func help(centre: UndoManagerExampleCommander) -> String? {
+  func help(centre: UndoManagerExampleCentre) -> String? {
     nil
   }
 
   /// Returns the icon shown on the command's button.
-  func icon(centre: UndoManagerExampleCommander) -> Icon {
+  func icon(centre: UndoManagerExampleCentre) -> Icon {
     Icon("minus.circle")
   }
 
   /// Decrements the count.
-  func performSynchronously(centre: UndoManagerExampleCommander) {
+  func performSynchronously(centre: UndoManagerExampleCentre) {
     centre.service.decrementDone()
   }
 
   /// Returns the command that increments the count again.
-  func undoCommand(centre: UndoManagerExampleCommander) -> IncrementCountCommand {
+  func undoCommand(centre: UndoManagerExampleCentre) -> IncrementCountCommand {
     IncrementCountCommand(undoManager: undoManager)
   }
 }

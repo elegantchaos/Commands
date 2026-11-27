@@ -26,8 +26,8 @@ private struct HistoryUICommand: CommandWithUI, CommandWithHistory {
   /// Centre type, declared because inference cannot resolve a command that is its own reversal.
   typealias Centre = HistoryUITestCentre
 
-  /// Result type, declared for the same reason as `Centre`.
-  typealias ResultType = Void
+  /// Output type, declared for the same reason as `Centre`.
+  typealias Output = Void
 
   /// Identifier used by assertions.
   let id: String
@@ -66,8 +66,8 @@ private struct HistoryPlainCommand: CommandWithHistory {
   /// Centre type, declared because inference cannot resolve a command that is its own reversal.
   typealias Centre = HistoryUITestCentre
 
-  /// Result type, declared for the same reason as `Centre`.
-  typealias ResultType = Void
+  /// Output type, declared for the same reason as `Centre`.
+  typealias Output = Void
 
   /// Identifier used by assertions.
   let id = "history.plain"

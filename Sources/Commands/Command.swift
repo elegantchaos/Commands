@@ -19,7 +19,7 @@ public protocol Command<Centre> {
   associatedtype Centre: CommandCentre
 
   /// The type of result returned when the command is performed.
-  associatedtype ResultType
+  associatedtype Output
 
   /// A unique identifier for the command.
   var id: String { get }
@@ -28,7 +28,7 @@ public protocol Command<Centre> {
   func availability(centre: Centre) -> CommandAvailability
 
   /// Performs the command using the given command centre.
-  func perform(centre: Centre) async throws -> ResultType
+  func perform(centre: Centre) async throws -> Output
 }
 
 /// Default implementations for `Command`.
