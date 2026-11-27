@@ -15,7 +15,10 @@ import SwiftUI
 /// own undo stack while it is being edited, so its typing is undone before any command.
 struct UndoManagerExampleView: View {
   /// Centre that performs the commands and registers their inverses.
-  @State private var centre = UndoManagerExampleCentre()
+  ///
+  /// The window owns it, so it lives as long as the window's undo manager, which keeps undo
+  /// actions that target it after this page is left.
+  let centre: UndoManagerExampleCentre
 
   /// Text edited in the text field.
   @State private var fieldText = ""
@@ -49,5 +52,5 @@ struct UndoManagerExampleView: View {
 }
 
 #Preview {
-  UndoManagerExampleView()
+  UndoManagerExampleView(centre: UndoManagerExampleCentre())
 }

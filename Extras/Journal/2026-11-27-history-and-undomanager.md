@@ -89,3 +89,16 @@ watchOS is no longer validated, although the package still supports it: `agt val
 The example project referred to the package as `../../../../Commands`, which only resolved in a checkout whose folder is named `Commands`; validation's own checkout is not. It now uses `../../..`.
 
 Full validation passed on `2987bd2`: the example builds for macOS and iOS, and the package's tests pass on both.
+
+## Review fixes
+
+Codex's full review (`Extras/Reviews/2026-11-27-commands-full-review.md`) found problems in this branch. Fixed here, each with a test that failed first:
+
+- **The UndoManager stack kept the undo manager and centre alive (finding 4).** The registered action now reaches the centre through the undo manager's target, which `UndoManager` does not retain, and holds the manager weakly; commands hold their undo manager in a `weak var`, as `CommandWithUndo.undoManager` now requires. `CommandCentreWithUndo` is class-only and has no `undoTarget`.
+- **History kept its centre alive (finding 5).** Entries hold their centre weakly; an entry whose centre has gone is disabled and throws `CommandError.commandUnavailable`. `CommandCentreWithHistory` is class-only.
+- **A running command could start again (finding 3).** `perform` refuses a command `isRunning` reports, as `availability(_:)` already did. `performAndRegisterUndo` is internal, so callers cannot skip the centre's checks and lifecycle.
+- **Recording during an undo or redo corrupted the history (finding 6).** `recordUndo(_:of:centre:)` throws `historyOperationInProgress` while either is in progress.
+- **CI looked for schemes that do not exist (new finding 1).** The generated workflow treats `Commands.xcworkspace` as an app workspace with per-platform schemes. The root workspace is now `Development.xcworkspace`, so CI tests the package's own scheme on iOS and builds it for watchOS again.
+- **The example's undo page lost its state on page switches (new finding 4).** Its centre is owned by the bench window, like the window's undo manager. Checked in a VM by leaving and returning to the page with an undo pending.
+
+Also in response: the deprecated `confirmableButton` and `confirmableToolbarItem` are removed; `Extras/Documentation/Migrating to 3.0.md` lists the changes since 2.5; and the example README no longer mentions the removed `ExampleTests` target and counts the toolbar items correctly. Running the example UI suite in full validation (new finding 2) is deliberately not done, because it takes over the screen on macOS; the README says where to run it. The remaining findings predate this branch and are left for their own changes.

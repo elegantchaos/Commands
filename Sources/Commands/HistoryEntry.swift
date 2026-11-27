@@ -23,8 +23,16 @@ public struct HistoryEntry {
   /// The command that names this step, whichever direction it is performed in.
   public let action: any Command
 
-  /// The centre that evaluates and performs `command`.
-  public let centre: any CommandCentre
+  /// The centre that evaluates and performs `command`, or `nil` once it has been released.
+  ///
+  /// The entry holds its centre weakly: the centre owns its history service, which owns its
+  /// entries, so a strong reference would keep the centre alive.
+  public var centre: (any CommandCentre)? {
+    centreReference
+  }
+
+  /// Weak reference to the centre, which owns the history this entry belongs to.
+  private weak var centreReference: (any CommandCentreWithHistory)?
 
   /// Returns the command's current availability through its centre.
   private let currentAvailability: () -> CommandAvailability
@@ -37,9 +45,14 @@ public struct HistoryEntry {
   where A.Centre == C.Centre {
     self.command = command
     self.action = action
-    self.centre = centre
-    currentAvailability = { centre.availability(command) }
-    performer = { context in
+    centreReference = centre
+    currentAvailability = { [weak centre] in
+      centre?.availability(command) ?? .disabled
+    }
+    performer = { [weak centre] context in
+      guard let centre else {
+        throw CommandError.commandUnavailable
+      }
       _ = try await centre.perform(command, during: context)
       return command.reversal(centre: centre).map {
         HistoryEntry(command: $0, action: action, centre: centre)
@@ -53,13 +66,16 @@ public struct HistoryEntry {
   }
 
   /// Returns the command's current availability, including the centre's running and history state.
+  ///
+  /// An entry whose centre has been released is disabled.
   public func availability() -> CommandAvailability {
     currentAvailability()
   }
 
   /// Performs the command in the supplied history context and returns the entry that reverses it.
   ///
-  /// The context is used only for this invocation.
+  /// The context is used only for this invocation. Throws `CommandError.commandUnavailable` when
+  /// the centre has been released.
   func perform(in context: CommandExecutionContext) async throws -> HistoryEntry? {
     try await performer(context)
   }

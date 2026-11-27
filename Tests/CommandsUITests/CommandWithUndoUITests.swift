@@ -12,8 +12,6 @@ import Testing
 /// Command centre that registers undo actions with a Foundation `UndoManager`.
 @MainActor
 private final class UndoUITestCentre: CommandCentreWithUndo {
-  /// The centre itself owns the registered undo actions.
-  var undoTarget: AnyObject { self }
 }
 
 /// UI command that registers itself as its own inverse, to check the undo action name.
@@ -29,7 +27,7 @@ private struct NamedUndoCommand: CommandWithUndo, CommandWithUI {
   let id = "test.ui.named-undo"
 
   /// Undo manager that receives the inverse command.
-  let undoManager: UndoManager?
+  weak var undoManager: UndoManager?
 
   /// Returns the user-visible name expected in the undo menu.
   func name(centre: UndoUITestCentre) -> String {

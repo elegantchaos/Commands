@@ -55,8 +55,9 @@ invocation and does not retain it.
 Forward commands can overlap, so a history service tracks them with a count rather
 than treating them as another history-operation mode. Undo and redo wait until
 that count reaches zero; while either history operation is suspended, new
-forward commands are disabled and rejected. This protects the history cursor
-from main-actor reentrancy.
+forward commands are disabled and rejected, and so are direct registrations
+through `recordUndo(_:of:centre:)`. This protects the history cursor from
+main-actor reentrancy.
 
 If an undoable centre replaces the default `recordStartedCommand` or
 `recordFinishedCommand` implementations, it must call

@@ -16,8 +16,12 @@ public protocol CommandWithUndo: Command where Centre: CommandCentreWithUndo {
   associatedtype UndoCommand: CommandWithUndo
   where UndoCommand.Output == Output, UndoCommand.Centre == Centre
 
-  /// The undo manager associated with this command.
-  /// This should be captured when the command is invoked.
+  /// The undo manager to register this command's inverse with, captured when the command is
+  /// created, such as SwiftUI's `@Environment(\.undoManager)`.
+  ///
+  /// Store it in a `weak var`. The undo manager keeps its registered commands alive, so a command
+  /// that held its manager strongly would keep the manager alive for as long as its own undo
+  /// action, and neither would be released.
   var undoManager: UndoManager? { get }
 
   /// The name of the undo action for this command, as shown in titles such as "Undo Increment".

@@ -122,12 +122,18 @@ open class HistoryService {
   /// because the step is named after what the user did, not the command that reverses it:
   /// undoing "Increment" performs a decrement, but the control should still say "Undo Increment"
   /// and then "Redo Increment". The entry keeps the action as it swaps between the reversal and
-  /// the original command. `CommandCentreWithHistory` calls this with
-  /// each successful command's reversal; call it directly only to add history that did not come
-  /// from a forward command.
+  /// the original command. `CommandCentreWithHistory` calls this with each successful command's
+  /// reversal; call it directly only to add history that did not come from a forward command.
+  ///
+  /// Throws `HistoryServiceError.historyOperationInProgress` while an undo or redo is in progress,
+  /// since that operation holds the position of the entry it will replace.
   open func recordUndo<C: CommandWithHistory, A: Command>(
     _ reversal: C, of action: A, centre: C.Centre
-  ) where A.Centre == C.Centre {
+  ) throws where A.Centre == C.Centre {
+    guard isPerformingHistoryOperation == false else {
+      throw HistoryServiceError.historyOperationInProgress
+    }
+
     undoStack.removeSubrange(undoCursor...)
     undoStack.append(HistoryEntry(command: reversal, action: action, centre: centre))
     undoCursor = undoStack.count

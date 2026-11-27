@@ -10,6 +10,9 @@ struct BenchView: View {
   /// The command centre shared by every page.
   let centre: ExampleCentre
 
+  /// The UndoManager page's centre, owned by the window like the window's undo manager.
+  @State private var undoManagerCentre = UndoManagerExampleCentre()
+
   /// The page shown in the detail column.
   @State private var page: BenchPage? = .toolbar
 
@@ -23,7 +26,7 @@ struct BenchView: View {
       }
       .navigationTitle("Bench")
     } detail: {
-      BenchPageView(page: page ?? .toolbar, centre: centre)
+      BenchPageView(page: page ?? .toolbar, centre: centre, undoManagerCentre: undoManagerCentre)
     }
     .task(runToggling)
   }
@@ -42,12 +45,15 @@ private struct BenchPageView: View {
   /// The command centre.
   let centre: ExampleCentre
 
+  /// The UndoManager page's centre.
+  let undoManagerCentre: UndoManagerExampleCentre
+
   /// The page's view.
   var body: some View {
     switch page {
     case .toolbar: ToolbarBenchView(centre: centre)
     case .containers: ContainersBenchView(centre: centre)
-    case .undoManager: UndoManagerExampleView()
+    case .undoManager: UndoManagerExampleView(centre: undoManagerCentre)
     case .history: HistoryExampleView(centre: centre)
     }
   }

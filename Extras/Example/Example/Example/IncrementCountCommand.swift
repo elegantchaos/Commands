@@ -14,7 +14,7 @@ struct IncrementCountCommand: CommandWithUndo, CommandWithUI {
   let id = "com.elegantchaos.commands.increment"
 
   /// Undo manager from the view that invoked the command.
-  let undoManager: UndoManager?
+  weak var undoManager: UndoManager?
 
   /// Returns the name shown on the command's button and in undo titles.
   func name(centre: UndoManagerExampleCentre) -> String {

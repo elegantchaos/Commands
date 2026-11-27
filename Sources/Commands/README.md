@@ -53,19 +53,18 @@ Each command protocol requires its centre to adopt the matching centre protocol,
 
 ### UndoManager
 
-A synchronous command adopts `CommandWithUndo`. It implements `performSynchronously(centre:)` and `undoCommand(centre:)`, and carries the `UndoManager` it was invoked with, such as SwiftUI's `@Environment(\.undoManager)`. Its centre adopts `CommandCentreWithUndo` and names the object that owns its registered actions.
+A synchronous command adopts `CommandWithUndo`. It implements `performSynchronously(centre:)` and `undoCommand(centre:)`, and carries the `UndoManager` it was invoked with, such as SwiftUI's `@Environment(\.undoManager)`, in a `weak var`: the undo manager keeps its registered commands alive, so a strong reference would keep both alive. Its centre, a class, adopts `CommandCentreWithUndo` and is the target of its registered actions, which the undo manager does not keep alive.
 
 ```swift
 @MainActor
 final class EditorCommands: CommandCentreWithUndo {
   var value = 0
-  var undoTarget: AnyObject { self }
 }
 
 @MainActor
 struct IncrementCommand: CommandWithUndo {
   let id = "editor.increment"
-  let undoManager: UndoManager?
+  weak var undoManager: UndoManager?
 
   func performSynchronously(centre: EditorCommands) {
     centre.value += 1
@@ -105,7 +104,7 @@ final class SessionCentre: SessionCommands, CommandCentreWithHistory {
 }
 ```
 
-The centre asks for the reversal after the command succeeds, so the reversal can capture state the command produced. `HistoryService` uses cursor-based semantics: undo creates the operation for redo, redo restores the operation for undo, and a new forward command discards the redo branch. While an undo or redo is in progress, forward commands are disabled, and history operations wait for running forward commands to finish. See the [concurrency design](../../Extras/Documentation/Concurrency.md) for the execution and re-entrancy invariants. `CommandsUI` provides buttons that perform the next undo and redo.
+The centre asks for the reversal after the command succeeds, so the reversal can capture state the command produced. `HistoryService` uses cursor-based semantics: undo creates the operation for redo, redo restores the operation for undo, and a new forward command discards the redo branch. While an undo or redo is in progress, forward commands are disabled, and history operations wait for running forward commands to finish. Recording a step directly with `recordUndo(_:of:centre:)` throws while an undo or redo is in progress. History entries hold their centre weakly, so a centre's history does not keep it alive. See the [concurrency design](../../Extras/Documentation/Concurrency.md) for the execution and re-entrancy invariants. `CommandsUI` provides buttons that perform the next undo and redo.
 
 ### Commands that reverse each other
 

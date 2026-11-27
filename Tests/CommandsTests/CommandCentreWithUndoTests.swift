@@ -28,9 +28,6 @@ private final class UndoTestCentre: CommandCentreWithUndo {
   /// Results returned by commands performed through undo or redo.
   var undoRedoResults: [Int] = []
 
-  /// The centre itself owns the registered undo actions.
-  var undoTarget: AnyObject { self }
-
   /// Records that a command started.
   func recordStartedCommand<C: Command>(_ command: C) where C.Centre == UndoTestCentre {
     startedCommandIDs.append(command.id)
@@ -66,7 +63,7 @@ private struct IncrementCommand: CommandWithUndo {
   let id = "test.undo.increment"
 
   /// Undo manager that receives the inverse command.
-  let undoManager: UndoManager?
+  weak var undoManager: UndoManager?
 
   /// Increments the value.
   func performSynchronously(centre: UndoTestCentre) -> Int {
@@ -93,7 +90,7 @@ private struct DecrementCommand: CommandWithUndo {
   let id = "test.undo.decrement"
 
   /// Undo manager that receives the inverse command.
-  let undoManager: UndoManager?
+  weak var undoManager: UndoManager?
 
   /// Reports the availability configured on the centre.
   func availability(centre: UndoTestCentre) -> CommandAvailability {
@@ -181,6 +178,25 @@ struct CommandCentreWithUndoTests {
     #expect(centre.failedCommandIDs == ["test.undo.decrement"])
     #expect(centre.startedCommandIDs == ["test.undo.increment"])
     #expect(centre.undoRedoResults.isEmpty)
+  }
+
+  /// Verifies that registering an undo action keeps neither the undo manager nor the centre alive.
+  @Test func registeredUndoDoesNotRetainManagerOrCentre() async throws {
+    weak var releasedManager: UndoManager?
+    weak var releasedCentre: UndoTestCentre?
+    do {
+      let manager = UndoManager()
+      manager.groupsByEvent = false
+      let centre = UndoTestCentre()
+      manager.beginUndoGrouping()
+      _ = try await centre.perform(IncrementCommand(undoManager: manager))
+      manager.endUndoGrouping()
+      #expect(manager.canUndo)
+      releasedManager = manager
+      releasedCentre = centre
+    }
+    #expect(releasedManager == nil)
+    #expect(releasedCentre == nil)
   }
 
   /// Verifies that a command performed outside an event leaves its undo action in a closed group of its own.

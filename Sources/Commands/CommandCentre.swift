@@ -49,7 +49,7 @@ extension CommandCentre {
     return availability
   }
 
-  /// Performs a command after checking its availability and execution context.
+  /// Performs a command after checking its availability, running state and execution context.
   ///
   /// Ordinary callers omit `context`. A coordinating service supplies it only
   /// while performing work that belongs to its active operation.
@@ -62,8 +62,10 @@ extension CommandCentre {
 
     // UI callers should normally gate execution through `availability`, but the
     // command centre still guards execution because availability can change
-    // between rendering a control and the action firing.
+    // between rendering a control and the action firing. A command that is
+    // already running is refused, as `availability(_:)` reports it.
     guard command.availability(centre: self) == .enabled,
+      !isRunning(command),
       isAllowed(during: context)
     else {
       throw CommandError.commandUnavailable

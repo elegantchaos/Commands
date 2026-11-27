@@ -67,9 +67,6 @@ Menu("Debug") {
 .commandConfirmation(.hosted)
 ```
 
-`confirmableButton(_:)` and `confirmableToolbarItem(_:)` are deprecated and forward to `button(_:)`
-and `toolbarItem(_:)`, so they confirm only commands that declare a confirmation.
-
 ## The commands host
 
 Place a `CommandsHost` at the root of each window, and inside any sheet that contains command

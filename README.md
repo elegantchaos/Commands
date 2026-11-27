@@ -23,7 +23,8 @@ them to UIKit and Mac Catalyst menus.
 See the detailed [Commands](Sources/Commands/README.md) and
 [CommandsUI](Sources/CommandsUI/README.md) guides for each target. See
 [Concurrency](Extras/Documentation/Concurrency.md) for the package's actor,
-async execution, undo/redo, and cancellation design.
+async execution, undo/redo, and cancellation design, and
+[Migrating to 3.0](Extras/Documentation/Migrating%20to%203.0.md) when upgrading from 2.x.
 
 ## Capabilities
 

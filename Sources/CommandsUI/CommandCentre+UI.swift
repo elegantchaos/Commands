@@ -72,19 +72,6 @@ extension CommandCentre {
     }
   }
 
-  /// Returns a button that confirms before executing the command, or nothing when it is hidden.
-  @available(
-    *, deprecated,
-    message:
-      "Use button(_:role:). A command opts into confirmation by returning one from confirmation(centre:), for example defaultConfirmation(centre:)."
-  )
-  @ViewBuilder public func confirmableButton<C: CommandWithUI>(
-    _ command: C, role: ButtonRole? = nil
-  ) -> some View
-  where C.Centre == Self {
-    button(command, role: role)
-  }
-
   /// Returns a toolbar item holding the button for the given command.
   ///
   /// Use this, not a `ToolbarItem` around `button(_:)`, to place a command in a toolbar: the
@@ -107,18 +94,6 @@ extension CommandCentre {
     CommandToolbarItem(
       command: command, centre: self, placement: placement, confirmation: confirmation
     ) { _ in content() }
-  }
-
-  /// Returns a toolbar item that confirms before executing the command.
-  @available(
-    *, deprecated,
-    message:
-      "Use toolbarItem(_:placement:). A command opts into confirmation by returning one from confirmation(centre:), for example defaultConfirmation(centre:)."
-  )
-  public func confirmableToolbarItem<C: CommandWithUI>(
-    _ command: C, placement: ToolbarItemPlacement = .automatic
-  ) -> CommandToolbarItem<C, Self, EmptyView> where C.Centre == Self {
-    toolbarItem(command, placement: placement)
   }
 
   /// Returns a toolbar item group holding the button for the given command, steady as the

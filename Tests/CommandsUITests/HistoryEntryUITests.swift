@@ -88,7 +88,7 @@ struct HistoryEntryUITests {
   /// Verifies that an entry presents the current metadata of the action that names its step.
   @Test func entryPresentsCurrentActionMetadata() throws {
     let centre = HistoryUITestCentre()
-    centre.historyService.recordUndo(
+    try centre.historyService.recordUndo(
       HistoryUICommand(id: "back", reversalID: nil),
       of: HistoryUICommand(id: "a", reversalID: nil), centre: centre)
     let entry = try #require(centre.historyService.nextUndo)
@@ -105,7 +105,7 @@ struct HistoryEntryUITests {
   /// Verifies that an entry whose action has no UI metadata has no presentation.
   @Test func entryWithoutUIActionHasNoPresentation() throws {
     let centre = HistoryUITestCentre()
-    centre.historyService.recordUndo(
+    try centre.historyService.recordUndo(
       HistoryPlainCommand(), of: HistoryPlainCommand(), centre: centre)
 
     let entry = try #require(centre.historyService.nextUndo)

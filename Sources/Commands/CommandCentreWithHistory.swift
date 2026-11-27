@@ -11,7 +11,7 @@ import Foundation
 /// service performs undo or redo, it allows only commands with that service's
 /// active context and prevents forward commands from changing history.
 @MainActor
-public protocol CommandCentreWithHistory: CommandCentre {
+public protocol CommandCentreWithHistory: CommandCentre, AnyObject {
   /// History that records the reversals of this centre's successful commands.
   var historyService: HistoryService { get }
 }
@@ -61,6 +61,12 @@ extension CommandCentreWithHistory {
     guard let centre = self as? H.Centre, let reversal = command.reversal(centre: centre) else {
       return
     }
-    historyService.recordUndo(reversal, of: command, centre: centre)
+    do {
+      try historyService.recordUndo(reversal, of: command, centre: centre)
+    } catch {
+      // `recordFinishedCommand` skips recording while history is undoing or redoing, which is
+      // the only time the service refuses a step.
+      commandChannel.log("Could not record the reversal of \(command.id): \(error)")
+    }
   }
 }

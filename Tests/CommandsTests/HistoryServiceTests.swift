@@ -223,8 +223,8 @@ private struct SuspendedForwardCommand: Command {
 @MainActor
 extension HistoryService {
   /// Records a command as a step named after itself, for tests that do not check step names.
-  fileprivate func recordUndo<C: CommandWithHistory>(_ command: C, centre: C.Centre) {
-    recordUndo(command, of: command, centre: centre)
+  fileprivate func recordUndo<C: CommandWithHistory>(_ command: C, centre: C.Centre) throws {
+    try recordUndo(command, of: command, centre: centre)
   }
 }
 
@@ -234,9 +234,9 @@ struct HistoryServiceTests {
   /// Verifies that undo actions can be reversed by matching redo actions.
   @Test func undoAndRedoTraverseHistoryInOrder() async throws {
     let centre = HistoryTestCentre()
-    centre.historyService.recordUndo(
+    try centre.historyService.recordUndo(
       UndoCommand(id: "undo.first", reversalID: "redo.first"), centre: centre)
-    centre.historyService.recordUndo(
+    try centre.historyService.recordUndo(
       UndoCommand(id: "undo.second", reversalID: "redo.second"), centre: centre)
 
     #expect(centre.historyService.hasUndo)
@@ -270,13 +270,13 @@ struct HistoryServiceTests {
   /// Verifies that recording a new command after undoing discards the redo branch.
   @Test func recordingAfterUndoDiscardsRedoHistory() async throws {
     let centre = HistoryTestCentre()
-    centre.historyService.recordUndo(
+    try centre.historyService.recordUndo(
       UndoCommand(id: "undo.original", reversalID: "redo.original"), centre: centre)
 
     try await centre.historyService.performUndo()
     #expect(centre.historyService.hasRedo)
 
-    centre.historyService.recordUndo(UndoCommand(id: "undo.replacement"), centre: centre)
+    try centre.historyService.recordUndo(UndoCommand(id: "undo.replacement"), centre: centre)
 
     #expect(centre.historyService.stackDescription == "undo.replacement")
     #expect(centre.historyService.hasUndo)
@@ -296,7 +296,7 @@ struct HistoryServiceTests {
   /// Verifies that failed forward commands finish tracking without registering a reversal.
   @Test func failedForwardCommandDoesNotRecordAReversal() async throws {
     let centre = HistoryTestCentre()
-    centre.historyService.recordUndo(UndoCommand(id: "undo.existing"), centre: centre)
+    try centre.historyService.recordUndo(UndoCommand(id: "undo.existing"), centre: centre)
 
     await #expect(throws: UndoFailure.expected) {
       try await centre.perform(FailingUndoableTestCommand())
@@ -310,13 +310,13 @@ struct HistoryServiceTests {
   /// Verifies that history entries report their command's identity and availability and perform it.
   @Test func historyEntryForwardsAvailabilityAndExecution() async throws {
     let centre = HistoryTestCentre()
-    centre.historyService.recordUndo(
+    try centre.historyService.recordUndo(
       UndoCommand(id: "test.disabled", reportedAvailability: .disabled), centre: centre)
 
     #expect(centre.historyService.nextUndo?.id == "test.disabled")
     #expect(centre.historyService.nextUndo?.availability() == .disabled)
 
-    centre.historyService.recordUndo(UndoCommand(id: "test.entry"), centre: centre)
+    try centre.historyService.recordUndo(UndoCommand(id: "test.entry"), centre: centre)
     try await centre.historyService.performUndo()
     #expect(centre.performedCommandIDs == ["test.entry"])
   }
@@ -338,9 +338,9 @@ struct HistoryServiceTests {
   }
 
   /// Verifies that failed reversals remain available for a later retry.
-  @Test func failedUndoPreservesTheReversal() async {
+  @Test func failedUndoPreservesTheReversal() async throws {
     let centre = HistoryTestCentre()
-    centre.historyService.recordUndo(FailingUndoCommand(), centre: centre)
+    try centre.historyService.recordUndo(FailingUndoCommand(), centre: centre)
 
     await #expect(throws: UndoFailure.expected) {
       try await centre.historyService.performUndo()
@@ -355,7 +355,7 @@ struct HistoryServiceTests {
   @Test func concurrentHistoryOperationIsRejected() async throws {
     let centre = HistoryTestCentre()
     let gate = UndoGate()
-    centre.historyService.recordUndo(SuspendedUndoCommand(gate: gate), centre: centre)
+    try centre.historyService.recordUndo(SuspendedUndoCommand(gate: gate), centre: centre)
 
     let firstUndo = Task {
       try await centre.historyService.performUndo()
@@ -382,11 +382,61 @@ struct HistoryServiceTests {
     #expect(centre.availability(UndoableTestCommand()) == .enabled)
   }
 
+  /// Verifies that a step cannot be recorded while an undo is suspended, since the undo holds the
+  /// position of the entry it will replace.
+  @Test func recordingDuringUndoIsRefused() async throws {
+    let centre = HistoryTestCentre()
+    let gate = UndoGate()
+    try centre.historyService.recordUndo(SuspendedUndoCommand(gate: gate), centre: centre)
+
+    let undo = Task {
+      try await centre.historyService.performUndo()
+    }
+    await gate.waitUntilStarted()
+
+    #expect(throws: HistoryServiceError.historyOperationInProgress) {
+      try centre.historyService.recordUndo(UndoCommand(id: "undo.late"), centre: centre)
+    }
+    #expect(centre.historyService.stackDescription == "suspended")
+
+    gate.release()
+    try await undo.value
+    #expect(centre.historyService.hasUndo == false)
+    #expect(centre.historyService.hasRedo == false)
+  }
+
+  /// Verifies that a centre's history, with both undo and redo entries, does not keep the centre
+  /// alive, and that its entries are disabled and refuse to run once the centre has gone.
+  @Test func historyDoesNotRetainItsCentre() async throws {
+    weak var released: HistoryTestCentre?
+    let service: HistoryService
+    do {
+      let centre = HistoryTestCentre()
+      try centre.historyService.recordUndo(
+        UndoCommand(id: "undo.first", reversalID: "redo.first"), centre: centre)
+      try centre.historyService.recordUndo(
+        UndoCommand(id: "undo.second", reversalID: "redo.second"), centre: centre)
+      try await centre.historyService.performUndo()
+      #expect(centre.historyService.hasUndo)
+      #expect(centre.historyService.hasRedo)
+      service = centre.historyService
+      released = centre
+    }
+
+    #expect(released == nil)
+    #expect(service.nextUndo?.availability() == .disabled)
+    #expect(service.nextRedo?.availability() == .disabled)
+    await #expect(throws: CommandError.commandUnavailable) {
+      try await service.performUndo()
+    }
+    #expect(service.hasUndo)
+  }
+
   /// Verifies that history operations wait for previously started forward commands.
   @Test func historyOperationIsRejectedWhileForwardCommandIsRunning() async throws {
     let centre = HistoryTestCentre()
     let gate = UndoGate()
-    centre.historyService.recordUndo(UndoCommand(id: "undo.pending"), centre: centre)
+    try centre.historyService.recordUndo(UndoCommand(id: "undo.pending"), centre: centre)
 
     let forwardCommand = Task {
       try await centre.perform(SuspendedForwardCommand(gate: gate))
@@ -409,7 +459,7 @@ struct HistoryServiceTests {
   @Test func executionContextIsRestrictedToItsOwningService() async throws {
     let activeCentre = HistoryTestCentre()
     let activeGate = UndoGate()
-    activeCentre.historyService.recordUndo(
+    try activeCentre.historyService.recordUndo(
       SuspendedUndoCommand(gate: activeGate), centre: activeCentre)
 
     let activeUndo = Task {
@@ -418,7 +468,7 @@ struct HistoryServiceTests {
     await activeGate.waitUntilStarted()
 
     let otherCentre = HistoryTestCentre()
-    otherCentre.historyService.recordUndo(
+    try otherCentre.historyService.recordUndo(
       UndoCommand(id: "cross-service.command"), centre: activeCentre)
 
     await #expect(throws: CommandError.commandUnavailable) {

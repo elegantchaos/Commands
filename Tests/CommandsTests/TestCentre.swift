@@ -215,6 +215,18 @@ struct TestCentreTests {
     #expect(centre.availability(command) == .runningSilently)
   }
 
+  /// Verifies that a command the centre reports as running cannot be started again.
+  @Test func testRunningCommandIsNotPerformedAgain() async throws {
+    let centre = TestCentre()
+    let command = TestCommand(id: "test.already-running")
+    centre.runningCommandIDs.insert(command.id)
+
+    await #expect(throws: CommandError.commandUnavailable) {
+      try await centre.perform(command)
+    }
+    #expect(centre.testRan == false)
+  }
+
   /// Verifies that fire-and-forget execution still runs the command and lifecycle hooks.
   @Test func testPerformWithoutWaitingRunsCommand() async throws {
     let centre = TestCentre()
