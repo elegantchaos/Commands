@@ -53,6 +53,8 @@ private struct BenchPageView: View {
     switch page {
     case .toolbar: ToolbarBenchView(centre: centre)
     case .containers: ContainersBenchView(centre: centre)
+    case .confirmation: ConfirmationBenchView(centre: centre)
+    case .importing: ImportBenchView(centre: centre)
     case .undoManager: UndoManagerExampleView(centre: undoManagerCentre)
     case .history: HistoryExampleView(centre: centre)
     }
@@ -66,6 +68,12 @@ enum BenchPage: String, CaseIterable, Identifiable {
 
   /// Hidden commands in a list and a menu.
   case containers
+
+  /// A command that asks for confirmation, presented each way a control can ask.
+  case confirmation
+
+  /// Importer commands in buttons and a context menu.
+  case importing
 
   /// Commands that undo through the window's `UndoManager`, beside text inputs.
   case undoManager
@@ -81,6 +89,8 @@ enum BenchPage: String, CaseIterable, Identifiable {
     switch self {
     case .toolbar: "Toolbar"
     case .containers: "Lists and Menus"
+    case .confirmation: "Confirmation"
+    case .importing: "Import"
     case .undoManager: "UndoManager"
     case .history: "History"
     }

@@ -16,7 +16,9 @@ struct ExampleApp: App {
   /// The bench window, with bench commands added to the Edit menu.
   var body: some Scene {
     WindowGroup {
-      BenchView(centre: centre)
+      CommandsHost(centre: centre) {
+        BenchView(centre: centre)
+      }
     }
     .commands {
       CommandGroup(after: .pasteboard) {
