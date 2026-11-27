@@ -21,6 +21,14 @@ SwiftUI uses the environment's `UndoManager` for text-field undo, so commands th
 - `CommandWithUndo`'s default `perform` lost a `where` clause that repeated the protocol's own constraints.
 - Added `CommandCentreWithUndoTests` and `CommandWithUndoUITests`.
 
+## Generic history
+
+History no longer needs type-erased reversal proxies. Commands opt in by adopting `CommandWithHistory`, whose `reversal(centre:)` returns a concrete command or `nil`; commands with nothing to reverse adopt only `Command`, as before. `HistoryService` stores `HistoryEntry` values that capture the command and centre with their concrete types, and `recordUndo(_:centre:)` takes a command. `CommandCentreWithHistory` opens a finished command as `any CommandWithHistory` to record its reversal. `CommandReversal`, `CommandReversalAdapter`, `CommandReversalAdapterWithUI`, `CommandReversalWithUI` and `Command.reversal(centre:)` are gone. The history buttons read UI metadata from the entry's command when it adopts `CommandWithUI`, and `WrappedCommand` adopts `CommandWithHistory` when the command it wraps does. The example commands adopt it conditionally, when their centre keeps history.
+
+The two mechanisms still differ in when the inverse is created: History asks for the reversal after the command succeeds, while `CommandWithUndo` creates its undo command before performing. The method names differ (`reversal` and `undoCommand`) to keep that visible.
+
+The concurrency design document's wording changed from reversals to history entries; its invariants are unchanged.
+
 Associated-type inference cannot resolve a command that names itself, or a partner that names it back, as its undo command. Such commands must declare `Centre` and `ResultType` explicitly, as the tests do.
 
 ## Validation

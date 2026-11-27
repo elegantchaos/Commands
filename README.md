@@ -28,15 +28,14 @@ async execution, undo/redo, and cancellation design.
 ## Capabilities
 
 - Centre-aware command availability and lifecycle tracking
-- Optional command reversals with a lightweight undo/redo service
+- Optional undo and redo, through Foundation's `UndoManager` or a lightweight history service
 - UI metadata: localized name and help, icons, shortcuts, and confirmation
 - SwiftUI buttons, toolbar items, dynamic-trigger buttons, and file importers
 - UIKit and Mac Catalyst `UICommand` and `UIMenu` adaptation
 
 ## Targets
 
-- [Commands](Sources/Commands/README.md): core command execution, availability,
-  reversals, undo, and redo.
+- [Commands](Sources/Commands/README.md): core command execution, availability, undo, and redo.
 - [CommandsUI](Sources/CommandsUI/README.md): UI metadata, SwiftUI controls,
   file importers, and UIKit/Mac Catalyst menus.
 

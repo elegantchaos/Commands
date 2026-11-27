@@ -29,10 +29,6 @@ public protocol Command<Centre> {
 
   /// Performs the command using the given command centre.
   func perform(centre: Centre) async throws -> ResultType
-
-  /// Returns the operation that reverses this command.
-  func reversal(centre: Centre) -> (any CommandReversal)?
-
 }
 
 /// Default implementations for `Command`.
@@ -40,7 +36,4 @@ public protocol Command<Centre> {
 extension Command {
   /// By default, commands are always enabled.
   public func availability(centre: Centre) -> CommandAvailability { .enabled }
-
-  /// By default, a command does not provide a reversal.
-  public func reversal(centre: Centre) -> (any CommandReversal)? { nil }
 }

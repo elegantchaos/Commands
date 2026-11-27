@@ -35,9 +35,9 @@ public struct HistoryUndoButton: View {
 
   /// Renders the pending reversal unless it is hidden.
   public var body: some View {
-    let reversal = historyService.nextUndo
-    let availability = reversal?.availability() ?? .disabled
-    let presentation = showsCommandPresentation ? reversal as? any CommandReversalWithUI : nil
+    let entry = historyService.nextUndo
+    let availability = entry?.availability() ?? .disabled
+    let presentation = showsCommandPresentation ? entry?.presentation : nil
 
     if availability != .hidden {
       Button(role: role, action: performUndo) {
@@ -45,21 +45,21 @@ public struct HistoryUndoButton: View {
       }
       .commandPresentation(
         availability: availability,
-        help: presentation?.help(),
+        help: presentation?.help,
         isPerforming: historyService.isUndoing
       )
     }
   }
 
   /// Button label for the pending reversal or the standard Undo action.
-  @ViewBuilder private func label(presentation: (any CommandReversalWithUI)?) -> some View {
+  @ViewBuilder private func label(presentation: HistoryEntryPresentation?) -> some View {
     if let presentation {
       Label(
         String.localizedStringWithFormat(
           String(localized: "action.undo", bundle: #bundle),
-          presentation.name()
+          presentation.name
         ),
-        icon: presentation.icon()
+        icon: presentation.icon
       )
     } else {
       Text("action.undo.simple", bundle: #bundle)

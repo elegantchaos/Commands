@@ -24,8 +24,10 @@ commander.dynamicButton(command: command(for:))
 
 `importer(_:)` and `importerButton(_:isShowingImportSheet:)` support file-import
 commands. `historyUndoButton()` and `historyRedoButton()` remain visible but disabled when no
-operation is available. Set `showsCommandPresentation: true` to use a pending
-`CommandReversalWithUI`'s localized name and icon.
+operation is available. Set `showsCommandPresentation: true` to label them with
+the pending command's localized name and icon, when it adopts `CommandWithUI`.
+A `CommandWithUI` that also adopts `CommandWithUndo` names its `UndoManager`
+action with its localized name.
 
 ## Confirmation
 
@@ -58,7 +60,7 @@ Menu("Debug") {
 ```
 
 `confirmableButton(_:)` and `confirmableToolbarItem(_:)` are deprecated and forward to `button(_:)`
-and `toolbarItem(_:)`. They no longer confirm a command that declares no confirmation.
+and `toolbarItem(_:)`, so they confirm only commands that declare a confirmation.
 
 ## The commands host
 

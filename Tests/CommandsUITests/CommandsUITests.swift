@@ -295,22 +295,4 @@ struct CommandsUITests {
     #expect(wrapped.icon(centre: centre).systemImage == "network")
     #expect(wrapped.confirmation(centre: centre)?.confirm == "Proceed")
   }
-
-  /// Verifies that UI reversal adapters preserve current metadata and execution behavior.
-  @Test func commandReversalAdapterWithUIForwardsMetadataAndExecution() async throws {
-    let centre = UITestCentre()
-    let command = MetadataCommand(reportedAvailability: .enabled, result: "ignored")
-    let reversal = CommandReversalAdapterWithUI(command: command, centre: centre)
-
-    #expect(reversal.id == command.id)
-    #expect(reversal.availability() == .enabled)
-    #expect(reversal.name() == "Metadata Command")
-    #expect(reversal.icon().systemImage == "network")
-    #expect(reversal.help() == "Helpful metadata")
-
-    let historyService = HistoryService()
-    historyService.recordUndo(reversal)
-    try await historyService.performUndo()
-    #expect(centre.performedCommandIDs == [command.id])
-  }
 }

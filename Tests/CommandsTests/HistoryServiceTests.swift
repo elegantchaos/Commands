@@ -16,13 +16,19 @@ private final class HistoryTestCentre: CommandCentreWithHistory {
   let historyService = HistoryService()
 }
 
-/// Command used to verify reversal adapter and undo-stack behavior.
+/// Command used to verify history entries and undo-stack behavior.
 @MainActor
-private struct UndoCommand: Command {
+private struct UndoCommand: CommandWithHistory {
+  /// Centre type, declared because inference cannot resolve a command that is its own reversal.
+  typealias Centre = HistoryTestCentre
+
+  /// Result type, declared for the same reason as `Centre`.
+  typealias ResultType = Void
+
   /// Identifier used to verify history execution order.
   let id: String
 
-  /// Availability reported through a reversal adapter.
+  /// Availability reported through the history entry.
   let reportedAvailability: CommandAvailability
 
   /// Identifier of the command that reverses this command.
@@ -44,42 +50,63 @@ private struct UndoCommand: Command {
     reportedAvailability
   }
 
-  /// Records that a reversal performed this command.
+  /// Records that history performed this command.
   func perform(centre: HistoryTestCentre) async throws {
     centre.performedCommandIDs.append(id)
   }
 
   /// Returns the command that reverses this history action.
-  func reversal(centre: HistoryTestCentre) -> (any CommandReversal)? {
-    guard let reversalID else {
-      return nil
-    }
-    return CommandReversalAdapter(
-      command: UndoCommand(id: reversalID, reversalID: id),
-      centre: centre
-    )
+  func reversal(centre: HistoryTestCentre) -> UndoCommand? {
+    reversalID.map { UndoCommand(id: $0, reversalID: id) }
   }
 }
 
-/// Command that supplies an undo action through `CommandReversalAdapter`.
+/// Forward command whose reversal the centre records.
 @MainActor
-private struct UndoableTestCommand: Command {
+private struct UndoableTestCommand: CommandWithHistory {
   /// Stable identifier for the forward operation.
   let id = "test.undoable.forward"
 
-  /// Performs no work beyond registering its reversal.
+  /// Performs no work beyond supplying its reversal.
   func perform(centre: HistoryTestCentre) async throws {
   }
 
   /// Returns the command that reverses the forward operation.
-  func reversal(centre: HistoryTestCentre) -> (any CommandReversal)? {
-    CommandReversalAdapter(command: UndoCommand(id: "test.undoable.reversal"), centre: centre)
+  func reversal(centre: HistoryTestCentre) -> UndoCommand? {
+    UndoCommand(id: "test.undoable.reversal")
+  }
+}
+
+/// Forward command that adopts history but has nothing to reverse this time.
+@MainActor
+private struct IrreversibleTestCommand: CommandWithHistory {
+  /// Stable identifier for the forward operation.
+  let id = "test.undoable.irreversible"
+
+  /// Performs no work.
+  func perform(centre: HistoryTestCentre) async throws {
+  }
+
+  /// Reports that this invocation cannot be reversed.
+  func reversal(centre: HistoryTestCentre) -> UndoCommand? {
+    nil
+  }
+}
+
+/// Forward command that does not adopt history at all.
+@MainActor
+private struct PlainTestCommand: Command {
+  /// Stable identifier for the forward operation.
+  let id = "test.plain"
+
+  /// Performs no work.
+  func perform(centre: HistoryTestCentre) async throws {
   }
 }
 
 /// Command that supplies a reversal but fails before completing its forward operation.
 @MainActor
-private struct FailingUndoableTestCommand: Command {
+private struct FailingUndoableTestCommand: CommandWithHistory {
   /// Stable identifier for the failing forward operation.
   let id = "test.undoable.failing-forward"
 
@@ -89,11 +116,8 @@ private struct FailingUndoableTestCommand: Command {
   }
 
   /// Returns a reversal that must not be recorded for the failed operation.
-  func reversal(centre: HistoryTestCentre) -> (any CommandReversal)? {
-    CommandReversalAdapter(
-      command: UndoCommand(id: "test.undoable.unexpected-reversal"),
-      centre: centre
-    )
+  func reversal(centre: HistoryTestCentre) -> UndoCommand? {
+    UndoCommand(id: "test.undoable.unexpected-reversal")
   }
 }
 
@@ -105,13 +129,18 @@ private enum UndoFailure: Error, Equatable {
 
 /// Command that fails while executing a reversal.
 @MainActor
-private struct FailingUndoCommand: Command {
+private struct FailingUndoCommand: CommandWithHistory {
   /// Stable identifier for the failing reversal.
   let id = "failing"
 
   /// Throws the expected test error.
   func perform(centre: HistoryTestCentre) async throws {
     throw UndoFailure.expected
+  }
+
+  /// Has no reversal, so a successful run would leave the history.
+  func reversal(centre: HistoryTestCentre) -> UndoCommand? {
+    nil
   }
 }
 
@@ -158,7 +187,7 @@ private final class UndoGate {
 
 /// Command that suspends until a test explicitly releases it.
 @MainActor
-private struct SuspendedUndoCommand: Command {
+private struct SuspendedUndoCommand: CommandWithHistory {
   /// Stable identifier for the suspended reversal.
   let id = "suspended"
 
@@ -168,6 +197,11 @@ private struct SuspendedUndoCommand: Command {
   /// Waits for the test to release the command.
   func perform(centre: HistoryTestCentre) async throws {
     await gate.wait()
+  }
+
+  /// Has no reversal, so the entry leaves the history once performed.
+  func reversal(centre: HistoryTestCentre) -> UndoCommand? {
+    nil
   }
 }
 
@@ -186,43 +220,16 @@ private struct SuspendedForwardCommand: Command {
   }
 }
 
-/// Reversal that attempts to execute a command in another undo service's execution context.
-@MainActor
-private struct CrossServiceReversal: CommandReversal {
-  /// Stable identifier for the test reversal.
-  let id = "cross-service"
-
-  /// Centre whose active history operation must reject this reversal's execution context.
-  let centre: HistoryTestCentre
-
-  /// Returns an enabled availability state for the test reversal.
-  func availability() -> CommandAvailability {
-    .enabled
-  }
-
-  /// Attempts to execute a command using the execution context supplied by another service.
-  func perform(in context: CommandExecutionContext) async throws -> (any CommandReversal)? {
-    _ = try await centre.perform(UndoCommand(id: "cross-service.command"), during: context)
-    return nil
-  }
-}
-
-/// Tests undo and redo registration, execution, and reversal adaptation.
+/// Tests undo and redo registration, execution, and history recording.
 @MainActor
 struct HistoryServiceTests {
   /// Verifies that undo actions can be reversed by matching redo actions.
   @Test func undoAndRedoTraverseHistoryInOrder() async throws {
     let centre = HistoryTestCentre()
     centre.historyService.recordUndo(
-      CommandReversalAdapter(
-        command: UndoCommand(id: "undo.first", reversalID: "redo.first"),
-        centre: centre
-      ))
+      UndoCommand(id: "undo.first", reversalID: "redo.first"), centre: centre)
     centre.historyService.recordUndo(
-      CommandReversalAdapter(
-        command: UndoCommand(id: "undo.second", reversalID: "redo.second"),
-        centre: centre
-      ))
+      UndoCommand(id: "undo.second", reversalID: "redo.second"), centre: centre)
 
     #expect(centre.historyService.hasUndo)
     #expect(centre.historyService.hasRedo == false)
@@ -256,16 +263,12 @@ struct HistoryServiceTests {
   @Test func recordingAfterUndoDiscardsRedoHistory() async throws {
     let centre = HistoryTestCentre()
     centre.historyService.recordUndo(
-      CommandReversalAdapter(
-        command: UndoCommand(id: "undo.original", reversalID: "redo.original"),
-        centre: centre
-      ))
+      UndoCommand(id: "undo.original", reversalID: "redo.original"), centre: centre)
 
     try await centre.historyService.performUndo()
     #expect(centre.historyService.hasRedo)
 
-    centre.historyService.recordUndo(
-      CommandReversalAdapter(command: UndoCommand(id: "undo.replacement"), centre: centre))
+    centre.historyService.recordUndo(UndoCommand(id: "undo.replacement"), centre: centre)
 
     #expect(centre.historyService.stackDescription == "undo.replacement")
     #expect(centre.historyService.hasUndo)
@@ -273,7 +276,7 @@ struct HistoryServiceTests {
     #expect(centre.historyService.nextUndo?.id == "undo.replacement")
   }
 
-  /// Verifies that undoable centres record successful forward command reversals.
+  /// Verifies that centres with history record the reversals of successful forward commands.
   @Test func historyCentreRecordsForwardCommandReversals() async throws {
     let centre = HistoryTestCentre()
     let command = UndoableTestCommand()
@@ -285,8 +288,7 @@ struct HistoryServiceTests {
   /// Verifies that failed forward commands finish tracking without registering a reversal.
   @Test func failedForwardCommandDoesNotRecordAReversal() async throws {
     let centre = HistoryTestCentre()
-    centre.historyService.recordUndo(
-      CommandReversalAdapter(command: UndoCommand(id: "undo.existing"), centre: centre))
+    centre.historyService.recordUndo(UndoCommand(id: "undo.existing"), centre: centre)
 
     await #expect(throws: UndoFailure.expected) {
       try await centre.perform(FailingUndoableTestCommand())
@@ -297,28 +299,40 @@ struct HistoryServiceTests {
     #expect(centre.performedCommandIDs == ["undo.existing"])
   }
 
-  /// Verifies that reversal adapters preserve availability and execution behavior.
-  @Test func commandReversalAdapterForwardsAvailabilityAndExecution() async throws {
+  /// Verifies that history entries report their command's identity and availability and perform it.
+  @Test func historyEntryForwardsAvailabilityAndExecution() async throws {
     let centre = HistoryTestCentre()
-    let unavailableAdapter = CommandReversalAdapter(
-      command: UndoCommand(id: "test.proxy", reportedAvailability: .disabled), centre: centre)
+    centre.historyService.recordUndo(
+      UndoCommand(id: "test.disabled", reportedAvailability: .disabled), centre: centre)
 
-    #expect(unavailableAdapter.id == "test.proxy")
-    #expect(unavailableAdapter.availability() == .disabled)
+    #expect(centre.historyService.nextUndo?.id == "test.disabled")
+    #expect(centre.historyService.nextUndo?.availability() == .disabled)
 
-    let executableAdapter = CommandReversalAdapter(
-      command: UndoCommand(id: "test.proxy"), centre: centre)
-
-    centre.historyService.recordUndo(executableAdapter)
+    centre.historyService.recordUndo(UndoCommand(id: "test.entry"), centre: centre)
     try await centre.historyService.performUndo()
-    #expect(centre.performedCommandIDs == ["test.proxy"])
+    #expect(centre.performedCommandIDs == ["test.entry"])
+  }
+
+  /// Verifies that a history command returning no reversal leaves the history unchanged.
+  @Test func irreversibleInvocationIsNotRecorded() async throws {
+    let centre = HistoryTestCentre()
+
+    try await centre.perform(IrreversibleTestCommand())
+    #expect(centre.historyService.hasUndo == false)
+  }
+
+  /// Verifies that commands which do not adopt history leave it unchanged.
+  @Test func plainCommandIsNotRecorded() async throws {
+    let centre = HistoryTestCentre()
+
+    try await centre.perform(PlainTestCommand())
+    #expect(centre.historyService.hasUndo == false)
   }
 
   /// Verifies that failed reversals remain available for a later retry.
   @Test func failedUndoPreservesTheReversal() async {
     let centre = HistoryTestCentre()
-    centre.historyService.recordUndo(
-      CommandReversalAdapter(command: FailingUndoCommand(), centre: centre))
+    centre.historyService.recordUndo(FailingUndoCommand(), centre: centre)
 
     await #expect(throws: UndoFailure.expected) {
       try await centre.historyService.performUndo()
@@ -333,8 +347,7 @@ struct HistoryServiceTests {
   @Test func concurrentHistoryOperationIsRejected() async throws {
     let centre = HistoryTestCentre()
     let gate = UndoGate()
-    centre.historyService.recordUndo(
-      CommandReversalAdapter(command: SuspendedUndoCommand(gate: gate), centre: centre))
+    centre.historyService.recordUndo(SuspendedUndoCommand(gate: gate), centre: centre)
 
     let firstUndo = Task {
       try await centre.historyService.performUndo()
@@ -365,8 +378,7 @@ struct HistoryServiceTests {
   @Test func historyOperationIsRejectedWhileForwardCommandIsRunning() async throws {
     let centre = HistoryTestCentre()
     let gate = UndoGate()
-    centre.historyService.recordUndo(
-      CommandReversalAdapter(command: UndoCommand(id: "undo.pending"), centre: centre))
+    centre.historyService.recordUndo(UndoCommand(id: "undo.pending"), centre: centre)
 
     let forwardCommand = Task {
       try await centre.perform(SuspendedForwardCommand(gate: gate))
@@ -385,12 +397,12 @@ struct HistoryServiceTests {
     #expect(centre.performedCommandIDs == ["undo.pending"])
   }
 
-  /// Verifies that one undo service cannot use another service's active context.
+  /// Verifies that one history service cannot use another service's active context.
   @Test func executionContextIsRestrictedToItsOwningService() async throws {
     let activeCentre = HistoryTestCentre()
     let activeGate = UndoGate()
     activeCentre.historyService.recordUndo(
-      CommandReversalAdapter(command: SuspendedUndoCommand(gate: activeGate), centre: activeCentre))
+      SuspendedUndoCommand(gate: activeGate), centre: activeCentre)
 
     let activeUndo = Task {
       try await activeCentre.historyService.performUndo()
@@ -398,7 +410,8 @@ struct HistoryServiceTests {
     await activeGate.waitUntilStarted()
 
     let otherCentre = HistoryTestCentre()
-    otherCentre.historyService.recordUndo(CrossServiceReversal(centre: activeCentre))
+    otherCentre.historyService.recordUndo(
+      UndoCommand(id: "cross-service.command"), centre: activeCentre)
 
     await #expect(throws: CommandError.commandUnavailable) {
       try await otherCentre.historyService.performUndo()

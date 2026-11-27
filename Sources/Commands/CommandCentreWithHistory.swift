@@ -12,6 +12,7 @@ import Foundation
 /// active context and prevents forward commands from changing history.
 @MainActor
 public protocol CommandCentreWithHistory: CommandCentre {
+  /// History that records the reversals of this centre's successful commands.
   var historyService: HistoryService { get }
 }
 
@@ -46,8 +47,20 @@ extension CommandCentreWithHistory {
       return
     }
     defer { historyService.finishForwardCommand() }
-    if case .succeeded = outcome, let reversal = command.reversal(centre: self) {
-      historyService.recordUndo(reversal)
+    if case .succeeded = outcome, let command = command as? any CommandWithHistory {
+      recordReversal(of: command)
     }
+  }
+
+  /// Records the reversal of a successful history command, when it supplies one.
+  ///
+  /// Taking the command generically opens the existential, so the reversal is recorded with
+  /// its concrete type. The cast to `H.Centre` always succeeds, because the command was
+  /// performed by this centre.
+  private func recordReversal<H: CommandWithHistory>(of command: H) {
+    guard let centre = self as? H.Centre, let reversal = command.reversal(centre: centre) else {
+      return
+    }
+    historyService.recordUndo(reversal, centre: centre)
   }
 }

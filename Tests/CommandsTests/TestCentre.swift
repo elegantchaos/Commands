@@ -193,7 +193,6 @@ struct TestCentreTests {
 
     #expect(command.availability(centre: centre) == .enabled)
     #expect(centre.availability(command) == .enabled)
-    #expect(command.reversal(centre: centre) == nil)
   }
 
   /// Verifies that non-hidden running commands are surfaced as `.running`.
