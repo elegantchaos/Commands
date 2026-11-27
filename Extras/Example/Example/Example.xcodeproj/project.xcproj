@@ -13,7 +13,7 @@
   "packages": [
     {
       "kind": "local",
-      "path": "../../../../Commands",
+      "path": "../../..",
     },
   ],
   "files": [

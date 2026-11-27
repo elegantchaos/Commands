@@ -32,6 +32,9 @@
             reference = "container:Example.xctestplan"
             default = "YES">
          </TestPlanReference>
+         <TestPlanReference
+            reference = "container:Full Validation.xctestplan">
+         </TestPlanReference>
       </TestPlans>
       <Testables>
          <TestableReference

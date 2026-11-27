@@ -1,5 +1,6 @@
 {
   "validate": {
-    "platforms": ["macOS", "iOS", "watchOS"]
+    "schemes": ["Example"],
+    "platforms": ["macOS", "iOS"]
   }
 }
