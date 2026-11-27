@@ -23,7 +23,7 @@ public protocol CommandCentreWithUndo: CommandCentre {
 public extension CommandCentreWithUndo {
   /// Perform the supplied command, and register a different supplied command as the undo action.
   func performAndRegisterUndo<C, U>(command: C, undo: U, undoManager: UndoManager?, name: String) -> C.ResultType where C: CommandWithUndo, C.Centre == Self, U: CommandWithUndo, U.Centre == Self, C.ResultType == U.ResultType {
-    print("registered undo \(undo.nameForUndo(centre: self)) for command \(command.nameForUndo(centre: self))")
+    commandChannel.debug("registered undo \(undo.nameForUndo(centre: self)) for command \(command.nameForUndo(centre: self))")
     undoManager?.registerUndo(withTarget: undoTarget) { _ in
       let result = performAndRegisterUndo(command: undo, undo: command, undoManager: undoManager, name: name)
       recordUndoRedoResult(undo, result: result)
@@ -33,6 +33,6 @@ public extension CommandCentreWithUndo {
   }
   
   func recordUndoRedoResult<C>(_ command: C, result: C.ResultType) where C: CommandWithUndo, C.Centre == Self {
-    print("discarded result \(result) for command \(command.nameForUndo(centre: self))")
+    commandChannel.debug("discarded result \(result) for command \(command.nameForUndo(centre: self))")
   }
 }

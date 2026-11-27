@@ -17,7 +17,6 @@ SwiftUI uses the environment's `UndoManager` for text-field undo, so commands th
 
 - `CommandWithUI`'s `nameForUndo` override is internal, so conformances outside `CommandsUI` fall back to `id` for the undo action name.
 - Undo and redo registered with `UndoManager` call `performSynchronously` directly, bypassing the centre's availability check and lifecycle hooks.
-- `CommandCentreWithUndo` logs with `print` instead of `commandChannel`.
 - The UndoManager mechanism has no tests yet.
 
 ## Validation
