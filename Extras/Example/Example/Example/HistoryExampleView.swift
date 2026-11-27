@@ -10,7 +10,7 @@ import SwiftUI
 /// Demonstrates undo and redo through a command centre's own `HistoryService`.
 struct HistoryExampleView: View {
   /// Centre that performs the commands and owns their history.
-  @State private var centre = HistoryExampleCentre()
+  let centre: ExampleCentre
 
   /// Shows the count, a command that changes it, and the history's undo and redo buttons.
   var body: some View {
@@ -25,9 +25,10 @@ struct HistoryExampleView: View {
         .foregroundStyle(.secondary)
     }
     .padding()
+    .navigationTitle("History")
   }
 }
 
 #Preview {
-  HistoryExampleView()
+  HistoryExampleView(centre: ExampleCentre())
 }

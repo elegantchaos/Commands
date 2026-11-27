@@ -69,3 +69,13 @@ Since this is a breaking release, some names changed to read more consistently:
 ## Unused strings
 
 Removed three keys from the CommandsUI string catalog that nothing referenced, by literal or generated symbol: `about.stack` and `tag.delete.message`, left over from the app this code came from, and `action.help`.
+
+## Merging main
+
+Main had moved on with stable command-control identity (controls keep their outermost view and leave hiding to the presentation), new toolbar item types, Logger 3, and an example app reworked into a bench of pages. Merging it:
+
+- The command buttons and history buttons take main's always-present layout, with this branch's names: `centre` rather than `commander`, `Centre` rather than `CC`, and the History types. The new toolbar types use the same names.
+- The bench's single centre is `ExampleCentre`, on the History API. Its undo page is replaced by an UndoManager page and a History page, built from the two views that were tabs on this branch; the tab view is gone.
+- The bench's macOS-only UI tests sit beside this branch's undo tests. The undo-page tests also run on iOS, where `showPage` goes back to the page list first, because the compact split view opens on the selected page.
+
+The undo-page UI tests pass on the iOS 27.2 simulator. On macOS, the UndoManager page's text editor sequence and the History page's undo and redo were checked by hand in a VM; the bench's own macOS UI tests were not run.

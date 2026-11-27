@@ -44,6 +44,7 @@ struct UndoManagerExampleView: View {
       UndoManagerButtons(undoManager: undoManager)
     }
     .padding()
+    .navigationTitle("UndoManager")
   }
 }
 

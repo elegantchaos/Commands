@@ -39,16 +39,14 @@ public struct HistoryRedoButton: View {
     let availability = entry?.availability() ?? .disabled
     let presentation = showsCommandPresentation ? entry?.presentation : nil
 
-    if availability != .hidden {
-      Button(role: role, action: performRedo) {
-        label(presentation: presentation)
-      }
-      .commandPresentation(
-        availability: availability,
-        help: presentation?.help,
-        isPerforming: historyService.isRedoing
-      )
+    Button(role: role, action: performRedo) {
+      label(presentation: presentation)
     }
+    .commandPresentation(
+      availability: availability,
+      help: presentation?.help,
+      isPerforming: historyService.isRedoing
+    )
   }
 
   /// Button label for the pending action or the standard Redo action.

@@ -39,16 +39,14 @@ public struct HistoryUndoButton: View {
     let availability = entry?.availability() ?? .disabled
     let presentation = showsCommandPresentation ? entry?.presentation : nil
 
-    if availability != .hidden {
-      Button(role: role, action: performUndo) {
-        label(presentation: presentation)
-      }
-      .commandPresentation(
-        availability: availability,
-        help: presentation?.help,
-        isPerforming: historyService.isUndoing
-      )
+    Button(role: role, action: performUndo) {
+      label(presentation: presentation)
     }
+    .commandPresentation(
+      availability: availability,
+      help: presentation?.help,
+      isPerforming: historyService.isUndoing
+    )
   }
 
   /// Button label for the pending reversal or the standard Undo action.
