@@ -8,8 +8,10 @@ import XCTest
 /// UI tests that check the bench's command controls and its undo pages.
 ///
 /// On macOS they check that hidden commands are left out of lists, menus, the menu bar and the
-/// toolbar, that availability changes reach the controls, and the order in which typing and
-/// commands undo. On every platform they perform, undo and redo a command on each undo page.
+/// toolbar, that availability changes reach the controls, that the menu bar's confirmations are
+/// presented, and the order in which typing and commands undo. On every platform they check
+/// each way a command asks for confirmation, and perform, undo and redo a command on each undo
+/// page.
 ///
 /// Flicker cannot be detected here; the bench's README lists the checks to make by eye.
 final class ExampleUITests: XCTestCase {
@@ -36,7 +38,58 @@ final class ExampleUITests: XCTestCase {
     performUndoAndRedo()
   }
 
+  /// A button's own confirmation dialog: cancelling keeps the items, confirming clears them.
+  @MainActor
+  func testButtonConfirmationAsksBeforeClearing() throws {
+    showPage("confirmation")
+    XCTAssertTrue(app.staticTexts["Items: 3"].waitForExistence(timeout: 5))
+
+    press(app.buttons["Clear with a Dialog"])
+    XCTAssertTrue(app.buttons["Clear"].waitForExistence(timeout: 5))
+    cancelDialog()
+    XCTAssertTrue(app.staticTexts["Items: 3"].waitForExistence(timeout: 2))
+
+    press(app.buttons["Clear with a Dialog"])
+    pressWhenShown(app.buttons["Clear"])
+    XCTAssertTrue(app.staticTexts["Items: 0"].waitForExistence(timeout: 2))
+  }
+
+  /// A menu item's confirmation is presented by the window's host, and clears once accepted.
+  @MainActor
+  func testMenuConfirmationIsPresentedByTheHost() throws {
+    showPage("confirmation")
+    XCTAssertTrue(app.staticTexts["Items: 3"].waitForExistence(timeout: 5))
+
+    press(app.descendants(matching: .any)["Clear from a Menu"].firstMatch)
+    pressWhenShown(app.descendants(matching: .any)["Clear Items"].firstMatch)
+    pressWhenShown(app.buttons["Clear"])
+    XCTAssertTrue(app.staticTexts["Items: 0"].waitForExistence(timeout: 2))
+  }
+
+  /// A control that skips confirmation clears straight away.
+  @MainActor
+  func testUnconfirmedButtonClearsImmediately() throws {
+    showPage("confirmation")
+    XCTAssertTrue(app.staticTexts["Items: 3"].waitForExistence(timeout: 5))
+
+    press(app.buttons["Clear without Asking"])
+    XCTAssertTrue(app.staticTexts["Items: 0"].waitForExistence(timeout: 2))
+    XCTAssertFalse(app.buttons["Cancel"].exists)
+  }
+
   #if os(macOS)
+    /// The Edit menu's Clear Items is confirmed by the focused window's host.
+    @MainActor
+    func testMenuBarConfirmationIsPresentedByTheHost() throws {
+      showPage("confirmation")
+      XCTAssertTrue(app.staticTexts["Items: 3"].waitForExistence(timeout: 5))
+
+      app.menuBars.menuBarItems["Edit"].click()
+      pressWhenShown(app.menuItems["Clear Items"])
+      pressWhenShown(app.buttons["Cancel"])
+      XCTAssertTrue(app.staticTexts["Items: 3"].waitForExistence(timeout: 2))
+    }
+
     /// Typing in the text editor and commands undo in the reverse of the order they happened.
     @MainActor
     func testEditorTypingAndCommandsUndoInReverseOrder() throws {
@@ -189,6 +242,25 @@ final class ExampleUITests: XCTestCase {
 
     press(app.buttons["Redo Increment"])
     XCTAssertTrue(app.staticTexts["Done: 1"].waitForExistence(timeout: 2))
+  }
+
+  /// Cancels the confirmation dialog on screen: with its Cancel button where it has one, or, for
+  /// the popover that iOS shows without one, by tapping outside it.
+  @MainActor
+  private func cancelDialog() {
+    let cancel = app.buttons["Cancel"]
+    if cancel.waitForExistence(timeout: 2) {
+      press(cancel)
+    } else {
+      press(element("PopoverDismissRegion"))
+    }
+  }
+
+  /// Waits for the element to appear, then presses it.
+  @MainActor
+  private func pressWhenShown(_ element: XCUIElement) {
+    XCTAssertTrue(element.waitForExistence(timeout: 5))
+    press(element)
   }
 
   /// Shows a bench page by selecting its sidebar row, identified by the page's raw value.

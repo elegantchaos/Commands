@@ -28,6 +28,9 @@ where C.Centre == Centre {
   /// Command centre used to execute the importer-backed command.
   let centre: Centre
 
+  /// Confirms the chosen input before performing, when the command declares a confirmation.
+  private let confirmationState = CommandConfirmationState()
+
   /// Creates a modifier that binds importer presentation to a command instance.
   public init(isShowing: Binding<Bool>, command: Binding<C>, centre: Centre) {
     self._isShowing = isShowing
@@ -36,6 +39,9 @@ where C.Centre == Centre {
   }
 
   /// Applies the importer sheet and forwards its result into the command.
+  ///
+  /// Once the user has chosen, the command asks for its confirmation, if it declares one, as a
+  /// command button does, and runs only if the user accepts.
   public func body(content: Content) -> some View {
     content
       #if !os(watchOS) && !os(tvOS)
@@ -44,14 +50,20 @@ where C.Centre == Centre {
           allowedContentTypes: command.types,
           allowsMultipleSelection: command.allowsMultipleSelection
         ) { result in
+          var chosen = command
           switch result {
           case .success(let urls):
-            command.state = .chosen(urls)
+            chosen.state = .chosen(urls)
           case .failure(let error):
-            command.state = .error(error)
+            chosen.state = .error(error)
           }
-          centre.performWithoutWaiting(command)
+          command = chosen
+          confirmationState.request(chosen.confirmation(centre: centre), mode: nil) {
+            [centre] in
+            centre.performWithoutWaiting(chosen)
+          }
         }
+        .commandLocalConfirmation(confirmationState)
       #endif
   }
 }

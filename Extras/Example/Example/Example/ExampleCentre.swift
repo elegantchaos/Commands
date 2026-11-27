@@ -9,7 +9,10 @@ import SwiftUI
 
 /// The example app's main command centre: the counter and history for the History page, and the
 /// state the bench commands read.
-final class ExampleCentre: CommandCentreWithHistory, ExampleServiceProvider, BenchStateProvider {
+@Observable
+final class ExampleCentre: CommandCentreWithHistory, ExampleServiceProvider, BenchStateProvider,
+  BenchItemsProvider
+{
   /// The counter the History page's commands change.
   let service = ExampleService()
 
@@ -18,4 +21,7 @@ final class ExampleCentre: CommandCentreWithHistory, ExampleServiceProvider, Ben
 
   /// The state bench commands read.
   let bench = BenchState()
+
+  /// The items the Confirmation and Import pages' commands change.
+  let items = BenchItems()
 }

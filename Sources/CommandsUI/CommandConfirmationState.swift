@@ -14,8 +14,13 @@ import SwiftUI
 struct CommandConfirmationState: DynamicProperty {
   /// A local confirmation waiting for the user's answer.
   struct LocalRequest: Identifiable {
+    /// Identifies the request, so the dialog's actions apply only to the request it shows.
     let id = UUID()
+
+    /// The dialog to show.
     let confirmation: CommandConfirmation
+
+    /// The action to run if the user confirms.
     let perform: @MainActor () -> Void
   }
 
@@ -58,6 +63,10 @@ struct CommandConfirmationState: DynamicProperty {
       if (mode ?? environmentMode) == .hosted {
         commandChannel.debug("no CommandsHost, so a hosted confirmation is shown locally")
       }
+      guard localRequest == nil else {
+        commandChannel.log("Refused confirmation \"\(confirmation.title)\" while another is shown")
+        return
+      }
       localRequest = LocalRequest(confirmation: confirmation, perform: perform)
 
     default:
@@ -75,33 +84,37 @@ extension View {
 
 /// Attaches the dialog for a button's local confirmation.
 private struct LocalConfirmationModifier: ViewModifier {
+  /// The button's pending local confirmation.
   @Binding var request: CommandConfirmationState.LocalRequest?
 
+  /// Attaches the dialog for the request shown when the body is evaluated.
   func body(content: Content) -> some View {
-    content.confirmationDialog(
-      request?.confirmation.title ?? "",
-      isPresented: isPresented,
+    let shown = request
+    return content.confirmationDialog(
+      shown?.confirmation.title ?? "",
+      isPresented: isPresenting(shown),
       titleVisibility: .visible,
-      presenting: request
+      presenting: shown
     ) { pending in
       Button(pending.confirmation.confirm, role: .destructive) {
+        guard request?.id == pending.id else { return }
         request = nil
         pending.perform()
       }
       Button(pending.confirmation.cancel, role: .cancel) {
-        request = nil
+        if request?.id == pending.id { request = nil }
       }
     } message: { pending in
       Text(pending.confirmation.message)
     }
   }
 
-  /// Whether a request is pending; dismissing the dialog cancels it.
-  private var isPresented: Binding<Bool> {
+  /// Whether `shown` is pending; dismissing the dialog cancels that request, and no other.
+  private func isPresenting(_ shown: CommandConfirmationState.LocalRequest?) -> Binding<Bool> {
     Binding {
-      request != nil
+      shown != nil
     } set: { isPresented in
-      if !isPresented { request = nil }
+      if !isPresented, request?.id == shown?.id { request = nil }
     }
   }
 }

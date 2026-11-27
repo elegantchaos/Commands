@@ -3,6 +3,7 @@
 //  Copyright © 2026 Elegant Chaos Limited. All rights reserved.
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+import Commands
 import Observation
 import SwiftUI
 
@@ -16,7 +17,7 @@ import SwiftUI
 public final class CommandPresenter {
   /// A confirmation waiting for the user's answer.
   public struct PendingConfirmation: Identifiable {
-    /// Identifies the request, so a replaced request is seen as new.
+    /// Identifies the request, so actions taken on an alert apply only to the request it shows.
     public let id = UUID()
 
     /// The dialog to show.
@@ -34,22 +35,28 @@ public final class CommandPresenter {
 
   /// Asks the user to confirm, then runs `perform`.
   ///
-  /// The action runs only if the user accepts. A request made while another is pending replaces it.
+  /// The action runs only if the user accepts. A request made while another is shown is refused,
+  /// so the alert on screen always belongs to the action its buttons run.
   public func confirm(
     _ confirmation: CommandConfirmation, perform: @escaping @MainActor () -> Void
   ) {
+    guard pendingConfirmation == nil else {
+      commandChannel.log("Refused confirmation \"\(confirmation.title)\" while another is shown")
+      return
+    }
     pendingConfirmation = PendingConfirmation(confirmation: confirmation, perform: perform)
   }
 
-  /// Runs the pending action and clears the request.
-  public func accept() {
-    guard let pending = pendingConfirmation else { return }
+  /// Runs `request`'s action and clears it, if it is the request being shown.
+  public func accept(_ request: PendingConfirmation) {
+    guard pendingConfirmation?.id == request.id else { return }
     pendingConfirmation = nil
-    pending.perform()
+    request.perform()
   }
 
-  /// Clears the pending request without running its action.
-  public func cancel() {
+  /// Clears `request` without running its action, if it is the request being shown.
+  public func cancel(_ request: PendingConfirmation) {
+    guard pendingConfirmation?.id == request.id else { return }
     pendingConfirmation = nil
   }
 }
