@@ -41,28 +41,32 @@ public struct CommandsHost<Centre: AnyObject & Observable, Content: View>: View 
 
   /// The host's content, with its presentation surface attached.
   public var body: some View {
+    let shown = presenter.pendingConfirmation
     content
       .environment(centre)
       .environment(\.commandPresenter, presenter)
       .focusedSceneValue(\.commandPresenter, presenter)
       .alert(
-        presenter.pendingConfirmation?.confirmation.title ?? "",
-        isPresented: isPresentingConfirmation,
-        presenting: presenter.pendingConfirmation
+        shown?.confirmation.title ?? "",
+        isPresented: isPresenting(shown),
+        presenting: shown
       ) { pending in
-        Button(pending.confirmation.cancel, role: .cancel) { presenter.cancel() }
-        Button(pending.confirmation.confirm, role: .destructive) { presenter.accept() }
+        Button(pending.confirmation.cancel, role: .cancel) { presenter.cancel(pending) }
+        Button(pending.confirmation.confirm, role: .destructive) { presenter.accept(pending) }
       } message: { pending in
         Text(pending.confirmation.message)
       }
   }
 
-  /// Whether a confirmation is waiting; dismissing the alert cancels the request.
-  private var isPresentingConfirmation: Binding<Bool> {
+  /// Whether `shown` is waiting; dismissing the alert cancels that request, and no other.
+  ///
+  /// SwiftUI ignores changes to the presented data once the alert is up, so every action is tied
+  /// to the request the alert was built from.
+  private func isPresenting(_ shown: CommandPresenter.PendingConfirmation?) -> Binding<Bool> {
     Binding {
-      presenter.pendingConfirmation != nil
+      shown != nil
     } set: { isPresented in
-      if !isPresented { presenter.cancel() }
+      if !isPresented, let shown { presenter.cancel(shown) }
     }
   }
 }

@@ -39,6 +39,17 @@ private final class UITestCentre: CommandCentre {
     /// Availability exposed through the generated UIKit command.
     var reportedAvailability: CommandAvailability = .enabled
 
+    /// Argument that distinguishes instances sharing the same identifier.
+    var payload = ""
+
+    /// Whether the command asks for confirmation before it runs.
+    var needsConfirmation = false
+
+    /// Returns a confirmation when the command asks for one.
+    func confirmation(centre: UITestCentre) -> CommandConfirmation? {
+      needsConfirmation ? defaultConfirmation(centre: centre) : nil
+    }
+
     /// Returns the configured availability.
     func availability(centre: UITestCentre) -> CommandAvailability {
       reportedAvailability
@@ -64,9 +75,23 @@ private final class UITestCentre: CommandCentre {
       CommandShortcut("k", modifiers: [.command, .shift])
     }
 
-    /// Records execution in the test centre.
+    /// Records execution in the test centre, with the payload when there is one.
     func perform(centre: UITestCentre) async throws {
-      centre.performedCommandIDs.append(id)
+      centre.performedCommandIDs.append(payload.isEmpty ? id : "\(id):\(payload)")
+    }
+  }
+
+  /// UIKit delegate that records confirmation requests instead of showing an alert.
+  @MainActor
+  private final class ConfirmingDelegate: CommandCentreDelegate {
+    /// The actions waiting for confirmation, in the order they were requested.
+    var pendingActions: [@MainActor () -> Void] = []
+
+    /// Records the request; a test confirms it by running the stored action.
+    override func confirm(
+      _ confirmation: CommandConfirmation, perform: @escaping @MainActor () -> Void
+    ) {
+      pendingActions.append(perform)
     }
   }
 #endif
@@ -173,11 +198,57 @@ struct CommandsUITests {
       #expect(keyCommand.discoverabilityTitle == "Perform the UIKit command")
       #expect(keyCommand.input == "k")
       #expect(keyCommand.modifierFlags == [.command, .shift])
-      #expect(keyCommand.propertyList as? String == command.id)
 
       let task = try #require(delegate.performCommand(generatedCommand))
       await task.value
       #expect(centre.performedCommandIDs == [command.id])
+    }
+
+    /// Verifies that a UIKit menu command that declares a confirmation runs only once confirmed.
+    @Test func commandCentreDelegateConfirmsBeforePerforming() async throws {
+      let centre = UITestCentre()
+      let delegate = ConfirmingDelegate()
+      let generated = delegate.uiCommand(
+        UIKitBackedCommand(needsConfirmation: true), centre: centre)
+
+      #expect(delegate.performCommand(generated) == nil)
+      #expect(delegate.pendingActions.count == 1)
+      #expect(centre.performedCommandIDs.isEmpty)
+
+      delegate.pendingActions.first?()
+      try await Task.sleep(for: .milliseconds(50))
+      #expect(centre.performedCommandIDs == ["test.ui.uikit"])
+    }
+
+    /// Verifies that two live menu items for the same command identifier each run their own command.
+    @Test func commandCentreDelegateDispatchesEachItemToItsOwnCommand() async throws {
+      let centre = UITestCentre()
+      let delegate = CommandCentreDelegate()
+      let first = delegate.uiCommand(UIKitBackedCommand(payload: "first"), centre: centre)
+      let second = delegate.uiCommand(UIKitBackedCommand(payload: "second"), centre: centre)
+
+      await delegate.performCommand(first)?.value
+      await delegate.performCommand(second)?.value
+
+      #expect(centre.performedCommandIDs == ["test.ui.uikit:first", "test.ui.uikit:second"])
+    }
+
+    /// Verifies that menu items from before the previous menu rebuild no longer dispatch, while
+    /// the latest ones do.
+    @Test func commandCentreDelegateDropsItemsFromOlderMenuBuilds() async throws {
+      let centre = UITestCentre()
+      let delegate = CommandCentreDelegate()
+      let old = delegate.uiCommand(UIKitBackedCommand(payload: "old"), centre: centre)
+      delegate.menusWillRebuild()
+      let previous = delegate.uiCommand(UIKitBackedCommand(payload: "previous"), centre: centre)
+      delegate.menusWillRebuild()
+      let current = delegate.uiCommand(UIKitBackedCommand(payload: "current"), centre: centre)
+
+      #expect(delegate.performCommand(old) == nil)
+      await delegate.performCommand(previous)?.value
+      await delegate.performCommand(current)?.value
+
+      #expect(centre.performedCommandIDs == ["test.ui.uikit:previous", "test.ui.uikit:current"])
     }
 
     /// Verifies that the UIKit menu helper wraps generated commands in an inline menu.

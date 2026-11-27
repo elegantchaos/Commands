@@ -48,7 +48,7 @@ func confirmation(centre: Centre) -> CommandConfirmation? {
 }
 ```
 
-`button(_:)`, `toolbarItem(_:)` and `dynamicButton` then confirm before performing the command.
+`button(_:)`, `toolbarItem(_:)`, `dynamicButton`, the importer controls and UIKit menu commands then confirm before performing the command. An importer asks after the user has chosen a file.
 Where the confirmation appears is a `CommandConfirmationMode`:
 
 - `.local` (the default) attaches a dialog to the button, which the system anchors to it where it
@@ -87,11 +87,13 @@ host's `CommandPresenter` instead, which a button finds in the environment, or t
 scene in the menu bar. Without a host, `.hosted` falls back to `.local`, which a menu cannot show:
 a menu button needs a host.
 
+A host shows one confirmation at a time. A request made while one is on screen is refused, and the alert's buttons and dismissal act only on the request it shows.
+
 ## UIKit and Mac Catalyst
 
-Subclass `CommandCentreDelegate` to build `UICommand`, `UIKeyCommand`, and
-inline `UIMenu` values. Use stable command IDs: the delegate uses them to
-replace registered invocations as menus are rebuilt.
+Subclass `CommandCentreDelegate` to build `UICommand`, `UIKeyCommand`, and inline `UIMenu` values in `buildMenu(with:)`, calling `super.buildMenu(with:)` before or after adding them. Each generated item runs its own command, even when several share a command ID; the delegate discards the invocations of items that menu rebuilds have replaced.
+
+A command that declares a confirmation asks for it before it runs. Set the delegate's `commandPresenter` to use a `CommandsHost`'s presenter; otherwise the delegate shows an alert on the key window, or override `confirm(_:perform:)` to confirm another way.
 
 ## Localization
 
