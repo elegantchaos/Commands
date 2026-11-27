@@ -145,7 +145,7 @@ extension CommandCentre {
 }
 
 @MainActor
-extension UndoableCommandCentre {
+extension CommandCentreWithHistory {
   /// Returns a button that performs the next undo operation.
   @ViewBuilder public func undoButton(
     role: ButtonRole? = nil,

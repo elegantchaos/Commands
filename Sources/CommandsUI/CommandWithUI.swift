@@ -103,3 +103,8 @@ extension CommandWithUI {
   /// By default, no shortcut is provided.
   public var shortcut: CommandShortcut? { nil }
 }
+
+@MainActor
+extension CommandWithUndo where Self: CommandWithUI {
+  func nameForUndo(centre: Centre) -> String { name(centre: centre) }
+}

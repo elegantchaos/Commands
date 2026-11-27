@@ -11,12 +11,12 @@ import Foundation
 /// service performs undo or redo, it allows only commands with that service's
 /// active context and prevents forward commands from changing history.
 @MainActor
-public protocol UndoableCommandCentre: CommandCentre {
-  var undoService: UndoService { get }
+public protocol CommandCentreWithHistory: CommandCentre {
+  var undoService: HistoryService { get }
 }
 
 @MainActor
-extension UndoableCommandCentre {
+extension CommandCentreWithHistory {
   /// Allows only the context owned by the active undo or redo operation.
   ///
   /// Keeping this rule here ensures `CommandCentre` remains independent of

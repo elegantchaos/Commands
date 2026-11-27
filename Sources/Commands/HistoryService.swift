@@ -7,7 +7,7 @@ import Foundation
 import Observation
 
 /// Errors reported while performing a history operation.
-public enum UndoServiceError: Error, Equatable, Sendable {
+public enum HistoryServiceError: Error, Equatable, Sendable {
   /// An undo or redo operation is already in progress.
   case historyOperationInProgress
 
@@ -24,7 +24,7 @@ public enum UndoServiceError: Error, Equatable, Sendable {
 /// history operation; it does not use global or task-local state.
 @MainActor
 @Observable
-open class UndoService {
+open class HistoryService {
   /// An active history operation and its execution context.
   ///
   /// Keeping these values in one enum makes it impossible to expose a history
@@ -144,11 +144,11 @@ open class UndoService {
   /// `UndoServiceError.forwardCommandInProgress`.
   open func performUndo() async throws {
     guard isPerformingHistoryOperation == false else {
-      throw UndoServiceError.historyOperationInProgress
+      throw HistoryServiceError.historyOperationInProgress
     }
 
     guard forwardCommandCount == 0 else {
-      throw UndoServiceError.forwardCommandInProgress
+      throw HistoryServiceError.forwardCommandInProgress
     }
 
     guard undoCursor > 0 else {
@@ -176,11 +176,11 @@ open class UndoService {
   /// `UndoServiceError.forwardCommandInProgress`.
   open func performRedo() async throws {
     guard isPerformingHistoryOperation == false else {
-      throw UndoServiceError.historyOperationInProgress
+      throw HistoryServiceError.historyOperationInProgress
     }
 
     guard forwardCommandCount == 0 else {
-      throw UndoServiceError.forwardCommandInProgress
+      throw HistoryServiceError.forwardCommandInProgress
     }
 
     guard undoCursor < undoStack.count else {
@@ -229,6 +229,6 @@ open class UndoService {
 }
 
 @MainActor
-extension UndoService: @MainActor CustomDebugStringConvertible {
+extension HistoryService: @MainActor CustomDebugStringConvertible {
   public var debugDescription: String { stackDescription }
 }

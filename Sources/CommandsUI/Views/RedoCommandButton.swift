@@ -14,7 +14,7 @@ import SwiftUI
 @MainActor
 public struct RedoCommandButton: View {
   /// Undo service that owns the pending redo action.
-  private let undoService: UndoService
+  private let undoService: HistoryService
 
   /// Optional semantic role for the button.
   private let role: ButtonRole?
@@ -24,7 +24,7 @@ public struct RedoCommandButton: View {
 
   /// Creates a redo button for the supplied service.
   public init(
-    undoService: UndoService,
+    undoService: HistoryService,
     role: ButtonRole? = nil,
     showsCommandPresentation: Bool = false
   ) {
